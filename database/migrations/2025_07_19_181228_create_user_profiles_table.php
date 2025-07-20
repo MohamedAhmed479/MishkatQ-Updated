@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
+
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign("user_id")->references("id")->on("users");
+
             $table->string("username");
             $table->text("profile_image")->nullable();
             $table->enum("current_level", ["beginner", "intermediate", "advanced"]);

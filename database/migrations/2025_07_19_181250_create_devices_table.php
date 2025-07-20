@@ -13,7 +13,21 @@ return new class extends Migration
     {
         Schema::create('devices', function (Blueprint $table) {
             $table->id();
+
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign("user_id")->references("id")->on("users");
+
+            $table->unsignedBigInteger('token_id')->nullable();
+            $table->foreign('token_id')->references('id')->on('personal_access_tokens')->onDelete('set null');
+
+            $table->string('device_type')->nullable();
+            $table->string('device_name')->nullable();
+            $table->string('platform')->nullable();
+            $table->string('browser')->nullable();
+            $table->string('ip_address', 45)->nullable();
+
             $table->timestamps();
+
         });
     }
 
