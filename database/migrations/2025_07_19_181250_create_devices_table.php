@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('devices', function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreign("user_id")->references("id")->on("users");
+            $table->unsignedBigInteger('user_id');
+            $table->foreign("user_id")->references("id")->on("users")->onDelete("cascade");
 
             $table->unsignedBigInteger('token_id')->nullable();
             $table->foreign('token_id')->references('id')->on('personal_access_tokens')->onDelete('set null');
@@ -27,8 +27,8 @@ return new class extends Migration
             $table->string('ip_address', 45)->nullable();
 
             $table->timestamps();
-
         });
+
     }
 
     /**

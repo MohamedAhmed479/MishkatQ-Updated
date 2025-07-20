@@ -10,7 +10,6 @@ class UserProfile extends Model
         'user_id',
         'username',
         'profile_image',
-        'current_level',
         'verses_memorized_count',
     ];
 
