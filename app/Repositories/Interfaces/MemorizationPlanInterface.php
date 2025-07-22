@@ -12,9 +12,11 @@ interface MemorizationPlanInterface
 
     public function find(int $planId): ?MemorizationPlan;
 
+    public function findActivePlanForUser(int $userId): ?MemorizationPlan;
+
     public function findPlanForUser(int $userId, int $planId): ?MemorizationPlan;
 
-    public function isUserHasActivePlan(User $user): bool;
+    public function isUserHasActivePlan(int $userId): bool;
 
     public function makeActivePlan(Array $planData): MemorizationPlan;
 

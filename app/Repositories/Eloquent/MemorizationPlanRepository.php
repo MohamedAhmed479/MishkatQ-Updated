@@ -16,9 +16,9 @@ class MemorizationPlanRepository implements MemorizationPlanInterface
         $this->model = $model;
     }
 
-    public function isUserHasActivePlan(User $user): bool
+    public function isUserHasActivePlan(int $userId): bool
     {
-        return $user->memorizationPlans()->where("status", "active")->exists();
+        return User::find($userId)->memorizationPlans()->where("status", "active")->exists();
     }
 
     public function makeActivePlan(array $planData): MemorizationPlan
@@ -75,5 +75,14 @@ class MemorizationPlanRepository implements MemorizationPlanInterface
         }
 
         return $plan->update(["status" => "paused"]);
+    }
+
+
+    public function findActivePlanForUser(int $userId): ?MemorizationPlan
+    {
+        return $this->model
+            ->where('user_id', $userId)
+            ->where('status', 'active')
+            ->first();
     }
 }

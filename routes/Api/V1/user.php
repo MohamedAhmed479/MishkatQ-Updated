@@ -4,6 +4,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\UserPreferenceController;
 use App\Http\Controllers\Api\V1\MemorizationPlanController;
+use App\Http\Controllers\Api\V1\PlanItemController;
 
 Route::middleware("auth:user")->group(function () {
     // =====================================================================================================
@@ -26,6 +27,13 @@ Route::middleware("auth:user")->group(function () {
         Route::post("/{planId}/pause", "pauseMemorizationPlan");
     });
 
-
+    // =====================================================================================================
+    //                                 Daily Memorization Routes
+    // =====================================================================================================
+    Route::controller(PlanItemController::class)->prefix("daily-memorization")->group(function () {
+        Route::get('/', 'getDailyContent');
+        Route::get('/plan-item/{planItemId}', 'getPlanItemContent');
+        Route::post('/complete', 'markAsCompleted');
+    });
 
 });

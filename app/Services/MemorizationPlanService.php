@@ -141,7 +141,7 @@ class MemorizationPlanService
      */
     public function makeNewMemoPlanWithHisItems(User $user, Array $validatedData): JsonResponse
     {
-        if($this->memorizationPlanRepository->isUserHasActivePlan($user)){
+        if($this->memorizationPlanRepository->isUserHasActivePlan($user->id)){
             return ApiResponse::error("لديك خطة حفظ نشطة. يُرجى إيقافها مؤقتًا أو إكمالها قبل البدء بخطة جديدة.", 400);
         }
 
