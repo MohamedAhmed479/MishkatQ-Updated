@@ -67,6 +67,105 @@ class User extends Authenticatable
         return $this->hasOne(UserPreference::class, 'user_id');
     }
 
+    public function memorizationPlans()
+    {
+        return $this->hasMany(MemorizationPlan::class);
+    }
+
+    public function memorizationProgress()
+    {
+        return $this->hasMany(MemorizationProgress::class);
+    }
+
+    public function getTotalMemorizedVerses(): int
+    {
+        return $this->memorizationProgress()->sum('verses_memorized');
+    }
+
+    public function getMemorizationProgress(): array
+    {
+        $progress = $this->memorizationProgress()
+            ->with('chapter')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'chapter_id' => $item->chapter_id,
+                    'chapter_name' => $item->chapter->name_ar,
+                    'verses_memorized' => $item->verses_memorized,
+                    'total_verses' => $item->total_verses,
+                    'progress_percentage' => $item->getProgressPercentage(),
+                    'status' => $item->status,
+                    'last_reviewed_at' => $item->last_reviewed_at,
+                ];
+            });
+
+        return [
+            'total_verses_memorized' => $this->getTotalMemorizedVerses(),
+            'chapters_progress' => $progress,
+        ];
+    }
+
+    public function isActive(): bool
+    {
+        if (!$this->last_active_at) {
+            return false;
+        }
+        return $this->last_active_at->diffInMinutes(now()) < 5;
+    }
+
+    public function actvePlan()
+    {
+        return $this->memorizationPlans()
+            ->where('status', 'active')
+            ->first();
+    }
+
+    public function badges()
+    {
+        return $this->belongsToMany(Badge::class, 'user_badges')
+            ->withPivot('awarded_at')
+            ->withTimestamps();
+    }
+
+    public function pointsTransactions()
+    {
+        return $this->hasMany(PointsTransaction::class);
+    }
+
+    public function leaderboards()
+    {
+        return $this->hasMany(Leaderboard::class);
+    }
+
+    public function getTotalPoints(): int
+    {
+        return $this->pointsTransactions()->sum('points');
+    }
+
+    public function getCurrentRank(string $periodType = 'monthly'): ?int
+    {
+        $now = now();
+        $start = match ($periodType) {
+            'daily' => (clone $now)->startOfDay(),
+            'weekly' => (clone $now)->startOfWeek(),
+            'monthly' => (clone $now)->startOfMonth(),
+            'yearly' => (clone $now)->startOfYear(),
+            default => (clone $now)->startOfMonth(),
+        };
+        $end = match ($periodType) {
+            'daily' => (clone $now)->endOfDay(),
+            'weekly' => (clone $now)->endOfWeek(),
+            'monthly' => (clone $now)->endOfMonth(),
+            'yearly' => (clone $now)->endOfYear(),
+            default => (clone $now)->endOfMonth(),
+        };
+
+        return $this->leaderboards()
+            ->where('period_type', $periodType)
+            ->where('period_start', $start)
+            ->where('period_end', $end)
+            ->value('rank');
+    }
 
     public function sendEmailVerificationNotification()
     {

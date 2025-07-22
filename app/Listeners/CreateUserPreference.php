@@ -24,7 +24,7 @@ class CreateUserPreference
     {
         UserPreference::create([
             "user_id" => $event->user->id,
-            // "tafsir_id" => 1,
+            "tafsir_id" => null,
             "daily_minutes" => 0,
             "sessions_per_day" => 0,
             "current_level" => "beginner",

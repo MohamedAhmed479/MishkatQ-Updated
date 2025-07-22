@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class UserPreference extends Model
+class MemorizationPlan extends Model
 {
     protected $guarded = ['id'];
 
@@ -13,9 +13,8 @@ class UserPreference extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function tafsir()
+    public function planItems()
     {
-        return $this->belongsTo(Tafsir::class, 'tafsir_id');
+        return $this->hasMany(PlanItem::class, "plan_id", "id");
     }
-
 }

@@ -13,11 +13,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call([
+            // Admin
+            // AdminSeeder::class,
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            // Badges
+            BadgeSeeder::class,
+
+            // Roles
+            // RoleSeeder::class,
+            // ManagerRoleSeeder::class,
+            // RegularUserRoleSeeder::class,
+
+            // Quran Data
+            ChaptersSeeder::class,
+            FetchQuranVersesSeeder::class,
+            JuzsSeeder::class,
+            TafsirSeeder::class,
+            ReciterSeeder::class,
+            RecitationSeeder::class,
         ]);
     }
 }

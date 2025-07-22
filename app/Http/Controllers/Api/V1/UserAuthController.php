@@ -15,6 +15,7 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Password;
@@ -31,13 +32,19 @@ class UserAuthController extends Controller
     public function register(StoreUserRequest $request): JsonResponse
     {
         try {
+            DB::beginTransaction();
+
             $data = $this->authService->registerUserWithDeviceAndToken(
                 $request->only(['name', 'email', 'password']),
                 $request->only(['device_type', 'device_name', 'platform', 'browser', 'ip_address'])
             );
 
+            DB::commit();
+
             return ApiResponse::created($data, "تم تسجيل المستخدم بنجاح. تم إرسال رسالة التحقق إلى {$data['email']}.");
-        } catch (\Exception $e) {
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
             return ApiResponse::error('فشل التسجيل', 500, [
                 'error' => $e->getMessage(),
             ]);

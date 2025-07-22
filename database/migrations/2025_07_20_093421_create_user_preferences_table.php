@@ -17,8 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete("cascade");
 
-//            $table->unsignedBigInteger('tafsir_id')->nullable();
-//            $table->foreign('tafsir_id')->references('id')->on('tafsirs');
+            $table->unsignedBigInteger('tafsir_id')->nullable();
+            $table->foreign('tafsir_id')->references('id')->on('tafsirs')->onDelete("set null");
 
             $table->integer('daily_minutes');
             $table->integer('sessions_per_day');

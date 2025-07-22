@@ -45,6 +45,8 @@ class AuthService
                 "sessions_per_day" => $user->preference->sessions_per_day,
                 "preferred_times" => $user->preference->preferred_times,
                 "current_level" => $user->preference->current_level,
+                "tafsir_id" => $user->preference->tafsir_id ?? null,
+                "tafsir_name" => $user->preference->tafsir ? $user->preference->tafsir->name : null,
             ],
             "deviceInfo" => [
                 "device_type" => $device->device_type,
@@ -104,6 +106,8 @@ class AuthService
                 "sessions_per_day" => $user->preference->sessions_per_day,
                 "preferred_times" => $user->preference->preferred_times,
                 "current_level" => $user->preference->current_level,
+                "tafsir_id" => $user->preference->tafsir_id ?? null,
+                "tafsir_name" => $user->preference->tafsir ? $user->preference->tafsir->name : null,
             ],
             "deviceInfo" => [
                 "device_type" => $device->device_type,
