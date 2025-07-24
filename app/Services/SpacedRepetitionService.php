@@ -3,25 +3,37 @@
 namespace App\Services;
 
 use App\Helpers\ApiResponse;
+use App\Http\Resources\PlanItemResource;
 use App\Models\PlanItem;
+use App\Models\Verse;
 use App\Repositories\Eloquent\SpacedRepetitionRepository;
 use App\Repositories\Interfaces\PlanItemInterface;
 use App\Repositories\Interfaces\SpacedRepetitionInterface;
+use App\Traits\AyaTafsirTrait;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+
 class SpacedRepetitionService
 {
+    use AyaTafsirTrait;
+
     public $spacedRepetitionRepository;
     public $planItemRepository;
+
     // protected $rewardService;
 
-    public function __construct(SpacedRepetitionInterface $spacedRepetitionRepository, PlanItemInterface $planItemRepository)
+    public function __construct(
+        SpacedRepetitionInterface $spacedRepetitionRepository,
+        PlanItemInterface $planItemRepository,
+    )
     {
         $this->spacedRepetitionRepository = $spacedRepetitionRepository;
         $this->planItemRepository = $planItemRepository;
-        // $this->rewardService = $rewardService;
     }
 
+    // $this->rewardService = $rewardService;
 
     /**
      * Define default review intervals in days
@@ -67,16 +79,53 @@ class SpacedRepetitionService
         }
     }
 
-
     /**
      * Get today's user revisions
      *
      * @param int $userId
      * @return Collection
      */
-    public function getTodayRevisionsForUser(int $userId): ?Collection
+    public function todayRevisions(int $userId): JsonResponse
     {
-        return $this->spacedRepetitionRepository->getTodayRevisionsForUser($userId);
+        $todayRevisions = $this->spacedRepetitionRepository->getTodayRevisionsForUser($userId);
+
+        if($todayRevisions->isEmpty()){
+            return ApiResponse::success([], "لا يوجد اي مراجعات اليوم");
+        }
+
+        return ApiResponse::success($todayRevisions, "تم استرجاع مراجعات اليوم بنجاح");
+    }
+
+    public function lastUncompletedRevisions(int $userId): JsonResponse
+    {
+        $lastUncompletedRevisions = $this->spacedRepetitionRepository->getLastUncompletedRevisionsForUser($userId);
+        if($lastUncompletedRevisions->isEmpty()){
+            return ApiResponse::success([], "لايوجد اي مراجعات فائته غير مكتملة");
+        }
+
+        return ApiResponse::success($lastUncompletedRevisions, "تم جلب جميع المراجعات الفائته والغير مكتملة");
+    }
+
+    public function getRevisionContent(int $revisionId): JsonResponse
+    {
+        $revision = $this->spacedRepetitionRepository->find($revisionId);
+        if(! $revision) return ApiResponse::notFound("لم يتم العثور علي المراجعة");
+
+        $planItem = $revision->planItem;
+
+        $preferredTafsirId = Auth::user()->preference->tafsir_id;
+
+        // Get all verses between start and end
+        $verses = Verse::where('chapter_id', $planItem->quran_surah_id)
+            ->where('verse_number', '>=', $planItem->verseStart->verse_number)
+            ->where('verse_number', '<=', $planItem->verseEnd->verse_number)
+            ->with(['words', 'recitations.reciter'])
+            ->get();
+
+
+        return ApiResponse::success([
+            'plan_item' => new PlanItemResource($planItem, $verses, $preferredTafsirId),
+        ], "تم جلب بيانات المراجعة");
     }
 
 }

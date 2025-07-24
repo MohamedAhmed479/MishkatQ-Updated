@@ -27,4 +27,8 @@ interface PlanItemInterface
 
     public function markAsComplete(int $planItemId): bool;
 
+    public function todayItem(int $userId): ?PlanItem;
+
+    public function getDetailedUserPlanItem(int $planItemId, int $userId): ?PlanItem;
+
 }

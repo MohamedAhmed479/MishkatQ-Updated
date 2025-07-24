@@ -113,7 +113,7 @@ class User extends Authenticatable
         return $this->last_active_at->diffInMinutes(now()) < 5;
     }
 
-    public function actvePlan()
+    public function activePlan()
     {
         return $this->memorizationPlans()
             ->where('status', 'active')

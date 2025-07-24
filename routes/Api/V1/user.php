@@ -1,10 +1,11 @@
 <?php
 
-use Carbon\Carbon;
+use App\Http\Controllers\Api\V1\SpacedRepetitionController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\UserPreferenceController;
 use App\Http\Controllers\Api\V1\MemorizationPlanController;
 use App\Http\Controllers\Api\V1\PlanItemController;
+use Illuminate\Support\Facades\Log;
 
 Route::middleware("auth:user")->group(function () {
     // =====================================================================================================
@@ -31,9 +32,20 @@ Route::middleware("auth:user")->group(function () {
     //                                 Daily Memorization Routes
     // =====================================================================================================
     Route::controller(PlanItemController::class)->prefix("daily-memorization")->group(function () {
-        Route::get('/', 'getDailyContent');
-        Route::get('/plan-item/{planItemId}', 'getPlanItemContent');
+        Route::get('/getTodayItem', 'getTodayItem');
+        Route::get('/plan-item/{planItemId}', 'getContentForSpecificItem');
         Route::post('/complete', 'markAsCompleted');
     });
 
+    Route::controller(SpacedRepetitionController::class)->prefix("daily-memorization")->group(function () {
+        Route::get("today-revisions", "getTodayRevisions");
+         Route::get("last-uncompleted-revisions", "getLastUncompletedRevisions");
+         Route::get('/revision/{revisionId}', 'getContentForSpecificRevision');
+    });
+
+
+
 });
+
+
+

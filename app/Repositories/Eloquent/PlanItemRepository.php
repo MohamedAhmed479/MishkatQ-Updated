@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\Interfaces\PlanItemInterface;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 
 class PlanItemRepository implements PlanItemInterface
 {
@@ -92,4 +93,37 @@ class PlanItemRepository implements PlanItemInterface
     {
         return $this->find($planItemId)->update(['is_completed' => true]);
     }
+
+    public function todayItem(int $userId): ?PlanItem
+    {
+        $activePlan = MemorizationPlan::select("id")
+            ->where('user_id', $userId)
+            ->where("status", "active")
+            ->first();
+
+        if (! $activePlan) {
+            return null;
+        }
+
+        return $this->model
+            ->where("plan_id", $activePlan->id)
+            ->whereDate('target_date', Carbon::today())
+            ->first();
+    }
+
+    public function getDetailedUserPlanItem(int $planItemId, int $userId): ?PlanItem
+    {
+        return $this->model->whereHas('memorizationPlan', function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        })
+            ->with([
+                'quranSurah',
+                'verseStart.words',
+                'verseStart.recitations.reciter',
+                'verseEnd.words',
+                'verseEnd.recitations.reciter'
+            ])
+            ->find($planItemId);
+    }
+
 }
