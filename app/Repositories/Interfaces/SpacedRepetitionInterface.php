@@ -15,4 +15,11 @@ interface SpacedRepetitionInterface
 
     public function find(int $revisionId): ?SpacedRepetition;
 
+    public function update(int $revisionId, Array $data): bool;
+
+    public function getMaxIntervalIndex(int $planItemId): int;
+
+    public function perfectReviewsCount(int $revisionId): int;
+
+    public function userCanEditRevision(int $userId, int $revisionId): bool;
 }

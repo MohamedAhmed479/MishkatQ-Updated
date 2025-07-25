@@ -31,4 +31,7 @@ interface PlanItemInterface
 
     public function getDetailedUserPlanItem(int $planItemId, int $userId): ?PlanItem;
 
+    public function isExistsForUser(int $planItemId, int $userId): bool;
+
+
 }

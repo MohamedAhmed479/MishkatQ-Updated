@@ -55,6 +55,32 @@ class SpacedRepetitionService
      */
     protected $defaultEaseFactor = 2.5;
 
+    public function postponeRevision(int $revisionId, Carbon $postponeDate)
+    {
+        $revision = $this->spacedRepetitionRepository->find($revisionId);
+
+        if (! $revision) return ApiResponse::notFound("لم يتم العثور علي هذه المراجعة");
+
+
+        if (! $this->spacedRepetitionRepository->userCanEditRevision(Auth::id(), $revisionId)) {
+            return ApiResponse::unauthorized("غير مسموح لهذا المستخدم بالقيام بهذه العملية");
+        }
+
+        $this->spacedRepetitionRepository->update($revision->id, [
+            'scheduled_date' => $postponeDate,
+        ]);
+
+        $data = [
+            'repetition' => [
+                'id' => $revision->id,
+                'scheduled_date' => $postponeDate->format('Y-m-d')
+            ]
+        ];
+
+        return ApiResponse::success($data, 'تم تأجيل المراجعة بنجاح');
+    }
+
+
     /**
      * Create a revision table for a saved section
      *

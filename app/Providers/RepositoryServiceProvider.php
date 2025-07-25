@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Repositories\Eloquent\MemorizationPlanRepository;
 use App\Repositories\Eloquent\PlanItemRepository;
+use App\Repositories\Eloquent\RevisionReviewsRepository;
 use App\Repositories\Eloquent\SpacedRepetitionRepository;
 use App\Repositories\Interfaces\MemorizationPlanInterface;
 use App\Repositories\Interfaces\PlanItemInterface;
+use App\Repositories\Interfaces\RevisionReviewsInterface;
 use App\Repositories\Interfaces\SpacedRepetitionInterface;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(MemorizationPlanInterface::class, MemorizationPlanRepository::class);
         $this->app->bind(PlanItemInterface::class, PlanItemRepository::class);
         $this->app->bind(SpacedRepetitionInterface::class, SpacedRepetitionRepository::class);
+        $this->app->bind(RevisionReviewsInterface::class, RevisionReviewsRepository::class);
     }
 
     /**

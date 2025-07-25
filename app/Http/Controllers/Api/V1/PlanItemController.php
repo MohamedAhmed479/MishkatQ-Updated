@@ -68,4 +68,19 @@ class PlanItemController extends Controller
             ]);
         }
     }
+
+    public function schedulesRevisions(int $planItemId): JsonResponse
+    {
+        try {
+
+            return $this->planItemService->getschedulesRevisionsForPlanItem($planItemId);
+
+        } catch (\Throwable $e) {
+            return ApiResponse::error("حدث خطأ ما", 500, [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+
 }

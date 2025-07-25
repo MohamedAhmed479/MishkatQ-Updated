@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\UserPreferenceController;
 use App\Http\Controllers\Api\V1\MemorizationPlanController;
 use App\Http\Controllers\Api\V1\PlanItemController;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Api\V1\MemorizationReviewController;
 
 Route::middleware("auth:user")->group(function () {
     // =====================================================================================================
@@ -35,17 +35,21 @@ Route::middleware("auth:user")->group(function () {
         Route::get('/getTodayItem', 'getTodayItem');
         Route::get('/plan-item/{planItemId}', 'getContentForSpecificItem');
         Route::post('/complete', 'markAsCompleted');
+        Route::get('/plan-item/{planItemId}/schedules', 'schedulesRevisions');
+
     });
 
     Route::controller(SpacedRepetitionController::class)->prefix("daily-memorization")->group(function () {
-        Route::get("today-revisions", "getTodayRevisions");
+         Route::get("today-revisions", "getTodayRevisions");
          Route::get("last-uncompleted-revisions", "getLastUncompletedRevisions");
          Route::get('/revision/{revisionId}', 'getContentForSpecificRevision');
+         Route::put('/{revisionId}/postpone', 'postpone');
     });
 
+    Route::controller(MemorizationReviewController::class)->prefix("revision-reviews")->group(function () {
+        Route::post('/{revisionId}/record', 'recordRevisionPerformance'); // Done
 
+        Route::get('statistics', 'statistics');
+    });
 
 });
-
-
-

@@ -118,4 +118,29 @@ class PlanItemService
 
         return ApiResponse::success([], "لايوجد اي عنصر للحفظ اليوم");
     }
+
+    public function getschedulesRevisionsForPlanItem(int $planItemId): JsonResponse
+    {
+        if(! $this->planItemRepository->isExistsForUser($planItemId, Auth::id())) {
+            return ApiResponse::notFound("لم يتم العثور علي عنصر الحفظ");
+        }
+
+        $planItem = $this->planItemRepository->find($planItemId);
+
+        $repetitions = $planItem->spacedRepetitions()
+            ->orderBy('scheduled_date')
+            ->get();
+
+        $data = [
+            'plan_item' => $planItem,
+            'repetitions' => $repetitions ?? [],
+        ];
+
+        if ($repetitions->isEmpty()) return ApiResponse::success($data, "لم يتم العثور علي اي مراجعات لعنصر الحفظ بعد");
+
+        return ApiResponse::success($data, "تم جلب مراجعات عنصر الحفظ بنجاح");
+    }
+
+
+
 }

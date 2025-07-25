@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SpacedRepetition extends Model
 {
@@ -51,18 +52,11 @@ class SpacedRepetition extends Model
     /**
      * علاقة مع سجلات المراجعة
      */
-    public function reviewRecords(): HasMany
+    public function reviewRecord(): HasOne
     {
-        return $this->hasMany(ReviewRecord::class);
+        return $this->hasOne(ReviewRecord::class);
     }
 
-    /**
-     * الحصول على آخر سجل مراجعة
-     */
-    public function getLastReviewRecord()
-    {
-        return $this->reviewRecords()->latest('review_date')->first();
-    }
 
     /**
      * تحديد ما إذا كانت المراجعة متأخرة

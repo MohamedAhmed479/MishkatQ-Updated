@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PostponeRevisionRequest;
 use App\Services\SpacedRepetitionService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class SpacedRepetitionController extends Controller
 {
@@ -15,6 +18,20 @@ class SpacedRepetitionController extends Controller
 
     public function __construct(SpacedRepetitionService $spacedRepetitionService) {
         $this->spacedRepetitionService = $spacedRepetitionService;
+    }
+
+    public function postpone(PostponeRevisionRequest $request, $revisionId)
+    {
+        try {
+            $postponeDate = Carbon::parse($request->validated()['postpone_date']);
+
+            return $this->spacedRepetitionService->postponeRevision($revisionId, $postponeDate);
+
+        } catch (ValidationException $exception) {
+            return ApiResponse::validationError($exception->errors());
+        } catch (\Throwable $exception) {
+            return ApiResponse::error($exception->getMessage());
+        }
     }
 
     public function getTodayRevisions(): JsonResponse

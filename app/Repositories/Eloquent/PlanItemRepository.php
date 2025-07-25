@@ -126,4 +126,14 @@ class PlanItemRepository implements PlanItemInterface
             ->find($planItemId);
     }
 
+    public function isExistsForUser(int $planItemId, int $userId): bool
+    {
+        $planItem = $this->find($planItemId);
+        if (! $planItem) return false;
+
+        return $planItem->memorizationPlan->user_id === $userId;
+    }
+
+
+
 }
