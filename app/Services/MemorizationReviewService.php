@@ -7,6 +7,7 @@ use App\Http\Requests\recordPerformanceRequest;
 use App\Models\PlanItem;
 use App\Models\ReviewRecord;
 use App\Models\SpacedRepetition;
+use App\Repositories\Interfaces\MemorizationPlanInterface;
 use App\Repositories\Interfaces\PlanItemInterface;
 use App\Repositories\Interfaces\RevisionReviewsInterface;
 use App\Repositories\Interfaces\SpacedRepetitionInterface;
@@ -41,8 +42,37 @@ class MemorizationReviewService
     public function __construct(
         protected PlanItemInterface $planItemRepository,
         protected SpacedRepetitionInterface $spacedRepetitionRepository,
-        protected RevisionReviewsInterface $revisionReviewsRepository
+        protected RevisionReviewsInterface $revisionReviewsRepository,
+        protected MemorizationPlanInterface $memorizationPlanRepository
     ) {
+
+    }
+
+
+    public function getUserReviewStatistics(int $userId, int $planId): JsonResponse
+    {
+        $plan = $this->memorizationPlanRepository->findPlanForUser($userId, $planId);
+        if(!$plan) return ApiResponse::notFound("لم يتم العثور علي الخظه");
+
+
+        $averageRating = $this->revisionReviewsRepository->getAverageRating($planId);
+
+        $overdueReviews = $this->spacedRepetitionRepository->getOverdueRevisionsCount($planId);
+
+        $successfulRevisions = $this->revisionReviewsRepository->getSuccessfulRevisionsCount($planId);
+
+        $completedRevisions = $this->revisionReviewsRepository->getCompletedRevisionsCount($planId);
+
+        $successRate = $completedRevisions > 0 ? ($successfulRevisions / $completedRevisions) * 100 : 0;
+
+        return ApiResponse::success([
+            'last_review_date' => $this->spacedRepetitionRepository->lastRevisionAt($planId)->diffForHumans(),
+            'completed_reviews' => $completedRevisions,
+            'successful_reviews' => $successfulRevisions,
+            'average_rating' => round($averageRating, 2),
+            'overdue_reviews' => $overdueReviews,
+            'success_rate' => round($successRate, 2) . "%",
+        ], "احصائيات الخطة");
 
     }
 
@@ -62,6 +92,8 @@ class MemorizationReviewService
         $revision = $this->spacedRepetitionRepository->find($revisionId);
 
         if (! $revision) return ApiResponse::notFound("المراجعة غير موجودة", 404);
+
+        if($revision->scheduled_date > Carbon::now()->toDateTimeString()) return ApiResponse::error("لم يحن موعد هذه المراجعة بعد");
 
         if(! $this->planItemRepository->userCanEditPlanItem(Auth::id(), $revision->plan_item_id)) {
             return ApiResponse::unauthorized("لا يُسمح بالوصول إلى هذه المراجعة");

@@ -3,16 +3,21 @@
 namespace App\Services;
 
 use App\Helpers\ApiResponse;
+use App\Http\Controllers\Api\V1\MemorizationProgressController;
 use App\Http\Resources\PlanItemResource;
+use App\Models\MemorizationPlan;
 use App\Models\PlanItem;
+use App\Models\ReviewRecord;
 use App\Models\Tafsir;
 use App\Models\Verse;
 use App\Repositories\Interfaces\MemorizationPlanInterface;
 use App\Repositories\Interfaces\PlanItemInterface;
 use App\Repositories\Interfaces\SpacedRepetitionInterface;
 use App\Traits\AyaTafsirTrait;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -24,15 +29,19 @@ class PlanItemService
     public $planItemRepository;
     protected $spacedRepetitionService;
 
+    protected $memorizationProgressService;
+
     public function __construct(
         MemorizationPlanInterface $memorizationPlanRepository,
         PlanItemInterface $planItemRepository,
-        SpacedRepetitionService $spacedRepetitionService
+        SpacedRepetitionService $spacedRepetitionService,
+        MemorizationProgressService $memorizationProgressService
     )
     {
         $this->memorizationPlanRepository = $memorizationPlanRepository;
         $this->planItemRepository = $planItemRepository;
         $this->spacedRepetitionService = $spacedRepetitionService;
+        $this->memorizationProgressService = $memorizationProgressService;
     }
 
 
@@ -97,16 +106,16 @@ class PlanItemService
         $this->spacedRepetitionService->generateRevisionScheduleForPlanItem($planItem->id);
 
         // Update the user's overall memorization progress statistics
-        // $this->updateMemorizationProgress($item);
+         $this->memorizationProgressService->updateMemorizationProgress($planItem);
 
         // Award points for completing the memorization
         // $this->rewardService->awardMemorizationPoints($user, $item);
 
         // Calculate and return updated progress metrics
-        // $updatedProgress = $this->calculateProgressStats($activePlan);
+         $updatedProgress = $this->memorizationProgressService->calculateProgressStats($activePlan);
 
         return ApiResponse::success([
-            // 'updated_progress' => $updatedProgress
+            'updated_progress' => $updatedProgress
         ], 'تم وضع علامة على العنصر على أنه مكتمل بنجاح.');
     }
 
@@ -140,7 +149,5 @@ class PlanItemService
 
         return ApiResponse::success($data, "تم جلب مراجعات عنصر الحفظ بنجاح");
     }
-
-
 
 }

@@ -4,7 +4,9 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\ReviewRecord;
 use App\Models\SpacedRepetition;
+use App\Models\User;
 use App\Repositories\Interfaces\RevisionReviewsInterface;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 Class RevisionReviewsRepository implements RevisionReviewsInterface
@@ -49,4 +51,35 @@ Class RevisionReviewsRepository implements RevisionReviewsInterface
 
         return $reviewRecord->refresh();
     }
+
+    public function getCompletedRevisionsCount(int $memorizationPlanId): int
+    {
+        return $this->model
+            ->whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($memorizationPlanId) {
+                $query->where('id', $memorizationPlanId);
+            })
+            ->count();
+    }
+
+    public function getSuccessfulRevisionsCount(int $memorizationPlanId): int
+    {
+        return $this->model
+            ->where('successful', true)
+            ->whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($memorizationPlanId) {
+                $query->where('id', $memorizationPlanId);
+            })
+            ->count();
+    }
+
+    public function getAverageRating(int $memorizationPlanId): ?float
+    {
+        return $this->model
+            ->whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($memorizationPlanId) {
+                $query->where('id', $memorizationPlanId);
+            })
+            ->avg('performance_rating');
+    }
+
+
+
 }

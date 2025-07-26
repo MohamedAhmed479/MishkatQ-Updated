@@ -55,6 +55,17 @@ class SpacedRepetitionRepository implements SpacedRepetitionInterface
             ->orderBy('scheduled_date')
             ->get();
     }
+    public function getOverdueRevisionsCount(int $planId): int
+    {
+        $today = Carbon::today();
+
+        return $this->model->whereHas('planItem.memorizationPlan', function ($query) use ($planId) {
+            $query->where('id', $planId);
+        })
+            ->whereDate('scheduled_date', '<', $today)
+            ->whereNull('last_reviewed_at')
+            ->count();
+    }
 
     public function update(int $revisionId, array $data): bool
     {
@@ -83,4 +94,20 @@ class SpacedRepetitionRepository implements SpacedRepetitionInterface
 
         return $revision->planItem->memorizationPlan->user_id === $userId;
     }
+
+    public function lastRevisionAt(int $planId): ?Carbon
+    {
+        $today = Carbon::today();
+
+        $last_reviewed_at = $this->model
+            ->whereHas('planItem.memorizationPlan', function ($query) use ($planId) {
+                $query->where('id', $planId);
+            })
+            ->latest("last_reviewed_at")
+            ->value("last_reviewed_at");
+
+        return Carbon::parse($last_reviewed_at);
+    }
+
+
 }

@@ -93,7 +93,7 @@ class User extends Authenticatable
                     'chapter_name' => $item->chapter->name_ar,
                     'verses_memorized' => $item->verses_memorized,
                     'total_verses' => $item->total_verses,
-                    'progress_percentage' => $item->getProgressPercentage(),
+                    'progress_percentage' => number_format($item->getProgressPercentage(), 2, '.', ''),
                     'status' => $item->status,
                     'last_reviewed_at' => $item->last_reviewed_at,
                 ];

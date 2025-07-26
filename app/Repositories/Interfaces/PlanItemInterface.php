@@ -33,5 +33,4 @@ interface PlanItemInterface
 
     public function isExistsForUser(int $planItemId, int $userId): bool;
 
-
 }

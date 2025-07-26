@@ -25,6 +25,20 @@ class MemorizationReviewController extends Controller
     {
     }
 
+    public function revisionsStatistics(int $planId): JsonResponse
+    {
+        try {
+
+            return $this->memorizationReviewService->getUserReviewStatistics(Auth::id(), $planId);
+
+        } catch (\Throwable $e) {
+            return ApiResponse::error("حدث خطأ ما", 500, [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+
     public function recordRevisionPerformance(recordPerformanceRequest $request, $revisionId): JsonResponse
     {
         try {

@@ -15,4 +15,11 @@ interface RevisionReviewsInterface
 
     public function getAReview(int $revisionId): ?ReviewRecord;
 
+    public function getCompletedRevisionsCount(int $memorizationPlanId): int;
+
+    public function getSuccessfulRevisionsCount(int $memorizationPlanId): int;
+
+
+    public function getAverageRating(int $memorizationPlanId): ?float;
+
 }

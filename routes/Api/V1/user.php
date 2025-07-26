@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\V1\UserPreferenceController;
 use App\Http\Controllers\Api\V1\MemorizationPlanController;
 use App\Http\Controllers\Api\V1\PlanItemController;
 use App\Http\Controllers\Api\V1\MemorizationReviewController;
+use App\Http\Controllers\Api\V1\MemorizationProgressController;
+use App\Http\Controllers\Api\V1\AnalyticsController;
 
 Route::middleware("auth:user")->group(function () {
     // =====================================================================================================
@@ -36,7 +38,6 @@ Route::middleware("auth:user")->group(function () {
         Route::get('/plan-item/{planItemId}', 'getContentForSpecificItem');
         Route::post('/complete', 'markAsCompleted');
         Route::get('/plan-item/{planItemId}/schedules', 'schedulesRevisions');
-
     });
 
     Route::controller(SpacedRepetitionController::class)->prefix("daily-memorization")->group(function () {
@@ -46,10 +47,22 @@ Route::middleware("auth:user")->group(function () {
          Route::put('/{revisionId}/postpone', 'postpone');
     });
 
-    Route::controller(MemorizationReviewController::class)->prefix("revision-reviews")->group(function () {
-        Route::post('/{revisionId}/record', 'recordRevisionPerformance'); // Done
-
-        Route::get('statistics', 'statistics');
+    Route::controller(MemorizationReviewController::class)->group(function () {
+        Route::post('revision-reviews/{revisionId}/record', 'recordRevisionPerformance');
+        Route::get('memorization-plans/{planId}/revisions/statistics', 'revisionsStatistics');
     });
+
+    // =====================================================================================================
+    //                                 Memorization Progress Routes
+    // =====================================================================================================
+    Route::controller(MemorizationProgressController::class)->prefix('memorization-progress')->group(function () {
+        Route::get('/', 'getProgress');
+        Route::get('/chapter/{chapterId}', 'getChapterProgress');
+    });
+
+    // =====================================================================================================
+    //                                         Analytics Routes
+    // =====================================================================================================
+    Route::get('active-memorization-plan/analytics', [AnalyticsController::class, 'getProgressAnalytics']);
 
 });
