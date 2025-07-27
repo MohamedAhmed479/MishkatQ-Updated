@@ -43,11 +43,11 @@ class MemorizationReviewService
         protected PlanItemInterface $planItemRepository,
         protected SpacedRepetitionInterface $spacedRepetitionRepository,
         protected RevisionReviewsInterface $revisionReviewsRepository,
-        protected MemorizationPlanInterface $memorizationPlanRepository
+        protected MemorizationPlanInterface $memorizationPlanRepository,
+        protected IncentiveService $incentiveService,
     ) {
 
     }
-
 
     public function getUserReviewStatistics(int $userId, int $planId): JsonResponse
     {
@@ -75,7 +75,6 @@ class MemorizationReviewService
         ], "احصائيات الخطة");
 
     }
-
 
     /**
      * Record the performance of a user's revision attempt for a specific spaced repetition item.
@@ -139,7 +138,6 @@ class MemorizationReviewService
     {
         $reviewRecord = $this->revisionReviewsRepository->createOrUpdate($revision->id, $validatedData);
 
-
         $this->spacedRepetitionRepository->update($revision->id, [
             'repetition_count' => $revision->repetition_count + 1,
             'last_reviewed_at' => now()
@@ -150,17 +148,17 @@ class MemorizationReviewService
         $this->rescheduleNextReview($revision, $validatedData["performance_rating"]);
 
         // Award points for completing the review
-        // $this->rewardService->awardReviewPoints($revision->planItem->memorizationPlan->user, $reviewRecord);
+        $this->incentiveService->awardReviewPoints($revision->planItem->memorizationPlan->user, $reviewRecord);
 
         // Check for perfect reviews streak
         $perfectReviewsCount = $this->spacedRepetitionRepository->perfectReviewsCount($revision->id);
 
-//        if ($perfectReviewsCount > 0) {
-//            $this->rewardService->awardPerfectReviewPoints(
-//                $revision->planItem->memorizationPlan->user,
-//                $perfectReviewsCount
-//            );
-//        }
+        if ($perfectReviewsCount > 0) {
+            $this->incentiveService->awardPerfectReviewPoints(
+                $revision->planItem->memorizationPlan->user,
+                $perfectReviewsCount
+            );
+        }
 
         return $reviewRecord;
     }
@@ -220,7 +218,6 @@ class MemorizationReviewService
             'last_reviewed_at' => null,
         ]);
     }
-
 
     /**
      * Calculates the next time interval based on the rating and ease factor.

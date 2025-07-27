@@ -17,6 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign("user_id")->references("id")->on("users")->onDelete("cascade");
 
+            $table->integer("total_points")->default(0);
+
             $table->string("username");
             $table->text("profile_image")->nullable();
             $table->integer("verses_memorized_count")->default(0);

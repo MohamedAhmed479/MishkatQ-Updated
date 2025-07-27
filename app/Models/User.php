@@ -139,7 +139,7 @@ class User extends Authenticatable
 
     public function getTotalPoints(): int
     {
-        return $this->pointsTransactions()->sum('points');
+        return $this->profile->total_points;
     }
 
     public function getCurrentRank(string $periodType = 'monthly'): ?int

@@ -25,23 +25,14 @@ class PlanItemService
 {
     use AyaTafsirTrait;
 
-    public $memorizationPlanRepository;
-    public $planItemRepository;
-    protected $spacedRepetitionService;
-
-    protected $memorizationProgressService;
-
     public function __construct(
-        MemorizationPlanInterface $memorizationPlanRepository,
-        PlanItemInterface $planItemRepository,
-        SpacedRepetitionService $spacedRepetitionService,
-        MemorizationProgressService $memorizationProgressService
+        public readonly MemorizationPlanInterface $memorizationPlanRepository,
+        public readonly PlanItemInterface $planItemRepository,
+        protected readonly SpacedRepetitionService $spacedRepetitionService,
+        protected readonly MemorizationProgressService $memorizationProgressService,
+        protected readonly IncentiveService $incentiveService
     )
     {
-        $this->memorizationPlanRepository = $memorizationPlanRepository;
-        $this->planItemRepository = $planItemRepository;
-        $this->spacedRepetitionService = $spacedRepetitionService;
-        $this->memorizationProgressService = $memorizationProgressService;
     }
 
 
@@ -109,7 +100,7 @@ class PlanItemService
          $this->memorizationProgressService->updateMemorizationProgress($planItem);
 
         // Award points for completing the memorization
-        // $this->rewardService->awardMemorizationPoints($user, $item);
+        $this->incentiveService->awardMemorizationPoints($user, $planItem);
 
         // Calculate and return updated progress metrics
          $updatedProgress = $this->memorizationProgressService->calculateProgressStats($activePlan);

@@ -21,19 +21,18 @@ class SpacedRepetitionService
 
     public $spacedRepetitionRepository;
     public $planItemRepository;
-
-    // protected $rewardService;
+    protected $incentiveService;
 
     public function __construct(
         SpacedRepetitionInterface $spacedRepetitionRepository,
         PlanItemInterface $planItemRepository,
+        IncentiveService $incentiveService
     )
     {
         $this->spacedRepetitionRepository = $spacedRepetitionRepository;
         $this->planItemRepository = $planItemRepository;
+        $this->incentiveService = $incentiveService;
     }
-
-    // $this->rewardService = $rewardService;
 
     /**
      * Define default review intervals in days
@@ -154,4 +153,8 @@ class SpacedRepetitionService
         ], "تم جلب بيانات المراجعة");
     }
 
+    public function getTodayReviewsForUser(int $userId): ?Collection
+    {
+        return $this->spacedRepetitionRepository->getTodayRevisionsForUser($userId);
+    }
 }

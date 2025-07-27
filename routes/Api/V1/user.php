@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\PlanItemController;
 use App\Http\Controllers\Api\V1\MemorizationReviewController;
 use App\Http\Controllers\Api\V1\MemorizationProgressController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
+use App\Http\Controllers\Api\V1\IncentiveController;
 
 Route::middleware("auth:user")->group(function () {
     // =====================================================================================================
@@ -65,4 +66,14 @@ Route::middleware("auth:user")->group(function () {
     // =====================================================================================================
     Route::get('active-memorization-plan/analytics', [AnalyticsController::class, 'getProgressAnalytics']);
 
+    // =====================================================================================================
+    //                                 Incentive System Routes
+    // =====================================================================================================
+    Route::controller(IncentiveController::class)->group(function () {
+        Route::get('/badges', 'getBadges'); // Done
+        Route::get('/users/{userId}/badges', 'getUserBadges');
+        Route::get('/users/{user}/points-history', 'getPointsHistory');
+        Route::get('/leaderboard', 'getLeaderboard');
+        Route::get('/users/{user}/stats', 'getUserStats');
+    });
 });
