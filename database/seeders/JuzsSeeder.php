@@ -3,63 +3,54 @@
 namespace Database\Seeders;
 
 use App\Models\Juz;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\File;
 
 class JuzsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $this->command->info('⏳ Start the process of fetching juzs of the Holy Quran...');
 
-        $api_url = "https://api.quran.com/api/v4/juzs";
-
         try {
-            $response = Http::timeout(30)
-                ->retry(3, 1000)
-                ->get($api_url);
+            $path = base_path('tests/data/juzs.json');
 
-            if (!$response->successful()) {
-                throw new \Exception("Failed to connect to server: HTTP " . $response->status());
+            if (!File::exists($path)) {
+                $this->command->error("❌ File not found at path: {$path}");
+                return;
             }
 
-            if (!isset($response['juzs'])) {
-                throw new \Exception("Unexpected data structure from API");
-            } 
+            $json = File::get($path);
+            $juzs = json_decode($json, true);
 
-            $juzs = $response['juzs'];
-            $totalJuzs = count($juzs);
-            $insertedCount = 0;
-            $updatedCount = 0;
+            if (!is_array($juzs)) {
+                $this->command->error("❌ Invalid JSON structure.");
+                return;
+            }
 
-            $progressBar = $this->command->getOutput()->createProgressBar($totalJuzs);
-            $progressBar->start();
+            $total = count($juzs);
+            $inserted = 0;
+            $updated = 0;
 
             foreach ($juzs as $juz) {
                 try {
-                    $result = Juz::updateOrCreate(
-                        ['juz_number' => $juz['juz_number']],
-                        [
-                            'start_verse_id' => $juz['first_verse_id'],
-                            'end_verse_id' => $juz['last_verse_id'],
-                            'verses_count' => $juz['verses_count'],
-                        ]
-                    );
+                    $existing = Juz::find($juz['id']);
 
-                    $result->wasRecentlyCreated ? $insertedCount++ : $updatedCount++;
-                    $progressBar->advance();
+                    if ($existing) {
+                        $existing->update($juz);
+                        $updated++;
+                    } else {
+                        Juz::create($juz);
+                        $inserted++;
+                    }
+
                 } catch (\Exception $e) {
-                    $this->command->error("Error in juz {$juz['id']}: " . $e->getMessage());
-                    continue;
+                    $this->command->warn("⚠️ Failed to process juz ID {$juz['id']}: {$e->getMessage()}");
                 }
             }
 
-            $progressBar->finish();
-            $this->showStatistics($totalJuzs, $insertedCount, $updatedCount);
+            $this->showStatistics($total, $inserted, $updated);
+
         } catch (\Exception $e) {
             $this->command->error('❌ Major Error: ' . $e->getMessage());
         }
@@ -73,7 +64,7 @@ class JuzsSeeder extends Seeder
         $this->command->line("🆕 New Juzs added: {$inserted}");
         $this->command->line("🔄 Updated Juzs: {$updated}");
 
-        $successRate = ($inserted + $updated) / $total * 100;
+        $successRate = ($inserted + $updated) / max($total, 1) * 100;
         $this->command->line("📈 Success Rate: " . round($successRate, 2) . '%');
 
         if ($inserted + $updated < $total) {

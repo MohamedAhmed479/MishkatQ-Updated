@@ -2,18 +2,25 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
+        // ⏱️ Start timing
+        $start = microtime(true);
+        $this->command->info('🚀 Starting full database seeding...');
+
         $this->call([
+            // Quran Data
+            ChaptersSeeder::class,
+            FetchQuranVersesSeeder::class,
+            JuzsSeeder::class,
+            TafsirSeeder::class,
+            ReciterSeeder::class,
+            RecitationSeeder::class,
+
             // Admin
             // AdminSeeder::class,
 
@@ -63,14 +70,25 @@ class DatabaseSeeder extends Seeder
             // RoleSeeder::class,
             // ManagerRoleSeeder::class,
             // RegularUserRoleSeeder::class,
-
-            // Quran Data
-//            ChaptersSeeder::class,
-//            FetchQuranVersesSeeder::class,
-//            JuzsSeeder::class,
-//            TafsirSeeder::class,
-//            ReciterSeeder::class,
-//            RecitationSeeder::class,
         ]);
+
+        // ⏱️ End timing
+        $end = microtime(true);
+        $duration = $end - $start;
+
+        $this->command->info('✅ Seeding completed successfully!');
+        $this->command->info('🕒 Total time: ' . $this->formatDuration($duration));
+    }
+
+    protected function formatDuration($seconds): string
+    {
+        $minutes = floor($seconds / 60);
+        $remainingSeconds = round($seconds % 60, 2);
+
+        if ($minutes > 0) {
+            return "{$minutes} min {$remainingSeconds} sec";
+        }
+
+        return "{$remainingSeconds} sec";
     }
 }

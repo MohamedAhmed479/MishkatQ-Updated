@@ -9,7 +9,7 @@ class Chapter extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'name_ar', 'name_en', 'revelation_place', 'revelation_order', 'verses_count',
+        'id', 'name_ar', 'name_en', 'revelation_place', 'revelation_order', 'verses_count',
     ];
 
     public function verses()

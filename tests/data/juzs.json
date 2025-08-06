@@ -1,0 +1,212 @@
+[
+    {
+        "id": 1,
+        "juz_number": 1,
+        "start_verse_id": 1,
+        "end_verse_id": 148,
+        "verses_count": 148
+    },
+    {
+        "id": 2,
+        "juz_number": 2,
+        "start_verse_id": 149,
+        "end_verse_id": 259,
+        "verses_count": 111
+    },
+    {
+        "id": 3,
+        "juz_number": 3,
+        "start_verse_id": 260,
+        "end_verse_id": 385,
+        "verses_count": 126
+    },
+    {
+        "id": 4,
+        "juz_number": 4,
+        "start_verse_id": 386,
+        "end_verse_id": 516,
+        "verses_count": 131
+    },
+    {
+        "id": 5,
+        "juz_number": 5,
+        "start_verse_id": 517,
+        "end_verse_id": 640,
+        "verses_count": 124
+    },
+    {
+        "id": 6,
+        "juz_number": 6,
+        "start_verse_id": 641,
+        "end_verse_id": 750,
+        "verses_count": 110
+    },
+    {
+        "id": 7,
+        "juz_number": 7,
+        "start_verse_id": 751,
+        "end_verse_id": 899,
+        "verses_count": 149
+    },
+    {
+        "id": 8,
+        "juz_number": 8,
+        "start_verse_id": 900,
+        "end_verse_id": 1041,
+        "verses_count": 142
+    },
+    {
+        "id": 9,
+        "juz_number": 9,
+        "start_verse_id": 1042,
+        "end_verse_id": 1200,
+        "verses_count": 159
+    },
+    {
+        "id": 10,
+        "juz_number": 10,
+        "start_verse_id": 1201,
+        "end_verse_id": 1327,
+        "verses_count": 127
+    },
+    {
+        "id": 11,
+        "juz_number": 11,
+        "start_verse_id": 1328,
+        "end_verse_id": 1478,
+        "verses_count": 151
+    },
+    {
+        "id": 12,
+        "juz_number": 12,
+        "start_verse_id": 1479,
+        "end_verse_id": 1648,
+        "verses_count": 170
+    },
+    {
+        "id": 13,
+        "juz_number": 13,
+        "start_verse_id": 1649,
+        "end_verse_id": 1802,
+        "verses_count": 154
+    },
+    {
+        "id": 14,
+        "juz_number": 14,
+        "start_verse_id": 1803,
+        "end_verse_id": 2029,
+        "verses_count": 227
+    },
+    {
+        "id": 15,
+        "juz_number": 15,
+        "start_verse_id": 2030,
+        "end_verse_id": 2214,
+        "verses_count": 185
+    },
+    {
+        "id": 16,
+        "juz_number": 16,
+        "start_verse_id": 2215,
+        "end_verse_id": 2483,
+        "verses_count": 269
+    },
+    {
+        "id": 17,
+        "juz_number": 17,
+        "start_verse_id": 2484,
+        "end_verse_id": 2673,
+        "verses_count": 190
+    },
+    {
+        "id": 18,
+        "juz_number": 18,
+        "start_verse_id": 2674,
+        "end_verse_id": 2875,
+        "verses_count": 202
+    },
+    {
+        "id": 19,
+        "juz_number": 19,
+        "start_verse_id": 2876,
+        "end_verse_id": 3214,
+        "verses_count": 339
+    },
+    {
+        "id": 20,
+        "juz_number": 20,
+        "start_verse_id": 3215,
+        "end_verse_id": 3385,
+        "verses_count": 171
+    },
+    {
+        "id": 21,
+        "juz_number": 21,
+        "start_verse_id": 3386,
+        "end_verse_id": 3563,
+        "verses_count": 178
+    },
+    {
+        "id": 22,
+        "juz_number": 22,
+        "start_verse_id": 3564,
+        "end_verse_id": 3732,
+        "verses_count": 169
+    },
+    {
+        "id": 23,
+        "juz_number": 23,
+        "start_verse_id": 3733,
+        "end_verse_id": 4089,
+        "verses_count": 357
+    },
+    {
+        "id": 24,
+        "juz_number": 24,
+        "start_verse_id": 4090,
+        "end_verse_id": 4264,
+        "verses_count": 175
+    },
+    {
+        "id": 25,
+        "juz_number": 25,
+        "start_verse_id": 4265,
+        "end_verse_id": 4510,
+        "verses_count": 246
+    },
+    {
+        "id": 26,
+        "juz_number": 26,
+        "start_verse_id": 4511,
+        "end_verse_id": 4705,
+        "verses_count": 195
+    },
+    {
+        "id": 27,
+        "juz_number": 27,
+        "start_verse_id": 4706,
+        "end_verse_id": 5104,
+        "verses_count": 399
+    },
+    {
+        "id": 28,
+        "juz_number": 28,
+        "start_verse_id": 5105,
+        "end_verse_id": 5241,
+        "verses_count": 137
+    },
+    {
+        "id": 29,
+        "juz_number": 29,
+        "start_verse_id": 5242,
+        "end_verse_id": 5672,
+        "verses_count": 431
+    },
+    {
+        "id": 30,
+        "juz_number": 30,
+        "start_verse_id": 5673,
+        "end_verse_id": 6236,
+        "verses_count": 564
+    }
+]

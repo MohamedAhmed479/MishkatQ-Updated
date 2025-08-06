@@ -3,67 +3,57 @@
 namespace Database\Seeders;
 
 use App\Models\Tafsir;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\File;
 
 class TafsirSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $this->command->info('⏳ Start the process of fetching Tafsirs of the Holy Quran...');
 
-        $api_url = "api.quran-tafseer.com/tafseer";
-
         try {
-            $response = Http::timeout(30)
-                ->retry(3, 1000)
-                ->baseUrl('http://' . $api_url)
-                ->get('/');
+            $path = base_path('tests/data/tafsirs.json');
 
-            if (!$response->successful()) {
-                throw new \Exception("Failed to connect to server: HTTP " . $response->status());
+            if (!File::exists($path)) {
+                $this->command->error("❌ File not found at path: {$path}");
+                return;
             }
 
-            $tafsirs = $response->json();
-            $totalTafsirs = count($tafsirs);
-            $insertedCount = 0;
-            $updatedCount = 0;
+            $json = File::get($path);
+            $tafsirs = json_decode($json, true);
 
-            if ($totalTafsirs === 0) {
-                throw new \Exception("No tafsirs found in the API response");
+            if (!is_array($tafsirs)) {
+                $this->command->error("❌ Invalid JSON structure.");
+                return;
             }
 
-            $progressBar = $this->command->getOutput()->createProgressBar($totalTafsirs);
-            $progressBar->start();
+            $total = count($tafsirs);
+            $inserted = 0;
+            $updated = 0;
 
             foreach ($tafsirs as $tafsir) {
                 try {
-                    $result = Tafsir::updateOrCreate(
-                        ['id' => $tafsir['id']],
-                        [
-                            'name' => $tafsir['name'],
-                        ]
-                    );
+                    $existing = Tafsir::find($tafsir['id']);
 
-                    $result->wasRecentlyCreated ? $insertedCount++ : $updatedCount++;
-                    $progressBar->advance();
+                    if ($existing) {
+                        $existing->update($tafsir);
+                        $updated++;
+                    } else {
+                        Tafsir::create($tafsir);
+                        $inserted++;
+                    }
                 } catch (\Exception $e) {
-                    $this->command->error("Error in tafsir {$tafsir['id']}: " . $e->getMessage());
-                    continue;
+                    $this->command->warn("⚠️ Failed to process tafsir ID {$tafsir['id']}: {$e->getMessage()}");
                 }
             }
 
-            $progressBar->finish();
-            $this->showStatistics($totalTafsirs, $insertedCount, $updatedCount);
+            $this->showStatistics($total, $inserted, $updated);
+
         } catch (\Exception $e) {
             $this->command->error('❌ Major Error: ' . $e->getMessage());
         }
     }
-
 
     protected function showStatistics($total, $inserted, $updated): void
     {
@@ -73,7 +63,7 @@ class TafsirSeeder extends Seeder
         $this->command->line("🆕 New Tafsirs added: {$inserted}");
         $this->command->line("🔄 Updated Tafsirs: {$updated}");
 
-        $successRate = ($inserted + $updated) / $total * 100;
+        $successRate = ($inserted + $updated) / max($total, 1) * 100;
         $this->command->line("📈 Success Rate: " . round($successRate, 2) . '%');
 
         if ($inserted + $updated < $total) {

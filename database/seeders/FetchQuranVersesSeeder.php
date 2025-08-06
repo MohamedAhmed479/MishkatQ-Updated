@@ -1,17 +1,11 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use App\Models\Chapter;
 use App\Models\Verse;
-use App\Models\Word;
-
-
-// Verses And Words
-
 
 class FetchQuranVersesSeeder extends Seeder
 {
@@ -19,117 +13,136 @@ class FetchQuranVersesSeeder extends Seeder
     {
         $this->command->info('⏳ Start the process of fetching and storing verses of the Holy Quran...');
 
-        $start = now();
-        $chapters = Chapter::all();
-        $totalChapters = $chapters->count();
-        $processedChapters = 0;
-        $totalVersesInserted = 0;
-        $totalVersesUpdated = 0;
-        $failedVerses = 0;
+        $startTime = now();
 
-        $chapterProgress = $this->command->getOutput()->createProgressBar($totalChapters);
-        $chapterProgress->start();
+        try {
+            // قراءة الملف
+            $path = base_path('tests/data/verses.json');
+            if (!File::exists($path)) {
+                $this->command->error("❌ File not found at path: {$path}");
+                return;
+            }
 
-        foreach ($chapters as $chapter) {
-            $chapterVersesCount = $this->fetchAndStoreChapterVerses($chapter, $totalVersesInserted, $totalVersesUpdated, $failedVerses);
+            $json = File::get($path);
+            $verses = json_decode($json, true);
 
-            $processedChapters++;
-            $chapterProgress->advance();
-            $this->command->info("\nProcessed {$chapterVersesCount} verse(s) from Surah {$chapter->name_ar}");
+            if (!is_array($verses)) {
+                $this->command->error("❌ Invalid JSON structure.");
+                return;
+            }
+
+            // إحصائيات
+            $total = count($verses);
+            $inserted = 0;
+            $updated = 0;
+            $failed = 0;
+
+            // تحسين الأداء: تقسيم البيانات إلى مجموعات
+            $chunks = array_chunk($verses, 1000); // معالجة 1000 آية في كل مرة
+            
+            $this->command->info("📊 Processing {$total} verses in " . count($chunks) . " chunks...");
+
+            foreach ($chunks as $chunkIndex => $chunk) {
+                $this->command->info("🔄 Processing chunk " . ($chunkIndex + 1) . "/" . count($chunks));
+                
+                // استخدام المعاملات لتحسين الأداء
+                DB::beginTransaction();
+                
+                try {
+                    $chunkStats = $this->processChunk($chunk);
+                    $inserted += $chunkStats['inserted'];
+                    $updated += $chunkStats['updated'];
+                    $failed += $chunkStats['failed'];
+                    
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    $failed += count($chunk);
+                    $this->command->warn("⚠️ Failed to process chunk " . ($chunkIndex + 1) . ": {$e->getMessage()}");
+                }
+            }
+
+            $duration = now()->diffForHumans($startTime, true);
+            $this->showStatistics($total, $inserted + $updated, $inserted, $updated, $failed, $duration);
+
+        } catch (\Exception $e) {
+            $this->command->error('❌ Major Error: ' . $e->getMessage());
         }
-
-        $chapterProgress->finish();
-        $end = now();
-        $duration = $start->diffForHumans($end, true);
-
-        $this->showStatistics($totalChapters, $processedChapters, $totalVersesInserted, $totalVersesUpdated, $failedVerses, $duration);
     }
 
-    protected function fetchAndStoreChapterVerses(Chapter $chapter, &$inserted, &$updated, &$failed): int
+    protected function processChunk(array $verses): array
     {
-        $page = 1;
-        $perPage = 100;
-        $totalPages = 1;
-        $chapterVersesCount = 0;
+        $inserted = 0;
+        $updated = 0;
+        $failed = 0;
 
-        do {
-            $response = Http::timeout(30)
-                ->retry(3, 500)
-                ->get("https://api.quran.com/api/v4/verses/by_chapter/{$chapter->id}", [
-                    'language' => 'ar',
-                    'words' => 'true',
-                    'word_fields' => 'text_uthmani,text_imlaei',
-                    'fields' => 'text_uthmani,text_imlaei',
-                    'page' => $page,
-                    'per_page' => $perPage
-                ]);
+        // استخراج جميع معرفات الآيات في هذه المجموعة
+        $verseIds = array_column($verses, 'id');
+        
+        // جلب الآيات الموجودة مسبقاً
+        $existingVerses = Verse::whereIn('id', $verseIds)->get()->keyBy('id');
+        
+        $toInsert = [];
+        $toUpdate = [];
 
-            if ($response->successful() && isset($response['verses'])) {
-                $totalPages = $response['pagination']['total_pages'] ?? $totalPages;
-
-                foreach ($response['verses'] as $verse) {
-                    try {
-                        DB::transaction(function () use ($verse, $chapter, &$inserted, &$updated) {
-                            $words = $verse['words'] ?? [];
-
-                            $result = Verse::updateOrCreate(
-                                ['id' => $verse['id']],
-                                [
-                                    'chapter_id'   => $chapter->id,
-                                    'verse_number' => $verse['verse_number'],
-                                    'verse_key'    => $verse['verse_key'],
-                                    'text_uthmani' => $verse['text_uthmani'],
-                                    'text_imlaei'  => $verse['text_imlaei'],
-                                    'page_number'  => $verse['page_number'],
-                                    'juz_number'   => $verse['juz_number'],
-                                    'hizb_number'  => $verse['hizb_number'],
-                                    'rub_number'   => $verse['rub_el_hizb_number'],
-                                    'sajda'        => $verse['sajdah_number'] !== null,
-                                ]
-                            );
-
-                            $wordsData = [];
-                            foreach ($words as $word) {
-                                $wordsData[] = [
-                                    'verse_id' => $verse['id'],
-                                    'position' => $word['position'],
-                                    'text'     => $word['text_uthmani'] ?? '',
-                                ];
-                            }
-                            Word::upsert($wordsData, ['verse_id', 'position'], ['text']);
-
-                            $result->wasRecentlyCreated ? $inserted++ : $updated++;
-                        });
-
-                        $chapterVersesCount++;
-                    } catch (\Exception $e) {
-                        $this->command->error("Error in verse {$verse['id']}: " . $e->getMessage());
-                        Log::channel('daily')->error("Verse {$verse['id']} error: " . $e->getMessage());
-                        $failed++;
-                    }
+        foreach ($verses as $verse) {
+            try {
+                if (isset($existingVerses[$verse['id']])) {
+                    // تحديث الآية الموجودة
+                    $toUpdate[] = $verse;
+                } else {
+                    // إدراج آية جديدة
+                    $toInsert[] = $verse;
                 }
-
-                $page++;
-                usleep(100000); // Respect API rate limit
-            } else {
-                $this->command->error("Failed to fetch verses for Surah {$chapter->name_ar} (page {$page}): " . $response->status());
-                $failed += $perPage;
-                break;
+            } catch (\Exception $e) {
+                $failed++;
             }
-        } while ($page <= $totalPages);
+        }
 
-        return $chapterVersesCount;
+        // إدراج الآيات الجديدة بشكل جماعي
+        if (!empty($toInsert)) {
+            try {
+                Verse::insert($toInsert);
+                $inserted = count($toInsert);
+            } catch (\Exception $e) {
+                $failed += count($toInsert);
+                $this->command->warn("⚠️ Failed to bulk insert: {$e->getMessage()}");
+            }
+        }
+
+        // تحديث الآيات الموجودة بشكل جماعي
+        if (!empty($toUpdate)) {
+            try {
+                $this->bulkUpdate($toUpdate);
+                $updated = count($toUpdate);
+            } catch (\Exception $e) {
+                $failed += count($toUpdate);
+                $this->command->warn("⚠️ Failed to bulk update: {$e->getMessage()}");
+            }
+        }
+
+        return [
+            'inserted' => $inserted,
+            'updated' => $updated,
+            'failed' => $failed
+        ];
+    }
+
+    protected function bulkUpdate(array $verses): void
+    {
+        // استخدام upsert بدلاً من update منفصل لكل آية
+        Verse::upsert($verses, ['id'], array_keys($verses[0]));
     }
 
     protected function showStatistics($total, $processed, $inserted, $updated, $failed, $duration): void
     {
         $this->command->info("\n==========================");
-        $this->command->info("Total Chapters: {$total}");
-        $this->command->info("Chapters Processed: {$processed}");
-        $this->command->info("Verses Inserted: {$inserted}");
-        $this->command->info("Verses Updated: {$updated}");
-        $this->command->info("Failed Verses: {$failed}");
+        $this->command->info("📖 Total Verses in file: {$total}");
+        $this->command->info("✅ Verses Processed: {$processed}");
+        $this->command->info("🆕 Inserted: {$inserted}");
+        $this->command->info("🔄 Updated: {$updated}");
+        $this->command->info("❌ Failed: {$failed}");
         $this->command->info("⏱ Time taken: {$duration}");
-        $this->command->info("==========================");
+        $this->command->info("==========================\n");
     }
 }
