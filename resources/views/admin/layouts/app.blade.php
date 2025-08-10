@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    
+
     <!-- Vite Assets (includes Tailwind CSS) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -17,7 +17,7 @@
         * {
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Cairo', sans-serif;
             min-height: 100vh;
@@ -107,6 +107,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 الأجهزة
+            </a>
+            <a href="{{ route('admin.chapters.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/surahs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 12.5A2.5 2.5 0 016.5 10H20M4 5.5A2.5 2.5 0 016.5 3H20"></path>
+                </svg>
+                السور
             </a>
         </nav>
 
@@ -251,7 +257,7 @@
     // Force dark mode always
     document.documentElement.classList.add('dark');
     localStorage.setItem('theme', 'dark');
-    
+
     // Ensure dark mode stays active even if someone tries to change it
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -262,7 +268,7 @@
             }
         });
     });
-    
+
     observer.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['class']

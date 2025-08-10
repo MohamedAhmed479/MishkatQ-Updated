@@ -21,6 +21,14 @@ class Verse extends Model
         'sajda',
     ];
 
+    /**
+     * Accessor للحقل text للتوافق مع الكود الموجود
+     */
+    public function getTextAttribute()
+    {
+        return $this->text_uthmani;
+    }
+
     public function chapter()
     {
         return $this->belongsTo(Chapter::class, 'chapter_id');
