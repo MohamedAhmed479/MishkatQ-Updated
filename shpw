@@ -1,0 +1,15 @@
+[33m5f7ee93[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m 🚀 Major Seeder Refactor: Replaced API calls with local JSON files for Quran data to drastically improve performance and reduce seeding time
+[33m8cbfe59[m add tests for register functionality
+[33m1092e80[m Created factories and seeders, then enhanced them using an AI agent to improve data quality and structure
+[33m7d15273[m install & configure laravel telescope & customize it
+[33mf7b3245[m add try & catch for all methods in QuranController For catch any exception
+[33m31361f5[m Add comprehensive Quran API routes and structure with controller, services, resources, and repository pattern
+[33mc39520b[m Add incentive system, scheduled commands & notification improvements with email templates and repository structure
+[33m731f4d2[m Add a comprehensive analysis for active plan & Quran progress tracking system to monitor users' memorization performance
+[33m93465d2[m add endpoint to postponement revision & another one to record revision performance(reviews)
+[33md7d076d[m solve some issues & finsh the plan item routes & revisions routes
+[33m9822f53[m add mark as complete for spesific plan item & then make the spaced repetations for this plan item & i'm starting in endpoint that will return the daliy content to memorized, i will continue tomorrw & i'll improve all code i write
+[33m87f75dd[m Implement full memorization plan management: - Create routes for plan creation, activation, pausing, deletion - Add related services, repositories, and controllers - Setup main database structure with models and migrations
+[33m9477a90[m Implement user authentication system: register, login, email verification, password reset, and logout
+[33m9ce0d82[m Inital Authentection tables, users, tokens, admins, devices, user_profiles and his models
+[33m13a7a53[m First commit
