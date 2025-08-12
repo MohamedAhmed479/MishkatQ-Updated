@@ -114,6 +114,49 @@
                 </svg>
                 السور
             </a>
+            <a href="{{ route('admin.juzs.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/juzs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                </svg>
+                الأجزاء
+            </a>
+            <a href="{{ route('admin.verses.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/verses*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6M9 16h6M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                الآيات
+            </a>
+            <a href="{{ route('admin.words.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/words*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m-6 4h18M3 13h12m6-2v2M3 19h18"></path>
+                </svg>
+                الكلمات
+            </a>
+            <a href="{{ route('admin.tafsirs.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/tafsirs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v7a3 3 0 006 0v-7c0-1.657-1.343-3-3-3z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 014-4h0a4 4 0 014 4v4"/>
+                </svg>
+                التفاسير
+            </a>
+            <a href="{{ route('admin.reciters.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/reciters*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                القراء
+            </a>
+            <a href="{{ route('admin.recitations.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2" />
+                </svg>
+                التسجيلات
+            </a>
+            <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/audit-logs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8m0 0V3m0 6l-8 8-4-4-6 6"></path>
+                </svg>
+                سجلات التدقيق
+            </a>
         </nav>
 
         <!-- Logout Area -->

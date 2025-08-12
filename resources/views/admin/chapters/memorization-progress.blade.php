@@ -1,251 +1,212 @@
 @extends('admin.layouts.app')
 
-@section('title', 'تقدم الحفظ - ' . $chapter->name_ar)
+@section('page-title', 'تقدم الحفظ — ' . $chapter->name_ar)
+@section('page-subtitle', 'عرض تقدم الحفظ للمستخدمين في السورة')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">الرئيسية</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.chapters.index') }}">السور</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.chapters.show', $chapter) }}">{{ $chapter->name_ar }}</a></li>
-                        <li class="breadcrumb-item active">تقدم الحفظ</li>
-                    </ol>
+<div class="p-6">
+    <!-- Header with Back -->
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.chapters.show', $chapter) }}"
+               class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+               title="عودة لتفاصيل السورة">
+                <svg class="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">تقدم الحفظ — سورة {{ $chapter->name_ar }}</h2>
+                <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300">
+                        إجمالي المستخدمين: {{ number_format($progress->total()) }}
+                    </span>
                 </div>
-                <h4 class="page-title">
-                    <i class="fas fa-chart-line me-2"></i>
-                    تقدم الحفظ - سورة {{ $chapter->name_ar }}
-                </h4>
             </div>
         </div>
+        <a href="{{ route('admin.chapters.index') }}" 
+           class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+            السور
+        </a>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h5 class="mb-0">
-                                <i class="fas fa-users me-2"></i>
-                                تقدم الحفظ للمستخدمين
-                            </h5>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <span class="badge bg-primary fs-6">
-                                إجمالي المستخدمين: {{ $progress->total() }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if($progress->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th width="80">#</th>
-                                        <th width="120">المستخدم</th>
-                                        <th width="120">البريد الإلكتروني</th>
-                                        <th width="100">نسبة التقدم</th>
-                                        <th width="120">آخر تحديث</th>
-                                        <th width="120">الحالة</th>
-                                        <th width="100">الإجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($progress as $item)
-                                    <tr>
-                                        <td class="text-center">
-                                            <span class="badge bg-secondary">{{ $loop->iteration }}</span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm me-2">
-                                                    <div class="avatar-title bg-primary rounded-circle">
-                                                        <i class="fas fa-user"></i>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <h6 class="mb-0">{{ $item->user->name ?? 'غير محدد' }}</h6>
-                                                    <small class="text-muted">ID: {{ $item->user_id }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="text-muted">{{ $item->user->email ?? 'غير محدد' }}</span>
-                                        </td>
-                                        <td>
-                                            @php
-                                                $percentage = $item->progress_percentage ?? 0;
-                                                $colorClass = $percentage >= 80 ? 'success' : ($percentage >= 50 ? 'warning' : 'danger');
-                                            @endphp
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-{{ $colorClass }}" 
-                                                     role="progressbar" 
-                                                     style="width: {{ $percentage }}%"
-                                                     aria-valuenow="{{ $percentage }}" 
-                                                     aria-valuemin="0" 
-                                                     aria-valuemax="100">
-                                                    {{ $percentage }}%
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="text-muted">
-                                                {{ $item->updated_at ? $item->updated_at->diffForHumans() : 'غير محدد' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @php
-                                                $status = $item->status ?? 'pending';
-                                                $statusColors = [
-                                                    'completed' => 'success',
-                                                    'in_progress' => 'warning',
-                                                    'pending' => 'secondary',
-                                                    'reviewing' => 'info'
-                                                ];
-                                                $statusLabels = [
-                                                    'completed' => 'مكتمل',
-                                                    'in_progress' => 'قيد التقدم',
-                                                    'pending' => 'في الانتظار',
-                                                    'reviewing' => 'قيد المراجعة'
-                                                ];
-                                            @endphp
-                                            <span class="badge bg-{{ $statusColors[$status] ?? 'secondary' }}">
-                                                {{ $statusLabels[$status] ?? $status }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#progressModal{{ $item->id }}">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <a href="#" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
+    <!-- Table Card -->
+    <div class="card-elegant rounded-xl overflow-hidden">
+        @if($progress->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800">
+                        <tr>
+                            <th class="text-right p-4 font-semibold text-slate-700 dark:text-slate-300 text-sm">#</th>
+                            <th class="text-right p-4 font-semibold text-slate-700 dark:text-slate-300 text-sm">المستخدم</th>
+                            <th class="text-right p-4 font-semibold text-slate-700 dark:text-slate-300 text-sm">البريد الإلكتروني</th>
+                            <th class="text-right p-4 font-semibold text-slate-700 dark:text-slate-300 text-sm">نسبة التقدم</th>
+                            <th class="text-right p-4 font-semibold text-slate-700 dark:text-slate-300 text-sm">آخر تحديث</th>
+                            <th class="text-right p-4 font-semibold text-slate-700 dark:text-slate-300 text-sm">الحالة</th>
+                            <th class="text-right p-4 font-semibold text-slate-700 dark:text-slate-300 text-sm">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        @foreach($progress as $item)
+                        @php
+                            $percentage = $item->progress_percentage ?? 0;
+                            $barColor = $percentage >= 80 ? 'from-emerald-500 to-emerald-600' : ($percentage >= 50 ? 'from-amber-500 to-amber-600' : 'from-rose-500 to-rose-600');
+                            $status = $item->status ?? 'pending';
+                            $statusMap = [
+                                'completed' => ['label' => 'مكتمل', 'cls' => 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'],
+                                'in_progress' => ['label' => 'قيد التقدم', 'cls' => 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'],
+                                'pending' => ['label' => 'في الانتظار', 'cls' => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'],
+                                'reviewing' => ['label' => 'قيد المراجعة', 'cls' => 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300'],
+                            ];
+                            $statusConf = $statusMap[$status] ?? $statusMap['pending'];
+                        @endphp
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-200">
+                            <td class="p-4 text-center">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium">
+                                    {{ $loop->iteration }}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center font-bold">
+                                        {{ strtoupper(substr($item->user->name ?? 'م', 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-slate-900 dark:text-slate-100">{{ $item->user->name ?? 'غير محدد' }}</div>
+                                        <div class="text-xs text-slate-500">ID: {{ $item->user_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="p-4 text-sm text-slate-600 dark:text-slate-400">{{ $item->user->email ?? 'غير محدد' }}</td>
+                            <td class="p-4">
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                                    <div class="h-3 bg-gradient-to-r {{ $barColor }}" style="width: {{ $percentage }}%"></div>
+                                </div>
+                                <div class="text-xs mt-1 text-slate-600 dark:text-slate-400">{{ $percentage }}%</div>
+                            </td>
+                            <td class="p-4 text-sm text-slate-600 dark:text-slate-400">
+                                {{ $item->updated_at ? $item->updated_at->diffForHumans() : 'غير محدد' }}
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium {{ $statusConf['cls'] }}">
+                                    {{ $statusConf['label'] }}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <div class="flex items-center gap-2">
+                                    <button type="button" 
+                                            class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                            onclick="toggleProgressModal('progress-{{ $item->id }}')"
+                                            title="عرض التفاصيل">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
 
-                                    <!-- Modal for progress details -->
-                                    <div class="modal fade" id="progressModal{{ $item->id }}" tabindex="-1">
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">
-                                                        تفاصيل التقدم - {{ $item->user->name ?? 'مستخدم' }}
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <h6>معلومات المستخدم</h6>
-                                                            <table class="table table-sm">
-                                                                <tr>
-                                                                    <td><strong>الاسم:</strong></td>
-                                                                    <td>{{ $item->user->name ?? 'غير محدد' }}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>البريد الإلكتروني:</strong></td>
-                                                                    <td>{{ $item->user->email ?? 'غير محدد' }}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>تاريخ التسجيل:</strong></td>
-                                                                    <td>{{ $item->user->created_at ? $item->user->created_at->format('Y-m-d') : 'غير محدد' }}</td>
-                                                                </tr>
-                                                            </table>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <h6>تفاصيل التقدم</h6>
-                                                            <table class="table table-sm">
-                                                                <tr>
-                                                                    <td><strong>نسبة التقدم:</strong></td>
-                                                                    <td>{{ $item->progress_percentage ?? 0 }}%</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>الحالة:</strong></td>
-                                                                    <td>
-                                                                        <span class="badge bg-{{ $statusColors[$status] ?? 'secondary' }}">
-                                                                            {{ $statusLabels[$status] ?? $status }}
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>آخر تحديث:</strong></td>
-                                                                    <td>{{ $item->updated_at ? $item->updated_at->format('Y-m-d H:i') : 'غير محدد' }}</td>
-                                                                </tr>
-                                                            </table>
-                                                        </div>
+                        <!-- Tailwind Modal -->
+                        <div id="progress-{{ $item->id }}" class="fixed inset-0 z-50 hidden">
+                            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleProgressModal('progress-{{ $item->id }}')"></div>
+                            <div class="absolute inset-0 flex items-center justify-center p-4">
+                                <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-3xl w-full shadow-2xl">
+                                    <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+                                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">تفاصيل التقدم — {{ $item->user->name ?? 'مستخدم' }}</h3>
+                                        <button onclick="toggleProgressModal('progress-{{ $item->id }}')" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                            <svg class="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h6 class="font-semibold mb-3 text-slate-800 dark:text-slate-100">معلومات المستخدم</h6>
+                                                <div class="space-y-2 text-sm">
+                                                    <div class="flex items-center justify-between py-2 border-b border-slate-200 dark:border-slate-700">
+                                                        <span class="text-slate-600 dark:text-slate-400">الاسم</span>
+                                                        <span class="font-medium text-slate-800 dark:text-slate-100">{{ $item->user->name ?? 'غير محدد' }}</span>
+                                                    </div>
+                                                    <div class="flex items-center justify-between py-2 border-b border-slate-200 dark:border-slate-700">
+                                                        <span class="text-slate-600 dark:text-slate-400">البريد الإلكتروني</span>
+                                                        <span class="font-medium text-slate-800 dark:text-slate-100">{{ $item->user->email ?? 'غير محدد' }}</span>
+                                                    </div>
+                                                    <div class="flex items-center justify-between py-2">
+                                                        <span class="text-slate-600 dark:text-slate-400">تاريخ التسجيل</span>
+                                                        <span class="font-medium text-slate-800 dark:text-slate-100">{{ $item->user->created_at ? $item->user->created_at->format('Y-m-d') : 'غير محدد' }}</span>
                                                     </div>
                                                 </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                            </div>
+                                            <div>
+                                                <h6 class="font-semibold mb-3 text-slate-800 dark:text-slate-100">تفاصيل التقدم</h6>
+                                                <div class="space-y-2 text-sm">
+                                                    <div class="flex items-center justify-between py-2 border-b border-slate-200 dark:border-slate-700">
+                                                        <span class="text-slate-600 dark:text-slate-400">نسبة التقدم</span>
+                                                        <span class="font-medium text-slate-800 dark:text-slate-100">{{ $percentage }}%</span>
+                                                    </div>
+                                                    <div class="flex items-center justify-between py-2 border-b border-slate-200 dark:border-slate-700">
+                                                        <span class="text-slate-600 dark:text-slate-400">الحالة</span>
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium {{ $statusConf['cls'] }}">{{ $statusConf['label'] }}</span>
+                                                    </div>
+                                                    <div class="flex items-center justify-between py-2">
+                                                        <span class="text-slate-600 dark:text-slate-400">آخر تحديث</span>
+                                                        <span class="font-medium text-slate-800 dark:text-slate-100">{{ $item->updated_at ? $item->updated_at->format('Y-m-d H:i') : 'غير محدد' }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $progress->links() }}
-                        </div>
-                    @else
-                        <div class="text-center py-5">
-                            <div class="mb-3">
-                                <i class="fas fa-chart-line fa-3x text-muted"></i>
+                                    <div class="flex items-center justify-end p-6 border-t border-slate-200 dark:border-slate-700">
+                                        <button onclick="toggleProgressModal('progress-{{ $item->id }}')" class="px-6 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">إغلاق</button>
+                                    </div>
+                                </div>
                             </div>
-                            <h5 class="text-muted">لا يوجد تقدم حفظ</h5>
-                            <p class="text-muted">لم يتم العثور على مستخدمين لديهم تقدم حفظ لهذه السورة</p>
                         </div>
-                    @endif
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="border-t border-slate-200 dark:border-slate-700 px-6 py-4">
+                {{ $progress->links() }}
+            </div>
+        @else
+            <div class="p-16 text-center">
+                <div class="flex flex-col items-center gap-4">
+                    <div class="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <svg class="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-lg font-medium text-slate-800 dark:text-slate-100 mb-2">لا يوجد تقدم حفظ</h3>
+                        <p class="text-slate-600 dark:text-slate-400">لم يتم العثور على مستخدمين لديهم تقدم حفظ لهذه السورة</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
     </div>
+
+    <script>
+        function toggleProgressModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const isHidden = el.classList.contains('hidden');
+            if (isHidden) {
+                el.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                el.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                document.querySelectorAll('[id^="progress-"]').forEach(m => m.classList.add('hidden'));
+                document.body.style.overflow = 'auto';
+            }
+        });
+    </script>
 </div>
-
-<style>
-.progress {
-    border-radius: 10px;
-}
-
-.progress-bar {
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.avatar-sm {
-    width: 32px;
-    height: 32px;
-}
-
-.avatar-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.875rem;
-}
-
-.table th {
-    font-weight: 600;
-    background-color: #f8f9fa;
-}
-
-.badge {
-    font-size: 0.875rem;
-}
-</style>
 @endsection

@@ -7,6 +7,17 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\BadgeController;
 use App\Http\Controllers\Admin\DeviceController;
 use App\Http\Controllers\Admin\ChapterController;
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\JuzController;
+use App\Http\Controllers\Admin\VerseController;
+use App\Http\Controllers\Admin\WordController;
+use App\Http\Controllers\Admin\TafsirController;
+use App\Http\Controllers\Admin\ReciterController;
+use App\Http\Controllers\Admin\RecitationController;
+use App\Http\Controllers\Admin\MemorizationPlanController;
+use App\Http\Controllers\Admin\PlanItemController;
+use App\Http\Controllers\Admin\SpacedRepetitionController;
+use App\Http\Controllers\Admin\ReviewRecordController;
 
 // Landing or other public routes can stay here...
 
@@ -41,6 +52,18 @@ Route::prefix('admin')->as('admin.')->group(function () {
         Route::delete('devices/bulk-delete', [DeviceController::class, 'bulkDelete'])->name('devices.bulk-delete');
 
         Route::resource("chapters", ChapterController::class);
+        Route::resource('juzs', JuzController::class);
+        Route::resource('verses', VerseController::class);
+        Route::resource('words', WordController::class);
+        Route::resource('tafsirs', TafsirController::class);
+        Route::resource('reciters', ReciterController::class);
+        Route::resource('recitations', RecitationController::class);
+        
+
+        // Audit Logs CRUD
+        Route::resource('audit-logs', AuditLogController::class)->parameters([
+            'audit-logs' => 'audit_log'
+        ]);
         
         // Additional chapter routes
         Route::get('chapters/{chapter}/verses', [ChapterController::class, 'verses'])->name('chapters.verses');

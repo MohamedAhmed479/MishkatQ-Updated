@@ -16,10 +16,12 @@ class DatabaseSeeder extends Seeder
             // Quran Data
             ChaptersSeeder::class,
             FetchQuranVersesSeeder::class,
+            WordSeeder::class,
             JuzsSeeder::class,
             TafsirSeeder::class,
             ReciterSeeder::class,
             RecitationSeeder::class,
+
 
             // Admin
             // AdminSeeder::class,
