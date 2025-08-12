@@ -151,6 +151,12 @@
                 </svg>
                 التسجيلات
             </a>
+            <a href="{{ route('admin.leaderboards.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/leaderboards*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 15l3 3 7-7" />
+                </svg>
+                لوحة المتصدرين
+            </a>
             <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/audit-logs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8m0 0V3m0 6l-8 8-4-4-6 6"></path>

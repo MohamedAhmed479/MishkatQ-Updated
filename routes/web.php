@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\WordController;
 use App\Http\Controllers\Admin\TafsirController;
 use App\Http\Controllers\Admin\ReciterController;
 use App\Http\Controllers\Admin\RecitationController;
+use App\Http\Controllers\Admin\LeaderboardController;
 use App\Http\Controllers\Admin\MemorizationPlanController;
 use App\Http\Controllers\Admin\PlanItemController;
 use App\Http\Controllers\Admin\SpacedRepetitionController;
@@ -58,6 +59,11 @@ Route::prefix('admin')->as('admin.')->group(function () {
         Route::resource('tafsirs', TafsirController::class);
         Route::resource('reciters', ReciterController::class);
         Route::resource('recitations', RecitationController::class);
+        
+        // Leaderboards CRUD
+        Route::resource('leaderboards', LeaderboardController::class);
+        Route::delete('leaderboards/bulk-delete', [LeaderboardController::class, 'bulkDelete'])->name('leaderboards.bulk-delete');
+        Route::post('leaderboards/recalculate', [LeaderboardController::class, 'recalculate'])->name('leaderboards.recalculate');
         
 
         // Audit Logs CRUD
