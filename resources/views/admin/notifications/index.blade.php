@@ -170,11 +170,11 @@
             @endif
 
             <!-- Bulk actions -->
-            <div class="px-6 py-4 border-t border-slate-700 flex items-center gap-3">
-                <button formaction="{{ route('admin.notifications.bulk-mark-as-read') }}" formmethod="POST" class="px-3 py-2 rounded-lg bg-emerald-600 text-white" onclick="injectMethod(this, 'PATCH')">تعليم كمقروء</button>
-                <button formaction="{{ route('admin.notifications.bulk-mark-as-unread') }}" formmethod="POST" class="px-3 py-2 rounded-lg bg-orange-600 text-white" onclick="injectMethod(this, 'PATCH')">تعليم كغير مقروء</button>
-                <button type="submit" class="px-3 py-2 rounded-lg bg-red-600 text-white">حذف المحدد</button>
-            </div>
+             <div class="px-6 py-4 border-t border-slate-700 flex items-center gap-3">
+                 <button formaction="{{ route('admin.notifications.bulk-mark-as-read') }}" formmethod="POST" class="px-3 py-2 rounded-lg bg-emerald-600 text-white @permClass('notifications.mark')" @permDisabled('notifications.mark') onclick="injectMethod(this, 'PATCH')">تعليم كمقروء</button>
+                 <button formaction="{{ route('admin.notifications.bulk-mark-as-unread') }}" formmethod="POST" class="px-3 py-2 rounded-lg bg-orange-600 text-white @permClass('notifications.mark')" @permDisabled('notifications.mark') onclick="injectMethod(this, 'PATCH')">تعليم كغير مقروء</button>
+                 <button type="submit" class="px-3 py-2 rounded-lg bg-red-600 text-white @permClass('notifications.bulk-delete')" @permDisabled('notifications.bulk-delete')>حذف المحدد</button>
+             </div>
         </form>
     </div>
 </div>

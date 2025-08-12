@@ -7,9 +7,22 @@ use App\Models\Reciter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class ReciterController extends Controller
+class ReciterController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:reciters.view', only: ['index']),
+            new ControllerMiddleware('permission:reciters.create', only: ['create','store']),
+            new ControllerMiddleware('permission:reciters.edit', only: ['edit','update']),
+            new ControllerMiddleware('permission:reciters.delete', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request): View
     {
         $search = (string) $request->string('q');

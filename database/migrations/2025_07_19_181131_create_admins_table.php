@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->unsignedBigInteger('assigned_by')->nullable();
             $table->foreign("assigned_by")->references("id")->on("admins");
+            $table->rememberToken();
             $table->timestamps();
         });
     }

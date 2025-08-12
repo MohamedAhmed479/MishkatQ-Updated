@@ -23,8 +23,11 @@ class DatabaseSeeder extends Seeder
             RecitationSeeder::class,
 
 
+            // Roles & Permissions for Admin panel
+            RolePermissionSeeder::class,
+
             // Admin
-            // AdminSeeder::class,
+            AdminSeeder::class,
 
             // Badges
             BadgeSeeder::class,
@@ -71,10 +74,7 @@ class DatabaseSeeder extends Seeder
             // Notifications
             NotificationSeeder::class,
 
-            // Roles
-            // RoleSeeder::class,
-            // ManagerRoleSeeder::class,
-            // RegularUserRoleSeeder::class,
+            // (User-facing roles can be added later if needed)
         ]);
 
         // ⏱️ End timing

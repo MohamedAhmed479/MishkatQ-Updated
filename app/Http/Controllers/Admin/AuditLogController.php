@@ -9,9 +9,22 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class AuditLogController extends Controller
+class AuditLogController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:audit-logs.view', only: ['index','show']),
+            new ControllerMiddleware('permission:audit-logs.create', only: ['create','store']),
+            new ControllerMiddleware('permission:audit-logs.edit', only: ['edit','update']),
+            new ControllerMiddleware('permission:audit-logs.delete', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request): View
     {
         $search = (string) $request->string('q');

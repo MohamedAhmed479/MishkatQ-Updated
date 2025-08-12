@@ -9,11 +9,17 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        Admin::firstOrCreate(
-            ['email' => 'mohamed@mishkatq.com'],
-            ['name' => 'محمد', 'password' => 'password']
+        $admin = Admin::firstOrCreate(
+            ['email' => 'superadmin@mishkatq.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => 'password',
+            ]
         );
+
+        // Assign Super Admin role if available
+        if (method_exists($admin, 'assignRole')) {
+            $admin->assignRole('Super Admin');
+        }
     }
 }
-
-

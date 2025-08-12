@@ -11,9 +11,21 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class ChapterController extends Controller
+class ChapterController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:chapters.view', only: ['index','show','verses','memorizationProgress','memorizationPlans']),
+            new ControllerMiddleware('permission:chapters.create', only: ['create','store']),
+            new ControllerMiddleware('permission:chapters.edit', only: ['edit','update']),
+            new ControllerMiddleware('permission:chapters.delete', only: ['destroy']),
+        ];
+    }
     /**
      * عرض قائمة السور
      */
@@ -21,12 +33,12 @@ class ChapterController extends Controller
     {
         // Debug: Log the request parameters
         \Log::info('Chapter index request parameters:', $request->all());
-        
+
         $search = (string) $request->string('q');
         $revelationPlace = (string) $request->string('revelation_place');
         $sortBy = (string) $request->string('sort_by', 'id');
         $sortOrder = (string) $request->string('sort_order', 'asc');
-        
+
         // Debug: Log the extracted values
         \Log::info('Extracted filter values:', [
             'search' => $search,
@@ -138,7 +150,7 @@ class ChapterController extends Controller
             ->get();
 
         return view('admin.chapters.show', compact(
-            'chapter', 'actualVersesCount', 'memorizationProgressCount', 
+            'chapter', 'actualVersesCount', 'memorizationProgressCount',
             'planItemsCount', 'recentVerses'
         ));
     }

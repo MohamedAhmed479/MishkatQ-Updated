@@ -8,9 +8,22 @@ use App\Models\Verse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class JuzController extends Controller
+class JuzController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:juzs.view', only: ['index','show']),
+            new ControllerMiddleware('permission:juzs.create', only: ['create','store']),
+            new ControllerMiddleware('permission:juzs.edit', only: ['edit','update']),
+            new ControllerMiddleware('permission:juzs.delete', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request): View
     {
         $search = (string) $request->string('q');

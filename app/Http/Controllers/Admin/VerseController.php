@@ -8,9 +8,22 @@ use App\Models\Verse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class VerseController extends Controller
+class VerseController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:verses.view', only: ['index','show']),
+            new ControllerMiddleware('permission:verses.create', only: ['create','store']),
+            new ControllerMiddleware('permission:verses.edit', only: ['edit','update']),
+            new ControllerMiddleware('permission:verses.delete', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request): View
     {
         $search = (string) $request->string('q');

@@ -8,9 +8,23 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class DeviceController extends Controller
+class DeviceController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:devices.view', only: ['index','show','userDevices']),
+            new ControllerMiddleware('permission:devices.create', only: ['create','store']),
+            new ControllerMiddleware('permission:devices.edit', only: ['edit','update']),
+            new ControllerMiddleware('permission:devices.delete', only: ['destroy','bulkDelete']),
+            new ControllerMiddleware('permission:devices.revoke-token', only: ['revokeToken']),
+        ];
+    }
+
     public function index(Request $request): View
     {
         $search = (string) $request->string('q');

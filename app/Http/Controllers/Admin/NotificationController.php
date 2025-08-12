@@ -7,9 +7,21 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification as Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class NotificationController extends Controller
+class NotificationController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:notifications.view', only: ['index','show']),
+            new ControllerMiddleware('permission:notifications.delete', only: ['destroy','bulkDelete']),
+            new ControllerMiddleware('permission:notifications.mark', only: ['markAsRead','markAsUnread','bulkMarkAsRead','bulkMarkAsUnread']),
+        ];
+    }
+
     /**
      * عرض قائمة التنبيهات
      */

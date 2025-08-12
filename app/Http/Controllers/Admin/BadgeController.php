@@ -7,9 +7,22 @@ use App\Models\Badge;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class BadgeController extends Controller
+class BadgeController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:badges.view', only: ['index','show','awardedUsers']),
+            new ControllerMiddleware('permission:badges.create', only: ['create','store']),
+            new ControllerMiddleware('permission:badges.edit', only: ['edit','update','toggleStatus']),
+            new ControllerMiddleware('permission:badges.delete', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request): View
     {
         $search = (string) $request->string('q');

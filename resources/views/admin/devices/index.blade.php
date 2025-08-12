@@ -68,7 +68,7 @@
             </div>
 
             <a href="{{ route('admin.devices.create') }}"
-               class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+               class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 @permClass('devices.create')" @permDisabled('devices.create')>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
@@ -258,16 +258,16 @@
                                     </td>
                                     <td class="p-4">
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.devices.show', $device) }}"
-                                               class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                             <a href="{{ route('admin.devices.show', $device) }}"
+                                               class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors @permClass('devices.view')" @permDisabled('devices.view')
                                                title="عرض التفاصيل">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                                 </svg>
                                             </a>
-                                            <a href="{{ route('admin.devices.edit', $device) }}"
-                                               class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                                             <a href="{{ route('admin.devices.edit', $device) }}"
+                                               class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors @permClass('devices.edit')" @permDisabled('devices.edit')
                                                title="تعديل">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -275,10 +275,10 @@
                                             </a>
 
                                             @if($device->token)
-                                                <form method="POST" action="{{ route('admin.devices.revoke-token', $device) }}" class="inline">
+                                                 <form method="POST" action="{{ route('admin.devices.revoke-token', $device) }}" class="inline @permClass('devices.revoke-token')">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <button type="submit"
+                                                     <button type="submit" @permDisabled('devices.revoke-token')
                                                             class="p-2 rounded-lg text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors"
                                                             title="إلغاء الرمز المميز"
                                                             onclick="return confirm('هل تريد إلغاء الرمز المميز لهذا الجهاز؟')">
@@ -289,10 +289,10 @@
                                                 </form>
                                             @endif
 
-                                            <form method="POST" action="{{ route('admin.devices.destroy', $device) }}" class="inline">
+                                             <form method="POST" action="{{ route('admin.devices.destroy', $device) }}" class="inline @permClass('devices.delete')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit"
+                                                 <button type="submit" @permDisabled('devices.delete')
                                                         class="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                                         title="حذف"
                                                         onclick="return confirm('هل تريد حذف هذا الجهاز نهائياً؟\n\nسيتم حذف:\n- الجهاز وجميع بياناته\n- الرمز المميز المرتبط به\n\nتحذير: هذا الإجراء لا يمكن التراجع عنه!')">
@@ -318,7 +318,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="device_ids" id="selected-devices">
-                                <button type="submit"
+                                 <button type="submit" @permDisabled('devices.bulk-delete')
                                         class="px-4 py-2 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         id="bulk-delete-btn"
                                         disabled

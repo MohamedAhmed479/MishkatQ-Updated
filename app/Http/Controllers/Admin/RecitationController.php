@@ -10,9 +10,22 @@ use App\Models\Verse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class RecitationController extends Controller
+class RecitationController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:recitations.view', only: ['index','show']),
+            new ControllerMiddleware('permission:recitations.create', only: ['create','store']),
+            new ControllerMiddleware('permission:recitations.edit', only: ['edit','update']),
+            new ControllerMiddleware('permission:recitations.delete', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request): View
     {
         $search = (string) $request->string('q');

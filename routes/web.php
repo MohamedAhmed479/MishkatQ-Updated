@@ -15,19 +15,22 @@ use App\Http\Controllers\Admin\TafsirController;
 use App\Http\Controllers\Admin\ReciterController;
 use App\Http\Controllers\Admin\RecitationController;
 use App\Http\Controllers\Admin\LeaderboardController;
-use App\Http\Controllers\Admin\MemorizationPlanController;
-use App\Http\Controllers\Admin\PlanItemController;
-use App\Http\Controllers\Admin\SpacedRepetitionController;
-use App\Http\Controllers\Admin\ReviewRecordController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\AdminManagementController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\PermissionController;
 
 // Landing or other public routes can stay here...
+
+// Authentication
+Route::middleware('guest:admin')->prefix('admin')->group(function () {
+    Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+});
 
 // Admin panel routes (Blade views, session-based auth for 'admin' guard)
 Route::prefix('admin')->as('admin.')->group(function () {
     // Authentication
     Route::middleware('guest:admin')->group(function () {
-        Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('login');
         Route::post('login', [AdminAuthController::class, 'login'])->name('login.submit');
     });
 
@@ -60,12 +63,12 @@ Route::prefix('admin')->as('admin.')->group(function () {
         Route::resource('tafsirs', TafsirController::class);
         Route::resource('reciters', ReciterController::class);
         Route::resource('recitations', RecitationController::class);
-        
+
         // Leaderboards CRUD
         Route::resource('leaderboards', LeaderboardController::class);
         Route::delete('leaderboards/bulk-delete', [LeaderboardController::class, 'bulkDelete'])->name('leaderboards.bulk-delete');
         Route::post('leaderboards/recalculate', [LeaderboardController::class, 'recalculate'])->name('leaderboards.recalculate');
-        
+
         // Notifications
         Route::resource('notifications', NotificationController::class)->only(['index','show','destroy']);
         Route::delete('notifications/bulk-delete', [NotificationController::class, 'bulkDelete'])->name('notifications.bulk-delete');
@@ -78,7 +81,14 @@ Route::prefix('admin')->as('admin.')->group(function () {
         Route::resource('audit-logs', AuditLogController::class)->parameters([
             'audit-logs' => 'audit_log'
         ]);
-        
+
+        // Admins CRUD
+        Route::resource('admins', AdminManagementController::class)->except(['show']);
+
+        // Roles & Permissions
+        Route::resource('roles', RoleController::class)->only(['index','store','update','destroy']);
+        Route::resource('permissions', PermissionController::class)->only(['index','store','update','destroy']);
+
         // Additional chapter routes
         Route::get('chapters/{chapter}/verses', [ChapterController::class, 'verses'])->name('chapters.verses');
         Route::get('chapters/{chapter}/memorization-progress', [ChapterController::class, 'memorizationProgress'])->name('chapters.memorization-progress');

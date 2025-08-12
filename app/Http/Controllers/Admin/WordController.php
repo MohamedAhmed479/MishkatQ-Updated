@@ -9,9 +9,22 @@ use App\Models\Chapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware as ControllerMiddleware;
 
-class WordController extends Controller
+class WordController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            'auth:admin',
+            new ControllerMiddleware('permission:words.view', only: ['index','show']),
+            new ControllerMiddleware('permission:words.create', only: ['create','store']),
+            new ControllerMiddleware('permission:words.edit', only: ['edit','update']),
+            new ControllerMiddleware('permission:words.delete', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request): View
     {
         $search = (string) $request->string('q');

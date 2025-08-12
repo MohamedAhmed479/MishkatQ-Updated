@@ -33,7 +33,7 @@
             </form>
 
             <div class="flex items-center gap-3">
-                <form method="POST" action="{{ route('admin.leaderboards.recalculate') }}" class="inline-flex items-center gap-2">
+                <form method="POST" action="{{ route('admin.leaderboards.recalculate') }}" class="inline-flex items-center gap-2 @permClass('leaderboards.recalculate')">
                     @csrf
                     <select name="period_type" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                         @foreach($periodTypes as $key => $label)
@@ -41,10 +41,10 @@
                         @endforeach
                     </select>
                     <input type="date" name="date" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" value="{{ $date ?: now()->toDateString() }}">
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">إعادة احتساب الرتب</button>
+                    <button type="submit" @permDisabled('leaderboards.recalculate') class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">إعادة احتساب الرتب</button>
                 </form>
 
-                <a href="{{ route('admin.leaderboards.create') }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                <a href="{{ route('admin.leaderboards.create') }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 @permClass('leaderboards.create')" @permDisabled('leaderboards.create')>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
                     إضافة سجل
                 </a>
@@ -140,16 +140,16 @@
                                     <td class="p-4">{{ $entry->period_end?->format('Y-m-d') }}</td>
                                     <td class="p-4">
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.leaderboards.show', $entry) }}" class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="عرض التفاصيل">
+                                             <a href="{{ route('admin.leaderboards.show', $entry) }}" class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors @permClass('leaderboards.view')" @permDisabled('leaderboards.view') title="عرض التفاصيل">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                             </a>
-                                            <a href="{{ route('admin.leaderboards.edit', $entry) }}" class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors" title="تعديل">
+                                             <a href="{{ route('admin.leaderboards.edit', $entry) }}" class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors @permClass('leaderboards.edit')" @permDisabled('leaderboards.edit') title="تعديل">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                             </a>
-                                            <form method="POST" action="{{ route('admin.leaderboards.destroy', $entry) }}" class="inline" onsubmit="return confirm('هل تريد حذف هذا السجل؟')">
+                                             <form method="POST" action="{{ route('admin.leaderboards.destroy', $entry) }}" class="inline @permClass('leaderboards.delete')" onsubmit="return confirm('هل تريد حذف هذا السجل؟')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="حذف">
+                                                 <button type="submit" @permDisabled('leaderboards.delete') class="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="حذف">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                 </button>
                                             </form>
