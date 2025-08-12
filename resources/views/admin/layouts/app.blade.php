@@ -81,88 +81,151 @@
         </div>
 
         <!-- Navigation -->
+        @php
+            $quranActive = request()->is('admin/surahs*') || request()->is('admin/juzs*') || request()->is('admin/verses*') || request()->is('admin/words*') || request()->is('admin/tafsirs*') || request()->is('admin/reciters*') || request()->is('admin/recitations*');
+            $usersActive = request()->is('admin/users*') || request()->is('admin/devices*');
+            $gamificationActive = request()->is('admin/badges*') || request()->is('admin/leaderboards*') || request()->is('admin/notifications*');
+            $systemActive = request()->is('admin/audit-logs*');
+        @endphp
         <nav class="p-4">
             <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pr-3">القائمة الرئيسية</div>
-            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium mb-1 {{ request()->routeIs('admin.dashboard') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium mb-2 {{ request()->routeIs('admin.dashboard') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 7V3a2 2 0 012-2h4a2 2 0 012 2v4"></path>
                 </svg>
                 اللوحة الرئيسية
             </a>
-            <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/users*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                </svg>
-                المستخدمون
-            </a>
-            <a href="{{ route('admin.badges.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/badges*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-                </svg>
-                الشارات
-            </a>
-            <a href="{{ route('admin.devices.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/devices*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-                الأجهزة
-            </a>
-            <a href="{{ route('admin.chapters.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/surahs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 12.5A2.5 2.5 0 016.5 10H20M4 5.5A2.5 2.5 0 016.5 3H20"></path>
-                </svg>
-                السور
-            </a>
-            <a href="{{ route('admin.juzs.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/juzs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                </svg>
-                الأجزاء
-            </a>
-            <a href="{{ route('admin.verses.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/verses*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6M9 16h6M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                الآيات
-            </a>
-            <a href="{{ route('admin.words.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/words*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m-6 4h18M3 13h12m6-2v2M3 19h18"></path>
-                </svg>
-                الكلمات
-            </a>
-            <a href="{{ route('admin.tafsirs.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/tafsirs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v7a3 3 0 006 0v-7c0-1.657-1.343-3-3-3z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 014-4h0a4 4 0 014 4v4"/>
-                </svg>
-                التفاسير
-            </a>
-            <a href="{{ route('admin.reciters.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/reciters*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                القراء
-            </a>
-            <a href="{{ route('admin.recitations.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2" />
-                </svg>
-                التسجيلات
-            </a>
-            <a href="{{ route('admin.leaderboards.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/leaderboards*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 15l3 3 7-7" />
-                </svg>
-                لوحة المتصدرين
-            </a>
-            <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/audit-logs*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8m0 0V3m0 6l-8 8-4-4-6 6"></path>
-                </svg>
-                سجلات التدقيق
-            </a>
+
+            <!-- Quran Content Section -->
+            <div class="mt-4" data-section="quran" data-has-active="{{ $quranActive ? '1' : '0' }}">
+                <button type="button" id="btn-section-quran" onclick="toggleSection('quran')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $quranActive ? 'text-emerald-400' : 'text-slate-300' }}">
+                    <span class="flex items-center gap-2 font-semibold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        إدارة المحتوى القرآني
+                    </span>
+                    <svg id="arrow-section-quran" class="w-4 h-4 transition-transform {{ $quranActive ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <ul id="section-quran" class="mt-2 space-y-1 {{ $quranActive ? '' : 'hidden' }}">
+                    <li>
+                        <a href="{{ route('admin.chapters.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/surahs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 12.5A2.5 2.5 0 016.5 10H20M4 5.5A2.5 2.5 0 016.5 3H20"/></svg>
+                            السور
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.juzs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/juzs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
+                            الأجزاء
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.verses.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/verses*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6M9 16h6M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            الآيات
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.words.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/words*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m-6 4h18M3 13h12m6-2v2M3 19h18"/></svg>
+                            الكلمات
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tafsirs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/tafsirs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v7a3 3 0 006 0v-7c0-1.657-1.343-3-3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 014-4h0a4 4 0 014 4v4"/></svg>
+                            التفاسير
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.reciters.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/reciters*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            القراء
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.recitations.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2"/></svg>
+                            التسجيلات
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Users & Devices Section -->
+            <div class="mt-3" data-section="users" data-has-active="{{ $usersActive ? '1' : '0' }}">
+                <button type="button" id="btn-section-users" onclick="toggleSection('users')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $usersActive ? 'text-emerald-400' : 'text-slate-300' }}">
+                    <span class="flex items-center gap-2 font-semibold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1"/></svg>
+                        المستخدمون والأجهزة
+                    </span>
+                    <svg id="arrow-section-users" class="w-4 h-4 transition-transform {{ $usersActive ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <ul id="section-users" class="mt-2 space-y-1 {{ $usersActive ? '' : 'hidden' }}">
+                    <li>
+                        <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/users*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1"/></svg>
+                            المستخدمون
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.devices.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/devices*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18"/></svg>
+                            الأجهزة
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Gamification Section -->
+            <div class="mt-3" data-section="gamification" data-has-active="{{ $gamificationActive ? '1' : '0' }}">
+                <button type="button" id="btn-section-gamification" onclick="toggleSection('gamification')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $gamificationActive ? 'text-emerald-400' : 'text-slate-300' }}">
+                    <span class="flex items-center gap-2 font-semibold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l5-5 5 5M12 12V3"/></svg>
+                        التحفيز والإنجازات
+                    </span>
+                    <svg id="arrow-section-gamification" class="w-4 h-4 transition-transform {{ $gamificationActive ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <ul id="section-gamification" class="mt-2 space-y-1 {{ $gamificationActive ? '' : 'hidden' }}">
+                    <li>
+                        <a href="{{ route('admin.badges.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/badges*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138"/></svg>
+                            الشارات
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.leaderboards.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/leaderboards*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 15l3 3 7-7"/></svg>
+                            لوحة المتصدرين
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.notifications.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/notifications*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            التنبيهات
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- System Section -->
+            <div class="mt-3" data-section="system" data-has-active="{{ $systemActive ? '1' : '0' }}">
+                <button type="button" id="btn-section-system" onclick="toggleSection('system')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $systemActive ? 'text-emerald-400' : 'text-slate-300' }}">
+                    <span class="flex items-center gap-2 font-semibold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8"/></svg>
+                        النظام والسجلات
+                    </span>
+                    <svg id="arrow-section-system" class="w-4 h-4 transition-transform {{ $systemActive ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <ul id="section-system" class="mt-2 space-y-1 {{ $systemActive ? '' : 'hidden' }}">
+                    <li>
+                        <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/audit-logs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8m0 0V3m0 6l-8 8-4-4-6 6"/></svg>
+                            سجلات التدقيق
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </nav>
 
         <!-- Logout Area -->
@@ -198,12 +261,38 @@
             </div>
             <!-- Header Actions -->
             <div class="flex items-center gap-3">
-                <!-- Admin Profile -->
-                <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-700/50 hover:bg-emerald-900/20 transition-colors">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">{{ substr(auth('admin')->user()->name ?? 'A', 0, 1) }}</div>
-                    <div>
-                        <div class="text-sm font-semibold text-slate-100">{{ auth('admin')->user()->name ?? 'المشرف' }}</div>
-                        <div class="text-xs text-slate-400">مشرف النظام</div>
+                <!-- Search -->
+                <form method="GET" action="{{ url()->current() }}" class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-700/50 focus-within:bg-slate-700/70 transition-colors">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                    <input name="q" value="{{ request('q') }}" type="search" placeholder="ابحث..." class="bg-transparent placeholder-slate-400 text-slate-100 focus:outline-none w-56" />
+                </form>
+
+                <!-- Notifications -->
+                <a href="{{ route('admin.notifications.index') }}" class="relative inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-700/50 hover:bg-emerald-900/20 transition-colors">
+                    <svg class="w-5 h-5 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    @isset($unreadNotifications)
+                        @if($unreadNotifications > 0)
+                            <span class="absolute -top-1 -left-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}</span>
+                        @endif
+                    @endisset
+                </a>
+
+                <!-- Admin Profile Dropdown -->
+                <div class="relative">
+                    <button type="button" onclick="toggleProfileMenu()" class="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-700/50 hover:bg-emerald-900/20 transition-colors">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">{{ substr(auth('admin')->user()->name ?? 'A', 0, 1) }}</div>
+                        <div class="hidden sm:block text-right">
+                            <div class="text-sm font-semibold text-slate-100">{{ auth('admin')->user()->name ?? 'المشرف' }}</div>
+                            <div class="text-xs text-slate-400">مشرف النظام</div>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="profileMenu" class="absolute left-0 top-12 w-48 rounded-xl bg-slate-800 border border-slate-700 shadow-xl p-2 hidden">
+                        <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700/60">اللوحة الرئيسية</a>
+                        <form method="POST" action="{{ route('admin.logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-right px-3 py-2 rounded-lg text-red-400 hover:bg-red-900/20">تسجيل الخروج</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -267,18 +356,85 @@
             <nav class="p-4">
                 <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pr-3">القائمة الرئيسية</div>
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium mb-1 {{ request()->routeIs('admin.dashboard') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}" onclick="toggleMobileSidebar()">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 7V3a2 2 0 012-2h4a2 2 0 012 2v4"></path>
-                    </svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 7V3a2 2 0 012-2h4a2 2 0 012 2v4"/></svg>
                     اللوحة الرئيسية
                 </a>
-                <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium {{ request()->is('admin/users*') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}" onclick="toggleMobileSidebar()">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                    </svg>
-                    المستخدمين
-                </a>
+
+                <div class="mt-4">
+                    <div class="px-4 py-2 text-slate-400 text-xs">إدارة المحتوى القرآني</div>
+                    <div class="space-y-1">
+                        <a href="{{ route('admin.chapters.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/surahs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 12.5A2.5 2.5 0 016.5 10H20M4 5.5A2.5 2.5 0 016.5 3H20"/></svg>
+                            السور
+                        </a>
+                        <a href="{{ route('admin.juzs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/juzs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
+                            الأجزاء
+                        </a>
+                        <a href="{{ route('admin.verses.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/verses*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6M9 16h6M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            الآيات
+                        </a>
+                        <a href="{{ route('admin.words.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/words*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m-6 4h18M3 13h12m6-2v2M3 19h18"/></svg>
+                            الكلمات
+                        </a>
+                        <a href="{{ route('admin.tafsirs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/tafsirs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v7a3 3 0 006 0v-7c0-1.657-1.343-3-3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 014-4h0a4 4 0 014 4v4"/></svg>
+                            التفاسير
+                        </a>
+                        <a href="{{ route('admin.reciters.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/reciters*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            القراء
+                        </a>
+                        <a href="{{ route('admin.recitations.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2"/></svg>
+                            التسجيلات
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="px-4 py-2 text-slate-400 text-xs">المستخدمون والأجهزة</div>
+                    <div class="space-y-1">
+                        <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/users*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1"/></svg>
+                            المستخدمون
+                        </a>
+                        <a href="{{ route('admin.devices.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/devices*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18"/></svg>
+                            الأجهزة
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="px-4 py-2 text-slate-400 text-xs">التحفيز والإنجازات</div>
+                    <div class="space-y-1">
+                        <a href="{{ route('admin.badges.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/badges*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138"/></svg>
+                            الشارات
+                        </a>
+                        <a href="{{ route('admin.leaderboards.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/leaderboards*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 15l3 3 7-7"/></svg>
+                            لوحة المتصدرين
+                        </a>
+                        <a href="{{ route('admin.notifications.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/notifications*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            التنبيهات
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="px-4 py-2 text-slate-400 text-xs">النظام والسجلات</div>
+                    <div class="space-y-1">
+                        <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/audit-logs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8m0 0V3m0 6l-8 8-4-4-6 6"/></svg>
+                            سجلات التدقيق
+                        </a>
+                    </div>
+                </div>
             </nav>
 
             <!-- Mobile Logout -->
@@ -302,6 +458,48 @@
         const sidebar = document.getElementById('mobileSidebar');
         sidebar.classList.toggle('open');
     }
+
+    // Collapsible sidebar sections with localStorage
+    const STORAGE_KEY = 'mishkat_admin_sidebar_sections';
+    function getSectionState() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        } catch (e) {
+            return {};
+        }
+    }
+    function setSectionState(state) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+    function toggleSection(sectionId) {
+        const list = document.getElementById(`section-${sectionId}`);
+        const arrow = document.getElementById(`arrow-section-${sectionId}`);
+        if (!list || !arrow) return;
+        list.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+        const state = getSectionState();
+        state[sectionId] = !list.classList.contains('hidden');
+        setSectionState(state);
+    }
+    function restoreSections() {
+        const state = getSectionState();
+        document.querySelectorAll('[data-section]').forEach(function(wrapper) {
+            const id = wrapper.getAttribute('data-section');
+            const hasActive = wrapper.getAttribute('data-has-active') === '1';
+            const list = document.getElementById(`section-${id}`);
+            const arrow = document.getElementById(`arrow-section-${id}`);
+            if (!list || !arrow) return;
+            const shouldOpen = state[id] ?? hasActive;
+            if (shouldOpen) {
+                list.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+            } else {
+                list.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', restoreSections);
 
     // Force dark mode always
     document.documentElement.classList.add('dark');

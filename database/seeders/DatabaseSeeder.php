@@ -68,6 +68,9 @@ class DatabaseSeeder extends Seeder
             // Spaced Repetitions
             SpacedRepetitionSeeder::class,
 
+            // Notifications
+            NotificationSeeder::class,
+
             // Roles
             // RoleSeeder::class,
             // ManagerRoleSeeder::class,

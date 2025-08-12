@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\MemorizationPlanController;
 use App\Http\Controllers\Admin\PlanItemController;
 use App\Http\Controllers\Admin\SpacedRepetitionController;
 use App\Http\Controllers\Admin\ReviewRecordController;
+use App\Http\Controllers\Admin\NotificationController;
 
 // Landing or other public routes can stay here...
 
@@ -65,6 +66,13 @@ Route::prefix('admin')->as('admin.')->group(function () {
         Route::delete('leaderboards/bulk-delete', [LeaderboardController::class, 'bulkDelete'])->name('leaderboards.bulk-delete');
         Route::post('leaderboards/recalculate', [LeaderboardController::class, 'recalculate'])->name('leaderboards.recalculate');
         
+        // Notifications
+        Route::resource('notifications', NotificationController::class)->only(['index','show','destroy']);
+        Route::delete('notifications/bulk-delete', [NotificationController::class, 'bulkDelete'])->name('notifications.bulk-delete');
+        Route::patch('notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+        Route::patch('notifications/{notification}/mark-as-unread', [NotificationController::class, 'markAsUnread'])->name('notifications.mark-as-unread');
+        Route::patch('notifications/bulk-mark-as-read', [NotificationController::class, 'bulkMarkAsRead'])->name('notifications.bulk-mark-as-read');
+        Route::patch('notifications/bulk-mark-as-unread', [NotificationController::class, 'bulkMarkAsUnread'])->name('notifications.bulk-mark-as-unread');
 
         // Audit Logs CRUD
         Route::resource('audit-logs', AuditLogController::class)->parameters([
