@@ -13,7 +13,7 @@ class CustomResetPassword extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public $url) {}
+    public function __construct(public $code) {}
 
     public function via(object $notifiable): array
     {
@@ -23,9 +23,10 @@ class CustomResetPassword extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('إعادة تعيين كلمة المرور')
+            ->subject('رمز إعادة تعيين كلمة المرور')
             ->view('emails.reset-password', [
-                'url' => $this->url
+                'code' => $this->code,
+                'expire' => config('auth.passwords.users.expire')
             ]);
     }
 

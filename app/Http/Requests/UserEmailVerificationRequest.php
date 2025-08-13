@@ -15,15 +15,7 @@ class UserEmailVerificationRequest extends FormRequest
      */
     public function authorize()
     {
-        if (! hash_equals((string) $this->user()->getKey(), (string) $this->route('id'))) {
-            return false;
-        }
-
-        if (! hash_equals(sha1($this->user()->getEmailForVerification()), (string) $this->route('hash'))) {
-            return false;
-        }
-
-        return true;
+        return $this->user() !== null;
     }
 
     /**
@@ -34,7 +26,7 @@ class UserEmailVerificationRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'code' => ['required', 'digits:6']
         ];
     }
 

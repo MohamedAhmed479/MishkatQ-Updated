@@ -169,25 +169,35 @@ class User extends Authenticatable
 
     public function sendEmailVerificationNotification()
     {
-        $url = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            [
-                'id' => $this->id,
-                'hash' => sha1($this->email)
-            ]
+        $code = (string) random_int(100000, 999999);
+
+        // Cache the code for 60 minutes associated with this user
+        \Illuminate\Support\Facades\Cache::put(
+            "email_verification_code_user_{$this->id}",
+            $code,
+            now()->addMinutes(60)
         );
 
-        $frontendUrl = config('app.frontend_url') . "/auth/verify-email?url=" . urlencode($url);
-
-        $this->notify(new UserVerifyEmailNotification($frontendUrl));
+        $this->notify(new UserVerifyEmailNotification($code));
     }
 
 
     public function sendPasswordResetNotification($token)
     {
-        $url = config('app.frontend_url') . "/auth/reset-password?token={$token}&email=" . urlencode($this->email);
+        $code = (string) random_int(100000, 999999);
 
-        $this->notify(new CustomResetPassword($url));
+        \Illuminate\Support\Facades\Cache::put(
+            "password_reset_code_{$this->email}",
+            $code,
+            now()->addMinutes(config('auth.passwords.users.expire'))
+        );
+
+        \Illuminate\Support\Facades\Cache::put(
+            "password_reset_token_{$this->email}",
+            $token,
+            now()->addMinutes(config('auth.passwords.users.expire'))
+        );
+
+        $this->notify(new CustomResetPassword($code));
     }
 }

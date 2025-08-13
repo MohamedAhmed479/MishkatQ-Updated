@@ -99,7 +99,7 @@ class UserAuthController extends Controller
     {
         try {
 
-            return $this->authService->handleEmailVerification();
+            return $this->authService->handleEmailVerification($request->validated());
 
         } catch (\Exception $e) {
             return ApiResponse::error('فشل في ارسال بريد التحقق', 500, [
@@ -124,7 +124,7 @@ class UserAuthController extends Controller
     public function resetPassword(UserResetPasswordRequest $request): JsonResponse
     {
         try {
-            $data = $request->only('email', 'password', 'password_confirmation', 'token');
+            $data = $request->only('email', 'password', 'password_confirmation', 'code');
 
             return $this->authService->handleResetPassword($data);
 

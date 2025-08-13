@@ -13,6 +13,21 @@ class UserRepository implements UserInterface
         return User::find($id);
     }
 
+    public function findByEmail(string $email): ?User
+    {
+        return User::where('email', $email)->first();
+    }
+
+    public function create(array $data): User
+    {
+        return User::create($data);
+    }
+
+    public function markEmailAsVerified(User $user): bool
+    {
+        return $user->markEmailAsVerified();
+    }
+
     public function updateTotalPoints(User $user, int $newPoints): void
     {
         $user->update(['total_points' => $newPoints]);
