@@ -67,7 +67,7 @@
         .mobile-sidebar.open { display: block; }
     </style>
 </head>
-<body class="dark bg-gradient-to-br from-slate-900 to-slate-800 font-sans min-h-screen">
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 font-sans min-h-screen">
 <div class="flex min-h-screen">
     <!-- Desktop Sidebar -->
     <aside class="sidebar fixed top-0 bottom-0 right-0 z-10 w-72 bg-gradient-to-b from-slate-800 to-slate-900 border-l border-slate-700/80 shadow-xl">
@@ -366,6 +366,12 @@
                     <input name="q" value="{{ request('q') }}" type="search" placeholder="ابحث..." class="bg-transparent placeholder-slate-400 text-slate-100 focus:outline-none w-56" />
                 </form>
 
+                <!-- Theme Toggle -->
+                <button type="button" id="themeToggle" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-700/50 hover:bg-emerald-900/20 transition-colors" title="تبديل السمة" onclick="toggleTheme()">
+                    <svg id="icon-sun" class="w-5 h-5 text-yellow-300 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M7.05 7.05L5.636 5.636m12.728 0l-1.414 1.414M7.05 16.95l-1.414 1.414"/><circle cx="12" cy="12" r="4"/></svg>
+                    <svg id="icon-moon" class="w-5 h-5 text-slate-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                </button>
+
                 <!-- Notifications -->
                 <a href="{{ route('admin.notifications.index') }}" class="relative inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-700/50 hover:bg-emerald-900/20 transition-colors">
                     <svg class="w-5 h-5 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
@@ -630,25 +636,34 @@
     }
     document.addEventListener('DOMContentLoaded', restoreSections);
 
-    // Force dark mode always
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-
-    // Ensure dark mode stays active even if someone tries to change it
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                if (!document.documentElement.classList.contains('dark')) {
-        document.documentElement.classList.add('dark');
+    // Theme handling (light/dark) with persistence
+    const THEME_KEY = 'theme';
+    function applyThemeIcon() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const sun = document.getElementById('icon-sun');
+        const moon = document.getElementById('icon-moon');
+        if (sun && moon) {
+            if (isDark) { sun.classList.remove('hidden'); moon.classList.add('hidden'); }
+            else { sun.classList.add('hidden'); moon.classList.remove('hidden'); }
+        }
     }
-            }
-        });
-    });
-
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['class']
-    });
+    function initTheme() {
+        const stored = localStorage.getItem(THEME_KEY);
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored === 'dark' || (!stored && prefersDark)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        applyThemeIcon();
+    }
+    function toggleTheme() {
+        document.documentElement.classList.toggle('dark');
+        const isDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+        applyThemeIcon();
+    }
+    document.addEventListener('DOMContentLoaded', initTheme);
 </script>
 
 @stack('scripts')
