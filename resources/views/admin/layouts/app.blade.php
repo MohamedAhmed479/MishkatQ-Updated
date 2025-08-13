@@ -71,6 +71,14 @@
 <div class="flex min-h-screen">
     <!-- Desktop Sidebar -->
     <aside class="sidebar fixed top-0 bottom-0 right-0 z-10 w-72 bg-gradient-to-b from-slate-800 to-slate-900 border-l border-slate-700/80 shadow-xl">
+
+        <style>
+            .sidebar a,
+            .sidebar button {
+                cursor: pointer;
+            }
+        </style>
+
         <!-- Logo Area -->
         <div class="p-6 border-b border-slate-700/50 flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-500/30">م</div>
@@ -285,7 +293,7 @@
                         </a>
                     </li>
                     @endcan
-                    
+
                 </ul>
             </div>
 
@@ -368,7 +376,7 @@
 
                 <!-- Theme Forced Dark (toggle removed) -->
 
-                
+
 
                 <!-- Quick link to edit own profile -->
                 <a href="{{ route('admin.profile.edit') }}" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-700/50 hover:bg-emerald-900/20 transition-colors" title="تعديل الملف الشخصي">
