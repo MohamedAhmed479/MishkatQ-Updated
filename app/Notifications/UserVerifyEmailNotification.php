@@ -11,14 +11,14 @@ class UserVerifyEmailNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public $url;
+    public $code;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($url)
+    public function __construct($code)
     {
-        $this->url = $url;
+        $this->code = $code;
     }
 
     /**
@@ -37,9 +37,9 @@ class UserVerifyEmailNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('تأكيد بريدك الإلكتروني')
+            ->subject('رمز تأكيد البريد الإلكتروني')
             ->view('emails.verify-email', [
-                'url' => $this->url,
+                'code' => $this->code,
                 'user' => $notifiable,
             ]);
 

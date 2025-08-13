@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\AuditableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class MemorizationPlan extends Model
 {
-    use HasFactory;
+    use HasFactory, AuditableTrait;
 
     protected $guarded = ['id'];
 

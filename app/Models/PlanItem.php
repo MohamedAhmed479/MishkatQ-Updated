@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\AuditableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PlanItem extends Model
 {
-    use HasFactory;
+    use HasFactory, AuditableTrait;
 
     /**
      * القواعد التي يجب تحويلها

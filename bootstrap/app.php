@@ -59,6 +59,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'verified.user' => \App\Http\Middleware\EnsureUserEmailIsVerified::class,
+            'audit' => \App\Http\Middleware\AuditMiddleware::class,
+
+        ]);
+        // Apply audit middleware to API routes
+        $middleware->api(append: [
+            \App\Http\Middleware\AuditMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

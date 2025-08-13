@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\V1\MemorizationProgressController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\IncentiveController;
 
-Route::middleware("auth:user")->group(function () {
+Route::middleware(["auth:user", 'verified.user'])->group(function () {
     // =====================================================================================================
     //                                      User Preferences Routes
     // =====================================================================================================
