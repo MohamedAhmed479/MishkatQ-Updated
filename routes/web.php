@@ -19,6 +19,10 @@ use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\MemorizationPlanController as AdminMemorizationPlanController;
+use App\Http\Controllers\Admin\PlanItemController as AdminPlanItemController;
+use App\Http\Controllers\Admin\SpacedRepetitionController as AdminSpacedRepetitionController;
+use App\Http\Controllers\Admin\ReviewRecordController as AdminReviewRecordController;
 
 // Landing or other public routes can stay here...
 
@@ -64,6 +68,12 @@ Route::prefix('admin')->as('admin.')->group(function () {
         Route::resource('reciters', ReciterController::class);
         Route::resource('recitations', RecitationController::class);
 
+        // Memorization Plans & Plan Items
+        Route::resource('memorization-plans', AdminMemorizationPlanController::class);
+        Route::resource('plan-items', AdminPlanItemController::class);
+        Route::resource('spaced-repetitions', AdminSpacedRepetitionController::class);
+        Route::resource('review-records', AdminReviewRecordController::class);
+
         // Leaderboards CRUD
         Route::resource('leaderboards', LeaderboardController::class);
         Route::delete('leaderboards/bulk-delete', [LeaderboardController::class, 'bulkDelete'])->name('leaderboards.bulk-delete');
@@ -96,4 +106,3 @@ Route::prefix('admin')->as('admin.')->group(function () {
 
     });
 });
-

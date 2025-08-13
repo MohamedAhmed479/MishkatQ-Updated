@@ -83,6 +83,7 @@
         <!-- Navigation -->
         @php
             $quranActive = request()->is('admin/surahs*') || request()->is('admin/juzs*') || request()->is('admin/verses*') || request()->is('admin/words*') || request()->is('admin/tafsirs*') || request()->is('admin/reciters*') || request()->is('admin/recitations*');
+            $memorizationActive = request()->is('admin/memorization-plans*') || request()->is('admin/plan-items*') || request()->is('admin/spaced-repetitions*') || request()->is('admin/review-records*');
             $usersActive = request()->is('admin/users*') || request()->is('admin/devices*') || request()->is('admin/admins*');
             $gamificationActive = request()->is('admin/badges*') || request()->is('admin/leaderboards*') || request()->is('admin/notifications*');
             $systemActive = request()->is('admin/audit-logs*') || request()->is('admin/roles*') || request()->is('admin/permissions*');
@@ -162,6 +163,51 @@
                         <a href="{{ route('admin.recitations.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2"/></svg>
                             التسجيلات
+                        </a>
+                    </li>
+                    @endcan
+                </ul>
+            </div>
+
+            <!-- Memorization Plans Section -->
+            <div class="mt-3" data-section="memorization" data-has-active="{{ $memorizationActive ? '1' : '0' }}">
+                <button type="button" id="btn-section-memorization" onclick="toggleSection('memorization')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $memorizationActive ? 'text-emerald-400' : 'text-slate-300' }}">
+                    <span class="flex items-center gap-2 font-semibold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10m-7 6h7"/></svg>
+                        إدارة خطط الحفظ
+                    </span>
+                    <svg id="arrow-section-memorization" class="w-4 h-4 transition-transform {{ $memorizationActive ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <ul id="section-memorization" class="mt-2 space-y-1 {{ $memorizationActive ? '' : 'hidden' }}">
+                    @can('memorization-plans.view')
+                    <li>
+                        <a href="{{ route('admin.memorization-plans.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/memorization-plans*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h10"/></svg>
+                            خطط الحفظ
+                        </a>
+                    </li>
+                    @endcan
+                    @can('plan-items.view')
+                    <li>
+                        <a href="{{ route('admin.plan-items.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/plan-items*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M4 6h16"/></svg>
+                            عناصر الخطة
+                        </a>
+                    </li>
+                    @endcan
+                    @can('spaced-repetitions.view')
+                    <li>
+                        <a href="{{ route('admin.spaced-repetitions.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/spaced-repetitions*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V8H3v11a2 2 0 002 2z"/></svg>
+                            مراجعات SRS
+                        </a>
+                    </li>
+                    @endcan
+                    @can('review-records.view')
+                    <li>
+                        <a href="{{ route('admin.review-records.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/review-records*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            تقييمات المراجعة
                         </a>
                     </li>
                     @endcan
@@ -443,6 +489,28 @@
                         <a href="{{ route('admin.recitations.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2"/></svg>
                             التسجيلات
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="px-4 py-2 text-slate-400 text-xs">خطط الحفظ</div>
+                    <div class="space-y-1">
+                        <a href="{{ route('admin.memorization-plans.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/memorization-plans*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h10"/></svg>
+                            خطط الحفظ
+                        </a>
+                        <a href="{{ route('admin.plan-items.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/plan-items*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M4 6h16"/></svg>
+                            عناصر الخطة
+                        </a>
+                        <a href="{{ route('admin.spaced-repetitions.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/spaced-repetitions*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V8H3v11a2 2 0 002 2z"/></svg>
+                            مراجعات SRS
+                        </a>
+                        <a href="{{ route('admin.review-records.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/review-records*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            تقييمات المراجعة
                         </a>
                     </div>
                 </div>

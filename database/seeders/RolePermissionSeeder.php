@@ -46,6 +46,12 @@ class RolePermissionSeeder extends Seeder
             'reciters.view', 'reciters.create', 'reciters.edit', 'reciters.delete',
             'recitations.view', 'recitations.create', 'recitations.edit', 'recitations.delete',
 
+            // Memorization Plans
+            'memorization-plans.view', 'memorization-plans.create', 'memorization-plans.edit', 'memorization-plans.delete',
+            'plan-items.view', 'plan-items.create', 'plan-items.edit', 'plan-items.delete',
+            'spaced-repetitions.view', 'spaced-repetitions.create', 'spaced-repetitions.edit', 'spaced-repetitions.delete',
+            'review-records.view', 'review-records.create', 'review-records.edit', 'review-records.delete',
+
             // Audit Logs
             'audit-logs.view', 'audit-logs.create', 'audit-logs.edit', 'audit-logs.delete',
 
