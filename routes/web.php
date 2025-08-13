@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{
     AuthController as AdminAuthController,
-    DashboardController as AdminDashboardController,
+    DashboardController,
     UserManagementController,
     BadgeController,
     DeviceController,
@@ -36,7 +36,7 @@ use App\Http\Controllers\Admin\{
 // Guest routes (login)
 Route::prefix('admin')->middleware('guest:admin')->group(function () {
     Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+    Route::post('login', [AdminAuthController::class, 'login'])->name('admin.login');
 });
 
 // Protected routes
@@ -54,8 +54,8 @@ Route::prefix('admin')->as('admin.')->middleware('auth:admin')->group(function (
     | Dashboard
     |--------------------------------------------------------------------------
     */
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('export/reviews', [AdminDashboardController::class, 'exportReviews'])->name('dashboard.export-reviews');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('export/reviews', [DashboardController::class, 'exportReviews'])->name('dashboard.export-reviews');
 
     /*
     |--------------------------------------------------------------------------

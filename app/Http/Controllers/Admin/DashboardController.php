@@ -131,38 +131,43 @@ class DashboardController extends Controller implements HasMiddleware
 
         // SRS Status (اليوم) + breakdown
         $charts = [
-            'cohort' => [
-                'labels' => $velocityLabels,
-                'datasets' => [
-                    ['label' => 'مراجعات ناجحة', 'data' => $velocityData, 'color' => 'rgba(16,185,129,0.9)'],
-                ],
-            ],
-            'velocity' => [
+            [
+                'id' => 'velocityChart',
+                'title' => '📈 اتجاه المراجعات',
+                'description' => 'عدد المراجعات الناجحة أسبوعياً',
+                'type' => 'line',
                 'labels' => $velocityLabels,
                 'data' => $velocityData,
+                'period' => 'أسبوعي',
             ],
-            'coverage' => [
+            [
+                'id' => 'coverageChart',
+                'title' => '📊 تغطية السور',
+                'description' => 'توزيع الحفظ حسب السور',
+                'type' => 'doughnut',
                 'labels' => $coverageLabels,
                 'data' => $coverageData,
                 'colors' => $coverageColors,
+                'period' => 'إجمالي',
             ],
-            'adherence' => [
+            [
+                'id' => 'adherenceChart',
+                'title' => '⚡ نسبة الالتزام',
+                'description' => 'مدى التزام الطلاب بجدول المراجعة',
+                'type' => 'line',
                 'labels' => $adherenceTrendLabels,
                 'data' => $adherenceTrendData,
+                'period' => 'أسبوعي',
             ],
-            'srsStatus' => [
+            [
+                'id' => 'srsStatusChart',
+                'title' => '🎯 حالة النظام',
+                'description' => 'توزيع المراجعات حسب الحالة',
+                'type' => 'doughnut',
                 'labels' => ['متأخرة', 'مجدولة اليوم', 'مكتملة اليوم'],
                 'data' => [$srsOverdue, $srsToday, SpacedRepetition::whereDate('last_reviewed_at', $today)->count()],
                 'colors' => ['#ef4444', '#f59e0b', '#10b981'],
-            ],
-            'ratings' => [
-                'labels' => $ratingsLabels,
-                'data' => $ratingsData,
-            ],
-            'srsBreakdown' => [
-                'labels' => ['ناجحة', 'غير ناجحة'],
-                'data' => [$successCount, $failCount],
-                'colors' => ['#10b981', '#ef4444'],
+                'period' => 'اليوم',
             ],
         ];
 
@@ -233,14 +238,28 @@ class DashboardController extends Controller implements HasMiddleware
         })->values();
 
         // Recent reviews
-        $recentReviews = ReviewRecord::with(['spacedRepetition.planItem.quranSurah', 'spacedRepetition.planItem.verseStart', 'spacedRepetition.planItem.verseEnd', 'spacedRepetition.planItem.memorizationPlan.user'])
+        $recentReviews = ReviewRecord::with([
+                'spacedRepetition.planItem.quranSurah', 
+                'spacedRepetition.planItem.verseStart', 
+                'spacedRepetition.planItem.verseEnd', 
+                'spacedRepetition.planItem.memorizationPlan.user'
+            ])
             ->orderByDesc('review_date')
             ->limit(12)
             ->get()
             ->map(function ($r) {
                 $planItem = $r->spacedRepetition?->planItem;
                 $plan = $planItem?->memorizationPlan;
-                $desc = $planItem ? $planItem->getDescription() : '—';
+                
+                // إنشاء الوصف مع التحقق من وجود العلاقات
+                $desc = '—';
+                if ($planItem && $planItem->quranSurah && $planItem->verseStart && $planItem->verseEnd) {
+                    $surahName = $planItem->quranSurah->name_ar;
+                    $startVerseNumber = $planItem->verseStart->verse_number;
+                    $endVerseNumber = $planItem->verseEnd->verse_number;
+                    $desc = "{$surahName} ({$startVerseNumber}-{$endVerseNumber})";
+                }
+                
                 return [
                     'date' => $r->review_date?->format('Y-m-d'),
                     'segment' => $desc,
@@ -250,8 +269,11 @@ class DashboardController extends Controller implements HasMiddleware
                 ];
             });
 
+        // Advanced Analytics Data
+        $analytics = $this->getAdvancedAnalytics($start, $end, $prevStart, $prevEnd);
+
         return view('admin.dashboard', compact(
-            'filters', 'filterOptions', 'kpis', 'charts', 'topStudents', 'atRiskStudents', 'recentReviews', 'leaderboardTop', 'lbPeriod'
+            'filters', 'filterOptions', 'kpis', 'charts', 'topStudents', 'atRiskStudents', 'recentReviews', 'leaderboardTop', 'lbPeriod', 'analytics'
         ));
     }
 
@@ -260,14 +282,28 @@ class DashboardController extends Controller implements HasMiddleware
         $range = $request->input('range', 'last_30_days');
         [$start, $end] = $this->resolveRange($range);
 
-        $rows = ReviewRecord::with(['spacedRepetition.planItem', 'spacedRepetition.planItem.memorizationPlan.user'])
+        $rows = ReviewRecord::with([
+                'spacedRepetition.planItem.quranSurah', 
+                'spacedRepetition.planItem.verseStart', 
+                'spacedRepetition.planItem.verseEnd', 
+                'spacedRepetition.planItem.memorizationPlan.user'
+            ])
             ->whereBetween('review_date', [$start, $end])
             ->orderByDesc('review_date')
             ->get()
             ->map(function ($r) {
                 $planItem = $r->spacedRepetition?->planItem;
                 $plan = $planItem?->memorizationPlan;
-                $desc = $planItem ? $planItem->getDescription() : '—';
+                
+                // إنشاء الوصف مع التحقق من وجود العلاقات
+                $desc = '—';
+                if ($planItem && $planItem->quranSurah && $planItem->verseStart && $planItem->verseEnd) {
+                    $surahName = $planItem->quranSurah->name_ar;
+                    $startVerseNumber = $planItem->verseStart->verse_number;
+                    $endVerseNumber = $planItem->verseEnd->verse_number;
+                    $desc = "{$surahName} ({$startVerseNumber}-{$endVerseNumber})";
+                }
+                
                 return [
                     $r->review_date?->format('Y-m-d H:i:s'),
                     $plan?->user?->name ?? '—',
@@ -337,6 +373,95 @@ class DashboardController extends Controller implements HasMiddleware
             $cursor->addWeek();
         }
         return $buckets;
+    }
+
+    private function getAdvancedAnalytics(Carbon $start, Carbon $end, Carbon $prevStart, Carbon $prevEnd): array
+    {
+        // Most active hours analysis
+        $hourlyActivity = ReviewRecord::selectRaw('HOUR(review_date) as hour, COUNT(*) as count')
+            ->whereBetween('review_date', [$start, $end])
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get()
+            ->pluck('count', 'hour')
+            ->toArray();
+
+        $mostActiveHour = collect($hourlyActivity)->sortDesc()->keys()->first();
+        $mostActiveHourCount = $hourlyActivity[$mostActiveHour] ?? 0;
+
+        // Weekly patterns
+        $weeklyPattern = ReviewRecord::selectRaw('DAYOFWEEK(review_date) as day, COUNT(*) as count')
+            ->whereBetween('review_date', [$start, $end])
+            ->groupBy('day')
+            ->get()
+            ->pluck('count', 'day')
+            ->toArray();
+
+        $dayNames = [1 => 'الأحد', 2 => 'الاثنين', 3 => 'الثلاثاء', 4 => 'الأربعاء', 5 => 'الخميس', 6 => 'الجمعة', 7 => 'السبت'];
+        $mostActiveDay = collect($weeklyPattern)->sortDesc()->keys()->first();
+        $mostActiveDayName = $dayNames[$mostActiveDay] ?? 'غير محدد';
+
+        // Performance trends
+        $currentAvgPerformance = ReviewRecord::whereBetween('review_date', [$start, $end])->avg('performance_rating');
+        $prevAvgPerformance = ReviewRecord::whereBetween('review_date', [$prevStart, $prevEnd])->avg('performance_rating');
+        $performanceTrend = $prevAvgPerformance > 0 ? round((($currentAvgPerformance - $prevAvgPerformance) / $prevAvgPerformance) * 100, 1) : 0;
+
+        // Success rate analysis
+        $currentSuccessRate = ReviewRecord::whereBetween('review_date', [$start, $end])
+            ->selectRaw('(SUM(CASE WHEN successful = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100 as rate')
+            ->value('rate');
+        $prevSuccessRate = ReviewRecord::whereBetween('review_date', [$prevStart, $prevEnd])
+            ->selectRaw('(SUM(CASE WHEN successful = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100 as rate')
+            ->value('rate');
+        $successRateTrend = $prevSuccessRate > 0 ? round($currentSuccessRate - $prevSuccessRate, 1) : 0;
+
+        // Chapter performance
+        $chapterStats = MemorizationProgress::select('chapter_id', DB::raw('SUM(verses_memorized) as total_verses'))
+            ->with('chapter')
+            ->groupBy('chapter_id')
+            ->orderByDesc('total_verses')
+            ->limit(5)
+            ->get();
+
+        $topChapters = $chapterStats->map(function ($stat) {
+            return [
+                'name' => $stat->chapter?->name_ar ?? 'غير محدد',
+                'verses' => (int) $stat->total_verses,
+                'progress' => min(100, round(($stat->total_verses / ($stat->chapter?->verses_count ?? 1)) * 100, 1))
+            ];
+        });
+
+        // Activity intensity
+        $totalReviews = ReviewRecord::whereBetween('review_date', [$start, $end])->count();
+        $totalDays = $start->diffInDays($end) + 1;
+        $dailyAverage = round($totalReviews / $totalDays, 1);
+
+        // Student engagement levels
+        $activeStudentsCount = MemorizationPlan::where('status', 'active')->distinct('user_id')->count('user_id');
+        $studentsWithRecentActivity = ReviewRecord::whereBetween('review_date', [$start, $end])
+            ->join('spaced_repetitions', 'review_records.spaced_repetition_id', '=', 'spaced_repetitions.id')
+            ->join('plan_items', 'spaced_repetitions.plan_item_id', '=', 'plan_items.id')
+            ->join('memorization_plans', 'plan_items.plan_id', '=', 'memorization_plans.id')
+            ->distinct('memorization_plans.user_id')
+            ->count('memorization_plans.user_id');
+
+        $engagementRate = $activeStudentsCount > 0 ? round(($studentsWithRecentActivity / $activeStudentsCount) * 100, 1) : 0;
+
+        return [
+            'mostActiveHour' => $mostActiveHour ?? 20,
+            'mostActiveHourCount' => $mostActiveHourCount,
+            'mostActiveDay' => $mostActiveDayName,
+            'performanceTrend' => $performanceTrend,
+            'successRateTrend' => $successRateTrend,
+            'currentSuccessRate' => round($currentSuccessRate ?? 0, 1),
+            'topChapters' => $topChapters,
+            'dailyAverage' => $dailyAverage,
+            'engagementRate' => $engagementRate,
+            'totalReviews' => $totalReviews,
+            'hourlyActivity' => $hourlyActivity,
+            'weeklyPattern' => $weeklyPattern,
+            'dayNames' => $dayNames
+        ];
     }
 }
 
