@@ -5,19 +5,49 @@
 
 @section('content')
 <div class="space-y-6">
-<form method="GET" action="{{ route('admin.dashboard') }}" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-<div class="col-span-1 md:col-span-2">
-<label class="block text-xs text-slate-400 mb-1">الفترة الزمنية</label>
-<select name="range" class="w-full px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700 text-slate-100 focus:outline-none">
+<div class="card-elegant rounded-2xl p-5">
+<div class="flex items-center justify-between mb-4">
+<div>
+<div class="text-xs text-slate-500">لوحة المتصدرين</div>
+<h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">الأفضل أداءً</h2>
+</div>
+<form method="GET" action="{{ route('admin.dashboard') }}" class="flex items-center gap-2">
+<select name="range" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none">
 @foreach(($filterOptions['ranges'] ?? []) as $key => $label)
-<option value="{{ $key }}" {{ ($filters['range'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+<option value="{{ $key }}" {{ ($filters['range'] ?? 'last_30_days') === $key ? 'selected' : '' }}>{{ $label }}</option>
 @endforeach
 </select>
-</div>
-<div class="flex items-end">
-<button type="submit" class="w-full px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">تطبيق</button>
-</div>
+<select name="lb_period" class="px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700 text-slate-100 focus:outline-none">
+<option value="daily" {{ ($lbPeriod ?? 'monthly') === 'daily' ? 'selected' : '' }}>اليوم</option>
+<option value="monthly" {{ ($lbPeriod ?? 'monthly') === 'monthly' ? 'selected' : '' }}>هذا الشهر</option>
+<option value="yearly" {{ ($lbPeriod ?? 'monthly') === 'yearly' ? 'selected' : '' }}>هذه السنة</option>
+</select>
+<button class="px-3 py-2 rounded-xl bg-emerald-600 text-white">تحديث</button>
 </form>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+@php $medals=['🥇','🥈','🥉']; @endphp
+@forelse(($leaderboardTop ?? []) as $i => $row)
+<div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-lg">{{ $medals[$i] ?? ($row['rank'] ?? $i+1) }}</div>
+<div>
+<div class="font-semibold text-slate-800 dark:text-slate-100">{{ $row['name'] }}</div>
+<div class="text-xs text-slate-500">الرتبة: {{ $row['rank'] }}</div>
+</div>
+</div>
+<div class="inline-flex items-center gap-2">
+<span class="text-slate-500 text-xs">النقاط</span>
+<span class="px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 font-semibold">{{ number_format($row['points'] ?? 0) }}</span>
+</div>
+</div>
+</div>
+@empty
+<div class="text-slate-500 text-sm">لا تتوفر بيانات لهذه الفترة.</div>
+@endforelse
+</div>
+</div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 @foreach(($kpis ?? []) as $kpi)
 @php
@@ -145,31 +175,10 @@ elseif (str_contains($label, 'متوسط مراجعات')) { $from='from-sky-500
 </div>
 <div class="card-elegant rounded-2xl p-4">
 <div class="flex items-center justify-between mb-3">
-<div class="font-semibold text-slate-700 dark:text-slate-200">لوحة المتصدرين (هذا الشهر)</div>
-</div>
-<div class="divide-y divide-slate-100 dark:divide-slate-700/50">
-@php $medals=['🥇','🥈','🥉']; @endphp
-@foreach(($leaderboardTop ?? []) as $i => $row)
-<div class="flex items-center justify-between py-3">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-lg">{{ $medals[$i] ?? ($row['rank'] ?? $i+1) }}</div>
-<div>
-<div class="font-semibold text-slate-800 dark:text-slate-100">{{ $row['name'] }}</div>
-<div class="text-xs text-slate-500">الرتبة: {{ $row['rank'] }}</div>
-</div>
-</div>
-<div class="inline-flex items-center gap-2">
-<span class="text-slate-500 text-xs">النقاط</span>
-<span class="px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 font-semibold">{{ number_format($row['points'] ?? 0) }}</span>
-</div>
-</div>
-@endforeach
-</div>
-</div>
-<div class="card-elegant rounded-2xl p-4">
-<div class="flex items-center justify-between mb-3">
 <div class="font-semibold text-slate-700 dark:text-slate-200">المراجعات الأخيرة</div>
-<div class="flex items-center gap-2"><a href="#" class="px-3 py-1 rounded-lg bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200">تصدير CSV</a></div>
+<div class="flex items-center gap-2">
+<a href="{{ route('admin.dashboard.export-reviews', ['range' => $filters['range'] ?? 'last_30_days']) }}" class="px-3 py-1 rounded-lg bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200">تصدير CSV</a>
+</div>
 </div>
 <div class="overflow-x-auto">
 <table class="min-w-full text-sm">
@@ -195,6 +204,12 @@ elseif (str_contains($label, 'متوسط مراجعات')) { $from='from-sky-500
 </tbody>
 </table>
 </div>
+</div>
+<div class="card-elegant rounded-2xl p-4">
+<div class="flex items-center justify-between mb-3">
+<div class="font-semibold text-slate-700 dark:text-slate-200">توزيع التقييمات</div>
+</div>
+<canvas id="ratingsChart" height="220"></canvas>
 </div>
 </div>
 @push('scripts')
@@ -233,7 +248,12 @@ const ctx = document.getElementById('srsBreakdownChart');
 if (!ctx || !chartsData.srsBreakdown) return;
 new Chart(ctx, { type: 'doughnut', data: { labels: chartsData.srsBreakdown.labels, datasets: [{ data: chartsData.srsBreakdown.data, backgroundColor: chartsData.srsBreakdown.colors, borderWidth: 0 }] }, options: { plugins: { legend: { rtl: true, position: 'bottom' } } } });
 }
-document.addEventListener('DOMContentLoaded', function() { buildCohortChart(); buildVelocityChart(); buildCoverageChart(); buildAdherenceChart(); buildSrsStatusChart(); buildSrsBreakdownChart(); });
+function buildRatingsChart() {
+const ctx = document.getElementById('ratingsChart');
+if (!ctx || !chartsData.ratings) return;
+new Chart(ctx, { type: 'bar', data: { labels: chartsData.ratings.labels, datasets: [{ label: 'عدد المراجعات', data: chartsData.ratings.data, backgroundColor: 'rgba(99,102,241,0.6)', borderRadius: 8 }] }, options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+}
+document.addEventListener('DOMContentLoaded', function() { buildCohortChart(); buildVelocityChart(); buildCoverageChart(); buildAdherenceChart(); buildSrsStatusChart(); buildSrsBreakdownChart(); buildRatingsChart(); });
 </script>
 @endpush
 @endsection

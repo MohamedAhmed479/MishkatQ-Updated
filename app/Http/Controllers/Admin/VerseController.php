@@ -69,7 +69,7 @@ class VerseController extends Controller implements HasMiddleware
 
     public function show(Verse $verse): View
     {
-        $verse->load('chapter');
+        $verse->load(['chapter', 'recitations.reciter']);
         return view('admin.verses.show', compact('verse'));
     }
 

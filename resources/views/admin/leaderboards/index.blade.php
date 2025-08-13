@@ -105,51 +105,51 @@
                     <table class="w-full">
                         <thead class="bg-slate-50 dark:bg-slate-800/50">
                             <tr>
-                                <th class="text-right p-4 text-sm font-medium text-slate-600 dark:text-slate-400 border-b">#</th>
-                                <th class="text-right p-4 text-sm font-medium text-slate-600 dark:text-slate-400 border-b">المستخدم</th>
-                                <th class="text-right p-4 text-sm font-medium text-slate-600 dark:text-slate-400 border-b">النقاط</th>
-                                <th class="text-right p-4 text-sm font-medium text-slate-600 dark:text-slate-400 border-b">الرتبة</th>
-                                <th class="text-right p-4 text-sm font-medium text-slate-600 dark:text-slate-400 border-b">الفترة</th>
-                                <th class="text-right p-4 text-sm font-medium text-slate-600 dark:text-slate-400 border-b">من</th>
-                                <th class="text-right p-4 text-sm font-medium text-slate-600 dark:text-slate-400 border-b">إلى</th>
-                                <th class="text-center p-4 text-sm font-medium text-slate-600 dark:text-slate-400 border-b">إجراءات</th>
+                                <th class="text-right p-4 text-sm font-medium text-white border-b">#</th>
+                                <th class="text-right p-4 text-sm font-medium text-white border-b">المستخدم</th>
+                                <th class="text-right p-4 text-sm font-medium text-white border-b">النقاط</th>
+                                <th class="text-right p-4 text-sm font-medium text-white border-b">الرتبة</th>
+                                <th class="text-right p-4 text-sm font-medium text-white border-b">الفترة</th>
+                                <th class="text-right p-4 text-sm font-medium text-white border-b">من</th>
+                                <th class="text-right p-4 text-sm font-medium text-white border-b">إلى</th>
+                                <th class="text-center p-4 text-sm font-medium text-white border-b">إجراءات</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                             @foreach($leaderboards as $entry)
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-4">{{ $entry->id }}</td>
-                                    <td class="p-4">
+                                    <td class="p-4 text-white">{{ $entry->id }}</td>
+                                    <td class="p-4 text-white">
                                         <div class="flex items-center gap-2">
                                             <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-xs">{{ substr($entry->user->name, 0, 1) }}</div>
                                             <div>
-                                                <div class="font-medium text-slate-800 dark:text-slate-200">{{ $entry->user->name }}</div>
-                                                <div class="text-sm text-slate-600 dark:text-slate-400">{{ $entry->user->email }}</div>
+                                                <div class="font-medium text-white">{{ $entry->user->name }}</div>
+                                                <div class="text-sm text-white">{{ $entry->user->email }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="p-4">{{ $entry->total_points }}</td>
-                                    <td class="p-4">
-                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">{{ $entry->rank }}</span>
+                                    <td class="p-4 text-white">{{ $entry->total_points }}</td>
+                                    <td class="p-4 text-white">
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-700/40 text-white">{{ $entry->rank }}</span>
                                     </td>
-                                    <td class="p-4">
+                                    <td class="p-4 text-white">
                                         @php $labels = ['daily'=>'يومي','weekly'=>'أسبوعي','monthly'=>'شهري','yearly'=>'سنوي']; @endphp
-                                        <span class="text-sm">{{ $labels[$entry->period_type] ?? $entry->period_type }}</span>
+                                        <span class="text-sm text-white">{{ $labels[$entry->period_type] ?? $entry->period_type }}</span>
                                     </td>
-                                    <td class="p-4">{{ $entry->period_start?->format('Y-m-d') }}</td>
-                                    <td class="p-4">{{ $entry->period_end?->format('Y-m-d') }}</td>
-                                    <td class="p-4">
+                                    <td class="p-4 text-white">{{ $entry->period_start?->format('Y-m-d') }}</td>
+                                    <td class="p-4 text-white">{{ $entry->period_end?->format('Y-m-d') }}</td>
+                                    <td class="p-4 text-white">
                                         <div class="flex items-center justify-center gap-2">
-                                             <a href="{{ route('admin.leaderboards.show', $entry) }}" class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors @permClass('leaderboards.view')" @permDisabled('leaderboards.view') title="عرض التفاصيل">
+                                             <a href="{{ route('admin.leaderboards.show', $entry) }}" class="p-2 rounded-lg text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors @permClass('leaderboards.view')" @permDisabled('leaderboards.view') title="عرض التفاصيل">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                             </a>
-                                             <a href="{{ route('admin.leaderboards.edit', $entry) }}" class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors @permClass('leaderboards.edit')" @permDisabled('leaderboards.edit') title="تعديل">
+                                             <a href="{{ route('admin.leaderboards.edit', $entry) }}" class="p-2 rounded-lg text-white hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors @permClass('leaderboards.edit')" @permDisabled('leaderboards.edit') title="تعديل">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                             </a>
                                              <form method="POST" action="{{ route('admin.leaderboards.destroy', $entry) }}" class="inline @permClass('leaderboards.delete')" onsubmit="return confirm('هل تريد حذف هذا السجل؟')">
                                                 @csrf
                                                 @method('DELETE')
-                                                 <button type="submit" @permDisabled('leaderboards.delete') class="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="حذف">
+                                                 <button type="submit" @permDisabled('leaderboards.delete') class="p-2 rounded-lg text-white hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="حذف">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                 </button>
                                             </form>

@@ -23,7 +23,7 @@ class DashboardController extends Controller implements HasMiddleware
     {
         return [
             'auth:admin',
-            new ControllerMiddleware('permission:dashboard.view', only: ['index']),
+            new ControllerMiddleware('permission:dashboard.view', only: ['index', 'exportReviews']),
         ];
     }
 
@@ -179,23 +179,35 @@ class DashboardController extends Controller implements HasMiddleware
                 'score' => '-',
             ]);
 
-        // Top leaderboard (هذا الشهر)
-        $monthStart = now()->startOfMonth();
-        $monthEnd = now()->endOfMonth();
-        $leaderboardTop = Leaderboard::with('user')
-            ->where('period_type', 'monthly')
-            ->where('period_start', $monthStart)
-            ->where('period_end', $monthEnd)
-            ->orderBy('rank')
-            ->limit(5)
-            ->get()
-            ->map(function ($r) {
-                return [
-                    'name' => $r->user?->name ?? '—',
-                    'points' => (int) $r->total_points,
-                    'rank' => (int) $r->rank,
-                ];
-            });
+        // Leaderboard with period filter
+        $lbPeriod = $request->input('lb_period', 'monthly');
+        [$lbStart, $lbEnd] = $this->resolveLeaderboardPeriod($lbPeriod);
+        $leaderboardQuery = Leaderboard::with('user')
+            ->where('period_type', $lbPeriod)
+            ->whereDate('period_start', $lbStart->toDateString())
+            ->whereDate('period_end', $lbEnd->toDateString())
+            ->orderBy('rank');
+        $leaderboardTop = $leaderboardQuery->limit(5)->get();
+
+        if ($leaderboardTop->isEmpty()) {
+            $latestStart = Leaderboard::where('period_type', $lbPeriod)->max('period_start');
+            if ($latestStart) {
+                $leaderboardTop = Leaderboard::with('user')
+                    ->where('period_type', $lbPeriod)
+                    ->whereDate('period_start', Carbon::parse($latestStart)->toDateString())
+                    ->orderBy('rank')
+                    ->limit(5)
+                    ->get();
+            }
+        }
+
+        $leaderboardTop = $leaderboardTop->map(function ($r) {
+            return [
+                'name' => $r->user?->name ?? '—',
+                'points' => (int) $r->total_points,
+                'rank' => (int) $r->rank,
+            ];
+        });
 
         // At-risk students (كثرة المتأخر/آخر نشاط قديم)
         $overdueByUser = DB::table('spaced_repetitions as s')
@@ -239,8 +251,46 @@ class DashboardController extends Controller implements HasMiddleware
             });
 
         return view('admin.dashboard', compact(
-            'filters', 'filterOptions', 'kpis', 'charts', 'topStudents', 'atRiskStudents', 'recentReviews', 'leaderboardTop'
+            'filters', 'filterOptions', 'kpis', 'charts', 'topStudents', 'atRiskStudents', 'recentReviews', 'leaderboardTop', 'lbPeriod'
         ));
+    }
+
+    public function exportReviews(Request $request)
+    {
+        $range = $request->input('range', 'last_30_days');
+        [$start, $end] = $this->resolveRange($range);
+
+        $rows = ReviewRecord::with(['spacedRepetition.planItem', 'spacedRepetition.planItem.memorizationPlan.user'])
+            ->whereBetween('review_date', [$start, $end])
+            ->orderByDesc('review_date')
+            ->get()
+            ->map(function ($r) {
+                $planItem = $r->spacedRepetition?->planItem;
+                $plan = $planItem?->memorizationPlan;
+                $desc = $planItem ? $planItem->getDescription() : '—';
+                return [
+                    $r->review_date?->format('Y-m-d H:i:s'),
+                    $plan?->user?->name ?? '—',
+                    $desc,
+                    (string) $r->performance_rating,
+                    $r->successful ? 'success' : 'fail',
+                ];
+            });
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ];
+
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            // UTF-8 BOM for Excel compatibility
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['date', 'user', 'segment', 'rating', 'result']);
+            foreach ($rows as $row) {
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        }, 'recent-reviews.csv', $headers);
     }
 
     private function resolveRange(string $range): array
@@ -252,6 +302,16 @@ class DashboardController extends Controller implements HasMiddleware
             'last_month' => [$now->copy()->subMonthNoOverflow()->startOfMonth(), $now->copy()->subMonthNoOverflow()->endOfMonth()],
             'last_12_months' => [$now->copy()->subMonths(11)->startOfMonth(), $now->copy()->endOfMonth()],
             default => [(clone $now)->subDays(29)->startOfDay(), (clone $now)->endOfDay()],
+        };
+    }
+
+    private function resolveLeaderboardPeriod(string $period): array
+    {
+        $now = now();
+        return match ($period) {
+            'daily' => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
+            'yearly' => [$now->copy()->startOfYear(), $now->copy()->endOfYear()],
+            default => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
         };
     }
 

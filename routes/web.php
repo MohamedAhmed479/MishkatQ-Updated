@@ -1,108 +1,180 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\AuthController as AdminAuthController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\BadgeController;
-use App\Http\Controllers\Admin\DeviceController;
-use App\Http\Controllers\Admin\ChapterController;
-use App\Http\Controllers\Admin\AuditLogController;
-use App\Http\Controllers\Admin\JuzController;
-use App\Http\Controllers\Admin\VerseController;
-use App\Http\Controllers\Admin\WordController;
-use App\Http\Controllers\Admin\TafsirController;
-use App\Http\Controllers\Admin\ReciterController;
-use App\Http\Controllers\Admin\RecitationController;
-use App\Http\Controllers\Admin\LeaderboardController;
-use App\Http\Controllers\Admin\NotificationController;
-use App\Http\Controllers\Admin\AdminManagementController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\MemorizationPlanController as AdminMemorizationPlanController;
-use App\Http\Controllers\Admin\PlanItemController as AdminPlanItemController;
-use App\Http\Controllers\Admin\SpacedRepetitionController as AdminSpacedRepetitionController;
-use App\Http\Controllers\Admin\ReviewRecordController as AdminReviewRecordController;
+use App\Http\Controllers\Admin\{
+    AuthController as AdminAuthController,
+    DashboardController as AdminDashboardController,
+    UserManagementController,
+    BadgeController,
+    DeviceController,
+    ChapterController,
+    AuditLogController,
+    JuzController,
+    VerseController,
+    WordController,
+    TafsirController,
+    ReciterController,
+    RecitationController,
+    LeaderboardController,
+    NotificationController,
+    AdminManagementController,
+    RoleController,
+    PermissionController,
+    ProfileController as AdminProfileController,
+    MemorizationPlanController as AdminMemorizationPlanController,
+    PlanItemController as AdminPlanItemController,
+    SpacedRepetitionController as AdminSpacedRepetitionController,
+    ReviewRecordController as AdminReviewRecordController
+};
 
-// Landing or other public routes can stay here...
+/*
+|--------------------------------------------------------------------------
+| Admin Routes
+|--------------------------------------------------------------------------
+*/
 
-// Authentication
-Route::middleware('guest:admin')->prefix('admin')->group(function () {
+// Guest routes (login)
+Route::prefix('admin')->middleware('guest:admin')->group(function () {
     Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [AdminAuthController::class, 'login'])->name('login.submit');
 });
 
-// Admin panel routes (Blade views, session-based auth for 'admin' guard)
-Route::prefix('admin')->as('admin.')->group(function () {
-    // Authentication
-    Route::middleware('guest:admin')->group(function () {
-        Route::post('login', [AdminAuthController::class, 'login'])->name('login.submit');
+// Protected routes
+Route::prefix('admin')->as('admin.')->middleware('auth:admin')->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication
+    |--------------------------------------------------------------------------
+    */
+    Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('export/reviews', [AdminDashboardController::class, 'exportReviews'])->name('dashboard.export-reviews');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Profile
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [AdminProfileController::class, 'edit'])->name('edit');
+        Route::put('/', [AdminProfileController::class, 'update'])->name('update');
     });
 
-    Route::post('logout', [AdminAuthController::class, 'logout'])
-        ->middleware('auth:admin')
-        ->name('logout');
+    /*
+    |--------------------------------------------------------------------------
+    | Users
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('users', UserManagementController::class);
 
-    // Protected admin area
-    Route::middleware('auth:admin')->group(function () {
-        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-
-        // Users CRUD
-        Route::resource('users', UserManagementController::class);
-
-        // Badges CRUD
-        Route::resource('badges', BadgeController::class);
-        Route::patch('badges/{badge}/toggle-status', [BadgeController::class, 'toggleStatus'])->name('badges.toggle-status');
-        Route::get('badges/{badge}/awarded-users', [BadgeController::class, 'awardedUsers'])->name('badges.awarded-users');
-
-        // Devices CRUD
-        Route::resource('devices', DeviceController::class);
-        Route::patch('devices/{device}/revoke-token', [DeviceController::class, 'revokeToken'])->name('devices.revoke-token');
-        Route::get('devices/user/{user}', [DeviceController::class, 'userDevices'])->name('devices.user-devices');
-        Route::delete('devices/bulk-delete', [DeviceController::class, 'bulkDelete'])->name('devices.bulk-delete');
-
-        Route::resource("chapters", ChapterController::class);
-        Route::resource('juzs', JuzController::class);
-        Route::resource('verses', VerseController::class);
-        Route::resource('words', WordController::class);
-        Route::resource('tafsirs', TafsirController::class);
-        Route::resource('reciters', ReciterController::class);
-        Route::resource('recitations', RecitationController::class);
-
-        // Memorization Plans & Plan Items
-        Route::resource('memorization-plans', AdminMemorizationPlanController::class);
-        Route::resource('plan-items', AdminPlanItemController::class);
-        Route::resource('spaced-repetitions', AdminSpacedRepetitionController::class);
-        Route::resource('review-records', AdminReviewRecordController::class);
-
-        // Leaderboards CRUD
-        Route::resource('leaderboards', LeaderboardController::class);
-        Route::delete('leaderboards/bulk-delete', [LeaderboardController::class, 'bulkDelete'])->name('leaderboards.bulk-delete');
-        Route::post('leaderboards/recalculate', [LeaderboardController::class, 'recalculate'])->name('leaderboards.recalculate');
-
-        // Notifications
-        Route::resource('notifications', NotificationController::class)->only(['index','show','destroy']);
-        Route::delete('notifications/bulk-delete', [NotificationController::class, 'bulkDelete'])->name('notifications.bulk-delete');
-        Route::patch('notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-        Route::patch('notifications/{notification}/mark-as-unread', [NotificationController::class, 'markAsUnread'])->name('notifications.mark-as-unread');
-        Route::patch('notifications/bulk-mark-as-read', [NotificationController::class, 'bulkMarkAsRead'])->name('notifications.bulk-mark-as-read');
-        Route::patch('notifications/bulk-mark-as-unread', [NotificationController::class, 'bulkMarkAsUnread'])->name('notifications.bulk-mark-as-unread');
-
-        // Audit Logs CRUD
-        Route::resource('audit-logs', AuditLogController::class)->parameters([
-            'audit-logs' => 'audit_log'
-        ]);
-
-        // Admins CRUD
-        Route::resource('admins', AdminManagementController::class)->except(['show']);
-
-        // Roles & Permissions
-        Route::resource('roles', RoleController::class)->only(['index','store','update','destroy']);
-        Route::resource('permissions', PermissionController::class)->only(['index','store','update','destroy']);
-
-        // Additional chapter routes
-        Route::get('chapters/{chapter}/verses', [ChapterController::class, 'verses'])->name('chapters.verses');
-        Route::get('chapters/{chapter}/memorization-progress', [ChapterController::class, 'memorizationProgress'])->name('chapters.memorization-progress');
-        Route::get('chapters/{chapter}/memorization-plans', [ChapterController::class, 'memorizationPlans'])->name('chapters.memorization-plans');
-
+    /*
+    |--------------------------------------------------------------------------
+    | Badges
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('badges')->name('badges.')->group(function () {
+        Route::patch('{badge}/toggle-status', [BadgeController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('{badge}/awarded-users', [BadgeController::class, 'awardedUsers'])->name('awarded-users');
     });
+    Route::resource('badges', BadgeController::class);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Devices
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('devices')->name('devices.')->group(function () {
+        Route::patch('{device}/revoke-token', [DeviceController::class, 'revokeToken'])->name('revoke-token');
+        Route::get('user/{user}', [DeviceController::class, 'userDevices'])->name('user-devices');
+        Route::delete('bulk-delete', [DeviceController::class, 'bulkDelete'])->name('bulk-delete');
+    });
+    Route::resource('devices', DeviceController::class);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Quran Content
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('chapters')->name('chapters.')->group(function () {
+        Route::get('{chapter}/verses', [ChapterController::class, 'verses'])->name('verses');
+        Route::get('{chapter}/memorization-progress', [ChapterController::class, 'memorizationProgress'])->name('memorization-progress');
+        Route::get('{chapter}/memorization-plans', [ChapterController::class, 'memorizationPlans'])->name('memorization-plans');
+    });
+    Route::resources([
+        'chapters'     => ChapterController::class,
+        'juzs'         => JuzController::class,
+        'verses'       => VerseController::class,
+        'words'        => WordController::class,
+        'tafsirs'      => TafsirController::class,
+        'reciters'     => ReciterController::class,
+        'recitations'  => RecitationController::class,
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Memorization Plans
+    |--------------------------------------------------------------------------
+    */
+    Route::resources([
+        'memorization-plans' => AdminMemorizationPlanController::class,
+        'plan-items'         => AdminPlanItemController::class,
+        'spaced-repetitions' => AdminSpacedRepetitionController::class,
+        'review-records'     => AdminReviewRecordController::class,
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Leaderboards
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('leaderboards')->name('leaderboards.')->group(function () {
+        Route::delete('bulk-delete', [LeaderboardController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('recalculate', [LeaderboardController::class, 'recalculate'])->name('recalculate');
+    });
+    Route::resource('leaderboards', LeaderboardController::class);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::delete('bulk-delete', [NotificationController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::patch('{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::patch('{notification}/mark-as-unread', [NotificationController::class, 'markAsUnread'])->name('mark-as-unread');
+        Route::patch('bulk-mark-as-read', [NotificationController::class, 'bulkMarkAsRead'])->name('bulk-mark-as-read');
+        Route::patch('bulk-mark-as-unread', [NotificationController::class, 'bulkMarkAsUnread'])->name('bulk-mark-as-unread');
+    });
+    Route::resource('notifications', NotificationController::class)->only(['index', 'show', 'destroy']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Logs
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('audit-logs', AuditLogController::class)->parameters([
+        'audit-logs' => 'audit_log'
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Management
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('admins', AdminManagementController::class)->except(['show']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Roles & Permissions
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('permissions', PermissionController::class)->only(['index', 'store', 'update', 'destroy']);
 });
