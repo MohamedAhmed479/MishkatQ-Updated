@@ -57,6 +57,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'verified.user' => \App\Http\Middleware\EnsureUserEmailIsVerified::class,
+            'audit' => \App\Http\Middleware\AuditMiddleware::class,
+        ]);
+        
+        // Apply audit middleware to API routes
+        $middleware->api(append: [
+            \App\Http\Middleware\AuditMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
