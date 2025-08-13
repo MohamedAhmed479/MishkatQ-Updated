@@ -159,6 +159,10 @@ Route::prefix('admin')->as('admin.')->middleware('auth:admin')->group(function (
     | Audit Logs
     |--------------------------------------------------------------------------
     */
+                Route::prefix('audit-logs')->name('audit-logs.')->group(function () {
+                Route::delete('bulk-delete', [AuditLogController::class, 'bulkDelete'])->name('bulk-delete');
+                Route::delete('bulk-delete-by-date', [AuditLogController::class, 'bulkDeleteByDate'])->name('bulk-delete-by-date');
+            });
     Route::resource('audit-logs', AuditLogController::class)->parameters([
         'audit-logs' => 'audit_log'
     ]);

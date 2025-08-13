@@ -4,42 +4,131 @@
 @section('page-subtitle', 'يمكن تعديل التفاصيل غير الحساسة للتوثيق')
 
 @section('content')
-<div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">تعديل سجل</h1>
-        <a href="{{ route('admin.audit-logs.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">العودة</a>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
+    <!-- Enhanced Header -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8 mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-white bg-gradient-to-r from-amber-600 to-amber-500 bg-clip-text text-transparent">تعديل سجل التدقيق</h1>
+                    <p class="text-slate-600 dark:text-slate-300 text-lg mt-1">تحديث وتعديل تفاصيل السجل الحالي</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Log ID Badge -->
+                <div class="text-center">
+                    <div class="text-xs text-slate-400 mb-1">معرف السجل</div>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                        #{{ $log->id }}
+                    </span>
+                </div>
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
+                    <a href="{{ route('admin.audit-logs.show', $log) }}" 
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl shadow-lg transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        عرض التفاصيل
+                    </a>
+                    <a href="{{ route('admin.audit-logs.index') }}" 
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white font-medium rounded-xl shadow-lg transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-        <form method="POST" action="{{ route('admin.audit-logs.update', $log) }}" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Enhanced Edit Form Container -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <!-- Form Header -->
+        <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-white">✏️ تحديث سجل التدقيق #{{ $log->id }}</h2>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ route('admin.audit-logs.update', $log) }}" class="p-8">
             @csrf
             @method('PUT')
-            <div>
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">الأكشن</label>
-                <input name="action" value="{{ old('action', $log->action) }}" required class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-            </div>
-            <div>
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">الحالة</label>
-                <input name="status" value="{{ old('status', $log->status) }}" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-            </div>
-            <div>
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">الشدة</label>
-                <select name="severity" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-                    <option value="">—</option>
-                    <option value="low" {{ old('severity', $log->severity) === 'low' ? 'selected' : '' }}>low</option>
-                    <option value="medium" {{ old('severity', $log->severity) === 'medium' ? 'selected' : '' }}>medium</option>
-                    <option value="high" {{ old('severity', $log->severity) === 'high' ? 'selected' : '' }}>high</option>
-                    <option value="critical" {{ old('severity', $log->severity) === 'critical' ? 'selected' : '' }}>critical</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">الفئة</label>
-                <input name="category" value="{{ old('category', $log->category) }}" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+            <!-- Essential Information Section -->
+            <div class="mb-10">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">📋 المعلومات الأساسية</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-white">⚡ العملية المنفذة <span class="text-red-400">*</span></label>
+                        <input name="action" 
+                               value="{{ old('action', $log->action) }}"
+                               required 
+                               class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-white placeholder-slate-400 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300">
+                        <p class="text-xs text-slate-400">مثل: user.created, post.updated, login.success</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-white">✅ حالة العملية</label>
+                        <input name="status" 
+                               value="{{ old('status', $log->status) }}"
+                               class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-white placeholder-slate-400 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300">
+                        <p class="text-xs text-slate-400">حالة تنفيذ العملية</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-white">⚠️ مستوى الخطورة</label>
+                        <select name="severity" 
+                                class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-white focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300">
+                            <option value="">اختر مستوى الخطورة</option>
+                            <option value="low" {{ old('severity', $log->severity) === 'low' ? 'selected' : '' }}>🟢 منخفض (Low)</option>
+                            <option value="medium" {{ old('severity', $log->severity) === 'medium' ? 'selected' : '' }}>🟡 متوسط (Medium)</option>
+                            <option value="high" {{ old('severity', $log->severity) === 'high' ? 'selected' : '' }}>🟠 عالي (High)</option>
+                            <option value="critical" {{ old('severity', $log->severity) === 'critical' ? 'selected' : '' }}>🔴 خطير (Critical)</option>
+                        </select>
+                        <p class="text-xs text-slate-400">تحديد أهمية هذه العملية</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-white">📂 فئة العملية</label>
+                        <input name="category" 
+                               value="{{ old('category', $log->category) }}"
+                               class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-white placeholder-slate-400 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300" 
+                               placeholder="auth, users, posts, settings...">
+                        <p class="text-xs text-slate-400">تصنيف العملية حسب النوع</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="md:col-span-2">
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">الوصف</label>
-                <textarea name="description" rows="3" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">{{ old('description', $log->description) }}</textarea>
+            <!-- Description Section -->
+            <div class="mb-10">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-white">📝 وصف العملية</label>
+                    <textarea name="description" 
+                              rows="4" 
+                              class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-white placeholder-slate-400 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 resize-none"
+                              placeholder="وصف تفصيلي للعملية التي تم تنفيذها...">{{ old('description', $log->description) }}</textarea>
+                    <p class="text-xs text-slate-400">شرح مفصل عن طبيعة العملية والغرض منها</p>
+                </div>
             </div>
 
             <div>
@@ -148,9 +237,29 @@
                 </div>
             </div>
 
-            <div class="md:col-span-2 flex items-center justify-end gap-3">
-                <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg">حفظ</button>
-                <a href="{{ route('admin.audit-logs.index') }}" class="px-5 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg">إلغاء</a>
+            <!-- Action Buttons -->
+            <div class="border-t border-slate-200 dark:border-slate-700 pt-8 mt-10">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-slate-400">
+                        <span class="font-medium">آخر تحديث:</span> {{ $log->updated_at->format('Y-m-d H:i:s') }}
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <a href="{{ route('admin.audit-logs.index') }}" 
+                           class="inline-flex items-center gap-2 px-8 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white font-medium rounded-xl transition-all duration-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            إلغاء التعديل
+                        </a>
+                        <button type="submit" 
+                                class="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            حفظ التعديلات
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
     </div>

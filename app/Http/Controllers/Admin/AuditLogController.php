@@ -21,7 +21,7 @@ class AuditLogController extends Controller implements HasMiddleware
             new ControllerMiddleware('permission:audit-logs.view', only: ['index','show']),
             new ControllerMiddleware('permission:audit-logs.create', only: ['create','store']),
             new ControllerMiddleware('permission:audit-logs.edit', only: ['edit','update']),
-            new ControllerMiddleware('permission:audit-logs.delete', only: ['destroy']),
+            new ControllerMiddleware('permission:audit-logs.delete', only: ['destroy', 'bulkDelete', 'bulkDeleteByDate']),
         ];
     }
 
@@ -153,6 +153,185 @@ class AuditLogController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.audit-logs.index')
             ->with('success', 'تم حذف السجل التدقيقي بنجاح');
+    }
+
+    /**
+     * Bulk delete selected audit logs
+     */
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'log_ids' => 'required|string',
+        ]);
+
+        // تحويل string معرفات السجلات إلى array
+        $logIds = explode(',', $request->log_ids);
+        $logIds = array_filter(array_map('intval', $logIds)); // تنظيف وتحويل إلى أرقام
+
+        if (empty($logIds)) {
+            return redirect()->route('admin.audit-logs.index')
+                ->with('error', 'لم يتم تحديد أي سجلات للحذف');
+        }
+
+        try {
+            // التحقق من الصلاحيات للحذف
+            if (!auth('admin')->user()->can('audit-logs.delete')) {
+                return redirect()->route('admin.audit-logs.index')
+                    ->with('error', 'ليس لديك صلاحية حذف السجلات');
+            }
+
+            // حذف السجلات المحددة
+            $deletedCount = AuditLog::whereIn('id', $logIds)->delete();
+
+            if ($deletedCount > 0) {
+                return redirect()->route('admin.audit-logs.index')
+                    ->with('success', "تم حذف {$deletedCount} سجل بنجاح");
+            } else {
+                return redirect()->route('admin.audit-logs.index')
+                    ->with('error', 'لم يتم العثور على السجلات المحددة');
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('admin.audit-logs.index')
+                ->with('error', 'حدث خطأ أثناء حذف السجلات: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * حذف السجلات حسب نطاق التاريخ
+     */
+    public function bulkDeleteByDate(Request $request)
+    {
+        $request->validate([
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+            'time_option' => 'required|in:full_day,custom_time',
+            'from_time' => 'nullable|required_if:time_option,custom_time|date_format:H:i',
+            'to_time' => 'nullable|required_if:time_option,custom_time|date_format:H:i|after:from_time',
+        ], [
+            'from_date.required' => 'تاريخ البداية مطلوب',
+            'from_date.date' => 'تاريخ البداية يجب أن يكون تاريخاً صحيحاً',
+            'to_date.required' => 'تاريخ النهاية مطلوب',
+            'to_date.date' => 'تاريخ النهاية يجب أن يكون تاريخاً صحيحاً',
+            'to_date.after_or_equal' => 'تاريخ النهاية يجب أن يكون مساوياً أو بعد تاريخ البداية',
+            'time_option.required' => 'خيار الوقت مطلوب',
+            'time_option.in' => 'خيار الوقت غير صحيح',
+            'from_time.required_if' => 'وقت البداية مطلوب عند اختيار وقت محدد',
+            'from_time.date_format' => 'وقت البداية يجب أن يكون بصيغة صحيحة (HH:MM)',
+            'to_time.required_if' => 'وقت النهاية مطلوب عند اختيار وقت محدد',
+            'to_time.date_format' => 'وقت النهاية يجب أن يكون بصيغة صحيحة (HH:MM)',
+            'to_time.after' => 'وقت النهاية يجب أن يكون بعد وقت البداية',
+        ]);
+
+        try {
+            // التحقق من الصلاحيات للحذف
+            if (!auth('admin')->user()->can('audit-logs.delete')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ليس لديك صلاحية حذف السجلات'
+                ], 403);
+            }
+
+            // إنشاء نطاق التاريخ والوقت
+            $fromDate = $request->from_date;
+            $toDate = $request->to_date;
+            $timeOption = $request->time_option;
+
+            if ($timeOption === 'custom_time') {
+                $fromDateTime = $fromDate . ' ' . $request->from_time . ':00';
+                $toDateTime = $toDate . ' ' . $request->to_time . ':59';
+            } else {
+                $fromDateTime = $fromDate . ' 00:00:00';
+                $toDateTime = $toDate . ' 23:59:59';
+            }
+
+            // التحقق من أن التاريخ النهائي ليس في المستقبل
+            if (strtotime($toDateTime) > time()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا يمكن حذف السجلات من تاريخ في المستقبل'
+                ], 422);
+            }
+
+            // عد السجلات قبل الحذف
+            $recordsCount = AuditLog::whereBetween('created_at', [$fromDateTime, $toDateTime])->count();
+
+            if ($recordsCount === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا توجد سجلات في النطاق الزمني المحدد'
+                ], 404);
+            }
+
+            // التحقق من عدم حذف سجلات حساسة (اختياري)
+            $sensitiveCount = AuditLog::whereBetween('created_at', [$fromDateTime, $toDateTime])
+                ->where('is_sensitive', true)
+                ->count();
+
+            if ($sensitiveCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "يحتوي النطاق على {$sensitiveCount} سجل حساس. لا يمكن حذف السجلات الحساسة"
+                ], 422);
+            }
+
+            // حذف السجلات
+            $deletedCount = AuditLog::whereBetween('created_at', [$fromDateTime, $toDateTime])->delete();
+
+            // إنشاء سجل تدقيق للحذف المتعدد بالتاريخ
+            AuditLog::create([
+                'user_id' => auth('admin')->id(),
+                'user_type' => 'admin',
+                'action' => 'bulk_delete_by_date',
+                'target_type' => 'audit_logs',
+                'target_id' => null,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'severity' => 'high',
+                'status' => 'success',
+                'http_method' => $request->method(),
+                'category' => 'data_management',
+                'description' => "حذف متعدد للسجلات بالتاريخ: {$deletedCount} سجل",
+                'old_values' => null,
+                'new_values' => null,
+                'request_data' => json_encode([
+                    'from_date' => $fromDate,
+                    'to_date' => $toDate,
+                    'time_option' => $timeOption,
+                    'from_time' => $request->from_time,
+                    'to_time' => $request->to_time,
+                    'deleted_count' => $deletedCount,
+                ]),
+                'metadata' => json_encode([
+                    'from_datetime' => $fromDateTime,
+                    'to_datetime' => $toDateTime,
+                    'records_found' => $recordsCount,
+                    'records_deleted' => $deletedCount,
+                    'execution_time' => microtime(true) - LARAVEL_START,
+                ]),
+                'is_sensitive' => false,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "تم حذف {$deletedCount} سجل بنجاح من الفترة المحددة",
+                'deleted_count' => $deletedCount,
+                'date_range' => [
+                    'from' => $fromDateTime,
+                    'to' => $toDateTime
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('خطأ في حذف السجلات بالتاريخ: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء حذف السجلات: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     protected function validateData(Request $request, bool $updating = false): array
