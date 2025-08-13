@@ -36,7 +36,7 @@ use App\Http\Controllers\Admin\{
 // Guest routes (login)
 Route::prefix('admin')->middleware('guest:admin')->group(function () {
     Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [AdminAuthController::class, 'login'])->name('login.submit');
+    Route::post('login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 });
 
 // Protected routes

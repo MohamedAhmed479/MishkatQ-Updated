@@ -59,7 +59,6 @@ class AuditService
             'request_data' => $this->sanitizeRequestData($request),
             'severity' => $severity,
             'is_sensitive' => $isSensitive,
-            'session_id' => $request->session()?->getId(),
             'device_info' => $this->getDeviceInfo($request),
             'status' => $status,
             'category' => $category,
@@ -141,7 +140,7 @@ class AuditService
     public function logApiRequest(Request $request, $response = null, string $status = 'success'): AuditLog
     {
         $action = $this->getActionFromRequest($request);
-        
+
         return $this->log(
             action: $action,
             description: "API Request: {$request->method()} {$request->path()}",
@@ -177,10 +176,10 @@ class AuditService
     {
         if (!$model) return null;
 
-        return $model->name ?? 
-               $model->title ?? 
-               $model->email ?? 
-               $model->username ?? 
+        return $model->name ??
+               $model->title ??
+               $model->email ??
+               $model->username ??
                class_basename($model) . ' #' . $model->getKey();
     }
 
@@ -192,7 +191,7 @@ class AuditService
         if (!$values) return null;
 
         $sensitiveFields = [
-            'password', 'password_confirmation', 'token', 'secret', 
+            'password', 'password_confirmation', 'token', 'secret',
             'api_key', 'private_key', 'credit_card', 'ssn'
         ];
 
@@ -211,7 +210,7 @@ class AuditService
     private function sanitizeRequestData(Request $request): array
     {
         $data = $request->except(['password', 'password_confirmation', 'token']);
-        
+
         // Remove file data to avoid large payloads
         foreach ($data as $key => $value) {
             if ($request->hasFile($key)) {
@@ -283,7 +282,7 @@ class AuditService
     public function logModelChanges(Model $model, string $action, ?array $oldValues = null): AuditLog
     {
         $newValues = null;
-        
+
         if ($action === 'updated' && $model->wasChanged()) {
             $newValues = $model->getChanges();
             $oldValues = $oldValues ?? array_intersect_key($model->getOriginal(), $newValues);

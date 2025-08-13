@@ -22,7 +22,6 @@ class DatabaseSeeder extends Seeder
             ReciterSeeder::class,
             RecitationSeeder::class,
 
-
             // Roles & Permissions for Admin panel
             RolePermissionSeeder::class,
 
@@ -33,46 +32,46 @@ class DatabaseSeeder extends Seeder
             BadgeSeeder::class,
 
             // Devices
-            DeviceSeeder::class,
+            // DeviceSeeder::class,
 
             // Users
-            UserSeeder::class,
+            // UserSeeder::class,
 
             // User Profiles
-            UserProfileSeeder::class,
+            // UserProfileSeeder::class,
 
             // Plan Items
-            PlanItemSeeder::class,
+            // PlanItemSeeder::class,
 
             // Memorization Plans
-            MemorizationPlanSeeder::class,
+            // MemorizationPlanSeeder::class,
 
             // User Preferences
-            UserPreferenceSeeder::class,
+            // UserPreferenceSeeder::class,
 
             // Review Records
-            ReviewRecordSeeder::class,
+            // ReviewRecordSeeder::class,
 
             // Audit Logs
-            AuditLogSeeder::class,
+            // AuditLogSeeder::class,
 
             // Leaderboards
-            LeaderboardSeeder::class,
+            // LeaderboardSeeder::class,
 
             // User Badges
-            UserBadgeSeeder::class,
+            // UserBadgeSeeder::class,
 
             // Points Transactions
-            PointsTransactionSeeder::class,
+            // PointsTransactionSeeder::class,
 
             // Memorization Progress
-            MemorizationProgressSeeder::class,
+            // MemorizationProgressSeeder::class,
 
             // Spaced Repetitions
-            SpacedRepetitionSeeder::class,
+            // SpacedRepetitionSeeder::class,
 
             // Notifications
-            NotificationSeeder::class,
+            // NotificationSeeder::class,
 
             // (User-facing roles can be added later if needed)
         ]);
