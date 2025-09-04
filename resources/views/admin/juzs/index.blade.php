@@ -17,44 +17,47 @@
         </a>
     </div>
 
-    <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 mb-6">
-        <form method="GET" action="{{ route('admin.juzs.index') }}" class="flex flex-wrap items-end gap-4">
-            <div class="min-w-40">
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">بحث برقم الجزء</label>
-                <input type="text" name="q" value="{{ $search }}" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+    <div class="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-700 mb-6">
+        <form method="GET" action="{{ route('admin.juzs.index') }}" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">بحث برقم الجزء</label>
+                    <input type="text" name="q" value="{{ $search }}" class="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-base">
+                </div>
+                <div>
+                    <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">أقل عدد آيات</label>
+                    <input type="number" name="min_verses" value="{{ $minVerses }}" class="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-base">
+                </div>
+                <div>
+                    <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">أكثر عدد آيات</label>
+                    <input type="number" name="max_verses" value="{{ $maxVerses }}" class="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-base">
+                </div>
+                <div>
+                    <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">ترتيب حسب</label>
+                    <select name="sort_by" class="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-base">
+                        <option value="juz_number" {{ $sortBy==='juz_number' ? 'selected' : '' }}>رقم الجزء</option>
+                        <option value="verses_count" {{ $sortBy==='verses_count' ? 'selected' : '' }}>عدد الآيات</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">ترتيب</label>
+                    <select name="sort_order" class="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-base">
+                        <option value="asc" {{ $sortOrder==='asc' ? 'selected' : '' }}>تصاعدي</option>
+                        <option value="desc" {{ $sortOrder==='desc' ? 'selected' : '' }}>تنازلي</option>
+                    </select>
+                </div>
             </div>
-            <div class="min-w-40">
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">أقل عدد آيات</label>
-                <input type="number" name="min_verses" value="{{ $minVerses }}" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-            </div>
-            <div class="min-w-40">
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">أكثر عدد آيات</label>
-                <input type="number" name="max_verses" value="{{ $maxVerses }}" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-            </div>
-            <div class="min-w-40">
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">ترتيب حسب</label>
-                <select name="sort_by" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-                    <option value="juz_number" {{ $sortBy==='juz_number' ? 'selected' : '' }}>رقم الجزء</option>
-                    <option value="verses_count" {{ $sortBy==='verses_count' ? 'selected' : '' }}>عدد الآيات</option>
-                </select>
-            </div>
-            <div class="min-w-40">
-                <label class="block text-sm mb-2 text-slate-700 dark:text-slate-300">ترتيب</label>
-                <select name="sort_order" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-                    <option value="asc" {{ $sortOrder==='asc' ? 'selected' : '' }}>تصاعدي</option>
-                    <option value="desc" {{ $sortOrder==='desc' ? 'selected' : '' }}>تنازلي</option>
-                </select>
-            </div>
-            <div class="flex items-center gap-3">
-                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg">تطبيق</button>
-                <a href="{{ route('admin.juzs.index') }}" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium rounded-lg">إعادة تعيين</a>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button type="submit" class="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg touch-manipulation">تطبيق</button>
+                <a href="{{ route('admin.juzs.index') }}" class="flex-1 sm:flex-none px-4 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium rounded-lg touch-manipulation text-center">إعادة تعيين</a>
             </div>
         </form>
     </div>
 
     <div class="card-elegant rounded-xl overflow-hidden">
         @if($juzs->count() > 0)
-            <div class="overflow-x-auto">
+            <!-- Desktop Table View -->
+            <div class="hidden lg:block overflow-x-auto">
                 <table class="min-w-full">
                     <thead class="bg-slate-50 dark:bg-slate-700/50">
                         <tr>
@@ -94,9 +97,70 @@
                     </tbody>
                 </table>
             </div>
-            <div class="border-t border-slate-200 dark:border-slate-700 px-6 py-4">{{ $juzs->links() }}</div>
+
+            <!-- Mobile Card View -->
+            <div class="lg:hidden">
+                <div class="p-4 space-y-4">
+                    @foreach($juzs as $juz)
+                    <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 border border-slate-200 dark:border-slate-600">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/20 rounded-xl flex items-center justify-center">
+                                    <span class="text-lg font-bold text-emerald-600 dark:text-emerald-400">{{ $juz->juz_number }}</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-slate-900 dark:text-slate-100">الجزء {{ $juz->juz_number }}</h3>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400">{{ number_format($juz->verses_count) }} آية</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('admin.juzs.show', $juz) }}" 
+                                   class="p-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200 touch-manipulation @permClass('juzs.view')" @permDisabled('juzs.view')
+                                   title="عرض">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </a>
+                                <a href="{{ route('admin.juzs.edit', $juz) }}" 
+                                   class="p-2 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors duration-200 touch-manipulation @permClass('juzs.edit')" @permDisabled('juzs.edit')
+                                   title="تعديل">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </a>
+                                <form action="{{ route('admin.juzs.destroy', $juz) }}" method="POST" class="inline @permClass('juzs.delete')" 
+                                      onsubmit="return confirm('هل أنت متأكد من حذف هذا الجزء؟')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" @permDisabled('juzs.delete')
+                                            class="p-2 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 touch-manipulation"
+                                            title="حذف">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-slate-600 dark:text-slate-400">بداية:</span>
+                                <p class="font-medium text-slate-900 dark:text-slate-100">{{ $juz->start_verse_id }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-600 dark:text-slate-400">نهاية:</span>
+                                <p class="font-medium text-slate-900 dark:text-slate-100">{{ $juz->end_verse_id }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 dark:border-slate-700 px-4 sm:px-6 py-4">{{ $juzs->links() }}</div>
         @else
-            <div class="p-16 text-center">
+            <div class="p-8 sm:p-16 text-center">
                 <div class="text-slate-500 dark:text-slate-400">لا توجد أجزاء</div>
             </div>
         @endif
