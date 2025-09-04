@@ -167,7 +167,7 @@
         <a href="{{ route('admin.users.create') }}" 
            class="flex items-center gap-2 px-4 py-2 bg-white text-blue-600 hover:bg-slate-100 
                   dark:bg-blue-500 dark:hover:bg-blue-400 dark:text-white 
-                  rounded-lg shadow-sm font-medium transition">
+                  rounded-lg shadow-sm font-medium transition @permClass('users.create')" @permDisabled('users.create')>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -225,25 +225,25 @@
                         <td class="p-4">
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('admin.users.show', $user) }}" 
-                                   class="p-2.5 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors action-btn" 
-                                   title="عرض التفاصيل">
+                                   class="p-2.5 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors action-btn @permClass('users.view')" 
+                                   title="عرض التفاصيل" @permDisabled('users.view')>
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </a>
                                 <a href="{{ route('admin.users.edit', $user) }}" 
-                                   class="p-2.5 rounded-lg text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors action-btn" 
-                                   title="تعديل">
+                                   class="p-2.5 rounded-lg text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors action-btn @permClass('users.edit')" 
+                                   title="تعديل" @permDisabled('users.edit')>
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </a>
-                                <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline" 
+                                <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline @permClass('users.delete')" 
                                       onsubmit="return confirm('هل تريد حذف هذا المستخدم نهائياً؟\n\nتحذير: هذا الإجراء لا يمكن التراجع عنه!')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" 
+                                    <button type="submit" @permDisabled('users.delete')
                                             class="p-2.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors action-btn" 
                                             title="حذف">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
