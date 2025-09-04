@@ -129,7 +129,11 @@
         <div class="p-6 border-b border-slate-700/50 flex items-center gap-3">
             <img src="{{ asset('images/logo.svg') }}" alt="شعار مشكاة" class="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/30" />
             <div>
+                @can('dashboard.view')
                 <a href="{{ route('admin.dashboard') }}" class="text-lg font-bold text-slate-100 hover:text-emerald-400 transition-colors">مركز مشكاة</a>
+                @else
+                <span class="text-lg font-bold text-slate-100">مركز مشكاة</span>
+                @endcan
                 <p class="text-xs text-slate-400">لوحة التحكم</p>
             </div>
         </div>
@@ -155,6 +159,7 @@
             @endcan
 
             <!-- Quran Content Section -->
+            @if(auth()->user()->can('chapters.view') || auth()->user()->can('juzs.view') || auth()->user()->can('verses.view') || auth()->user()->can('words.view') || auth()->user()->can('tafsirs.view') || auth()->user()->can('reciters.view') || auth()->user()->can('recitations.view'))
             <div class="mt-4" data-section="quran" data-has-active="{{ $quranActive ? '1' : '0' }}">
                 <button type="button" id="btn-section-quran" onclick="toggleSection('quran')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $quranActive ? 'text-emerald-400' : 'text-slate-300' }}">
                     <span class="flex items-center gap-2 font-semibold">
@@ -222,8 +227,10 @@
                     @endcan
                 </ul>
             </div>
+            @endif
 
             <!-- Memorization Plans Section -->
+            @if(auth()->user()->can('memorization-plans.view') || auth()->user()->can('plan-items.view') || auth()->user()->can('spaced-repetitions.view') || auth()->user()->can('review-records.view'))
             <div class="mt-3" data-section="memorization" data-has-active="{{ $memorizationActive ? '1' : '0' }}">
                 <button type="button" id="btn-section-memorization" onclick="toggleSection('memorization')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $memorizationActive ? 'text-emerald-400' : 'text-slate-300' }}">
                     <span class="flex items-center gap-2 font-semibold">
@@ -267,8 +274,10 @@
                     @endcan
                 </ul>
             </div>
+            @endif
 
             <!-- Users & Devices Section -->
+            @if(auth()->user()->can('users.view') || auth()->user()->can('admins.view') || auth()->user()->can('devices.view'))
             <div class="mt-3" data-section="users" data-has-active="{{ $usersActive ? '1' : '0' }}">
                 <button type="button" id="btn-section-users" onclick="toggleSection('users')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $usersActive ? 'text-emerald-400' : 'text-slate-300' }}">
                     <span class="flex items-center gap-2 font-semibold">
@@ -304,8 +313,10 @@
                     @endcan
                 </ul>
             </div>
+            @endif
 
             <!-- Gamification Section -->
+            @if(auth()->user()->can('badges.view') || auth()->user()->can('leaderboards.view') || auth()->user()->can('notifications.view'))
             <div class="mt-3" data-section="gamification" data-has-active="{{ $gamificationActive ? '1' : '0' }}">
                 <button type="button" id="btn-section-gamification" onclick="toggleSection('gamification')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $gamificationActive ? 'text-emerald-400' : 'text-slate-300' }}">
                     <span class="flex items-center gap-2 font-semibold">
@@ -342,8 +353,10 @@
 
                 </ul>
             </div>
+            @endif
 
             <!-- System Section -->
+            @if(auth()->user()->can('audit-logs.view') || auth()->user()->can('roles.view') || auth()->user()->can('permissions.view'))
             <div class="mt-3" data-section="system" data-has-active="{{ $systemActive ? '1' : '0' }}">
                 <button type="button" id="btn-section-system" onclick="toggleSection('system')" class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-700/40 transition-colors {{ $systemActive ? 'text-emerald-400' : 'text-slate-300' }}">
                     <span class="flex items-center gap-2 font-semibold">
@@ -379,6 +392,7 @@
                     @endcan
                 </ul>
             </div>
+            @endif
         </nav>
 
         <!-- Logout Area -->
@@ -509,116 +523,166 @@
             <!-- Mobile Navigation -->
             <nav class="mobile-nav-container flex-1 overflow-y-auto p-4">
                 <div class="mobile-section-header text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pr-3">القائمة الرئيسية</div>
+                @can('dashboard.view')
                 <a href="{{ route('admin.dashboard') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium mb-1 touch-manipulation {{ request()->routeIs('admin.dashboard') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}" onclick="toggleMobileSidebar()">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 7V3a2 2 0 012-2h4a2 2 0 012 2v4"/></svg>
                     <span class="text-sm sm:text-base">اللوحة الرئيسية</span>
                 </a>
+                @endcan
 
+                @if(auth()->user()->can('chapters.view') || auth()->user()->can('juzs.view') || auth()->user()->can('verses.view') || auth()->user()->can('words.view') || auth()->user()->can('tafsirs.view') || auth()->user()->can('reciters.view') || auth()->user()->can('recitations.view'))
                 <div class="mt-4">
                     <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">إدارة المحتوى القرآني</div>
                     <div class="space-y-1">
+                        @can('chapters.view')
                         <a href="{{ route('admin.chapters.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/surahs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 12.5A2.5 2.5 0 016.5 10H20M4 5.5A2.5 2.5 0 016.5 3H20"/></svg>
                             <span class="text-sm sm:text-base">السور</span>
                         </a>
+                        @endcan
+                        @can('juzs.view')
                         <a href="{{ route('admin.juzs.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/juzs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
                             <span class="text-sm sm:text-base">الأجزاء</span>
                         </a>
+                        @endcan
+                        @can('verses.view')
                         <a href="{{ route('admin.verses.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/verses*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6M9 16h6M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             <span class="text-sm sm:text-base">الآيات</span>
                         </a>
+                        @endcan
+                        @can('words.view')
                         <a href="{{ route('admin.words.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/words*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m-6 4h18M3 13h12m6-2v2M3 19h18"/></svg>
                             <span class="text-sm sm:text-base">الكلمات</span>
                         </a>
+                        @endcan
+                        @can('tafsirs.view')
                         <a href="{{ route('admin.tafsirs.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/tafsirs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v7a3 3 0 006 0v-7c0-1.657-1.343-3-3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 014-4h0a4 4 0 014 4v4"/></svg>
                             <span class="text-sm sm:text-base">التفاسير</span>
                         </a>
+                        @endcan
+                        @can('reciters.view')
                         <a href="{{ route('admin.reciters.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/reciters*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span class="text-sm sm:text-base">القراء</span>
                         </a>
+                        @endcan
+                        @can('recitations.view')
                         <a href="{{ route('admin.recitations.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2"/></svg>
                             <span class="text-sm sm:text-base">التسجيلات</span>
                         </a>
+                        @endcan
                     </div>
                 </div>
+                @endif
 
+                @if(auth()->user()->can('memorization-plans.view') || auth()->user()->can('plan-items.view') || auth()->user()->can('spaced-repetitions.view') || auth()->user()->can('review-records.view'))
                 <div class="mt-4">
                     <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">خطط الحفظ</div>
                     <div class="space-y-1">
+                        @can('memorization-plans.view')
                         <a href="{{ route('admin.memorization-plans.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/memorization-plans*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h10"/></svg>
                             <span class="text-sm sm:text-base">خطط الحفظ</span>
                         </a>
+                        @endcan
+                        @can('plan-items.view')
                         <a href="{{ route('admin.plan-items.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/plan-items*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M4 6h16"/></svg>
                             <span class="text-sm sm:text-base">عناصر الخطة</span>
                         </a>
+                        @endcan
+                        @can('spaced-repetitions.view')
                         <a href="{{ route('admin.spaced-repetitions.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/spaced-repetitions*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V8H3v11a2 2 0 002 2z"/></svg>
                             <span class="text-sm sm:text-base">مراجعات SRS</span>
                         </a>
+                        @endcan
+                        @can('review-records.view')
                         <a href="{{ route('admin.review-records.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/review-records*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <span class="text-sm sm:text-base">تقييمات المراجعة</span>
                         </a>
+                        @endcan
                     </div>
                 </div>
+                @endif
 
+                @if(auth()->user()->can('users.view') || auth()->user()->can('admins.view') || auth()->user()->can('devices.view'))
                 <div class="mt-4">
                     <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">المستخدمون والأجهزة</div>
                     <div class="space-y-1">
+                        @can('users.view')
                         <a href="{{ route('admin.users.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/users*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1"/></svg>
                             <span class="text-sm sm:text-base">المستخدمون</span>
                         </a>
+                        @endcan
+                        @can('devices.view')
                         <a href="{{ route('admin.devices.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/devices*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18"/></svg>
                             <span class="text-sm sm:text-base">الأجهزة</span>
                         </a>
+                        @endcan
                     </div>
                 </div>
+                @endif
 
+                @if(auth()->user()->can('badges.view') || auth()->user()->can('leaderboards.view') || auth()->user()->can('notifications.view'))
                 <div class="mt-4">
                     <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">التحفيز والإنجازات</div>
                     <div class="space-y-1">
+                        @can('badges.view')
                         <a href="{{ route('admin.badges.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/badges*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138"/></svg>
                             <span class="text-sm sm:text-base">الشارات</span>
                         </a>
+                        @endcan
+                        @can('leaderboards.view')
                         <a href="{{ route('admin.leaderboards.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/leaderboards*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 15l3 3 7-7"/></svg>
                             <span class="text-sm sm:text-base">لوحة المتصدرين</span>
                         </a>
+                        @endcan
+                        @can('notifications.view')
                         <a href="{{ route('admin.notifications.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/notifications*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                             <span class="text-sm sm:text-base">التنبيهات</span>
                         </a>
+                        @endcan
                     </div>
                 </div>
+                @endif
 
+                @if(auth()->user()->can('audit-logs.view') || auth()->user()->can('roles.view') || auth()->user()->can('permissions.view'))
                 <div class="mt-4">
                     <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">النظام والسجلات</div>
                     <div class="space-y-1">
+                        @can('audit-logs.view')
                         <a href="{{ route('admin.audit-logs.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/audit-logs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8m0 0V3m0 6l-8 8-4-4-6 6"/></svg>
                             <span class="text-sm sm:text-base">سجلات التدقيق</span>
                         </a>
+                        @endcan
+                        @can('roles.view')
                         <a href="{{ route('admin.roles.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/roles*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                             <span class="text-sm sm:text-base">الأدوار</span>
                         </a>
+                        @endcan
+                        @can('permissions.view')
                         <a href="{{ route('admin.permissions.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/permissions*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <span class="text-sm sm:text-base">الصلاحيات</span>
                         </a>
+                        @endcan
                     </div>
                 </div>
+                @endif
             </nav>
 
             <!-- Mobile Logout -->

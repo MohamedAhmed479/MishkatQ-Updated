@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">تفاصيل الآية {{ $verse->verse_key }}</h1>
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <a href="{{ route('admin.verses.edit', $verse) }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors touch-manipulation">تعديل</a>
+            <a href="{{ route('admin.verses.edit', $verse) }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors touch-manipulation @permClass('verses.edit')" @permDisabled('verses.edit')>تعديل</a>
             <a href="{{ route('admin.verses.index') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors touch-manipulation">العودة</a>
         </div>
     </div>
