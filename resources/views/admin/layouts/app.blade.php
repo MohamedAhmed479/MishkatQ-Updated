@@ -60,15 +60,57 @@
         @media (max-width: 1023px) {
             .sidebar { display: none !important; }
             .mobile-menu-btn { display: inline-flex !important; }
+            .mr-72 { margin-right: 0 !important; }
         }
         @media (min-width: 1024px) {
             .sidebar { display: block !important; }
             .mobile-menu-btn { display: none; }
         }
-        @media (max-width: 1023px) {
-            .mr-72 { margin-right: 0 !important; }
-        }
+        
+        /* Mobile Sidebar Improvements */
         .mobile-sidebar.open { display: block; }
+        .mobile-sidebar {
+            transition: all 0.3s ease-in-out;
+        }
+        .mobile-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        .mobile-sidebar:not(.open) .mobile-content {
+            transform: translateX(100%);
+        }
+        
+        /* Better touch targets for mobile */
+        @media (max-width: 768px) {
+            .mobile-content {
+                width: 100vw;
+                max-width: 320px;
+            }
+            .mobile-nav-item {
+                min-height: 48px;
+                padding: 12px 16px;
+            }
+            .mobile-section-header {
+                padding: 8px 16px;
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Improved mobile navigation */
+        .mobile-nav-container {
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Better mobile header */
+        @media (max-width: 640px) {
+            .mobile-header {
+                padding: 1rem;
+            }
+            .mobile-header h1 {
+                font-size: 1.125rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 font-sans min-h-screen">
@@ -450,14 +492,14 @@
     <!-- Mobile Sidebar -->
     <div id="mobileSidebar" class="mobile-sidebar fixed inset-0 z-50 hidden">
         <div class="mobile-overlay absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleMobileSidebar()"></div>
-        <aside class="mobile-content absolute top-0 bottom-0 right-0 w-80 bg-gradient-to-b from-slate-800 to-slate-900 border-l border-slate-700/80 shadow-2xl">
+        <aside class="mobile-content absolute top-0 bottom-0 right-0 w-80 max-w-[90vw] bg-gradient-to-b from-slate-800 to-slate-900 border-l border-slate-700/80 shadow-2xl flex flex-col">
             <!-- Mobile Header -->
-            <div class="p-6 border-b border-slate-700/50 flex items-center justify-between">
+            <div class="mobile-header p-4 sm:p-6 border-b border-slate-700/50 flex items-center justify-between flex-shrink-0">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/logo.svg') }}" alt="شعار مشكاة" class="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/30" />
-                    <span class="text-lg font-bold text-slate-100">مركز مشكاة</span>
+                    <img src="{{ asset('images/logo.svg') }}" alt="شعار مشكاة" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl shadow-lg shadow-emerald-500/30" />
+                    <span class="text-base sm:text-lg font-bold text-slate-100">مركز مشكاة</span>
                 </div>
-                <button onclick="toggleMobileSidebar()" class="inline-flex items-center justify-center p-2 rounded-xl hover:bg-red-900/20 transition-colors">
+                <button onclick="toggleMobileSidebar()" class="inline-flex items-center justify-center p-2 rounded-xl hover:bg-red-900/20 transition-colors touch-manipulation">
                     <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -465,129 +507,129 @@
             </div>
 
             <!-- Mobile Navigation -->
-            <nav class="p-4">
-                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pr-3">القائمة الرئيسية</div>
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium mb-1 {{ request()->routeIs('admin.dashboard') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}" onclick="toggleMobileSidebar()">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 7V3a2 2 0 012-2h4a2 2 0 012 2v4"/></svg>
-                    اللوحة الرئيسية
+            <nav class="mobile-nav-container flex-1 overflow-y-auto p-4">
+                <div class="mobile-section-header text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pr-3">القائمة الرئيسية</div>
+                <a href="{{ route('admin.dashboard') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 transition-all duration-300 font-medium mb-1 touch-manipulation {{ request()->routeIs('admin.dashboard') ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : '' }}" onclick="toggleMobileSidebar()">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 7V3a2 2 0 012-2h4a2 2 0 012 2v4"/></svg>
+                    <span class="text-sm sm:text-base">اللوحة الرئيسية</span>
                 </a>
 
                 <div class="mt-4">
-                    <div class="px-4 py-2 text-slate-400 text-xs">إدارة المحتوى القرآني</div>
+                    <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">إدارة المحتوى القرآني</div>
                     <div class="space-y-1">
-                        <a href="{{ route('admin.chapters.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/surahs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 12.5A2.5 2.5 0 016.5 10H20M4 5.5A2.5 2.5 0 016.5 3H20"/></svg>
-                            السور
+                        <a href="{{ route('admin.chapters.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/surahs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 12.5A2.5 2.5 0 016.5 10H20M4 5.5A2.5 2.5 0 016.5 3H20"/></svg>
+                            <span class="text-sm sm:text-base">السور</span>
                         </a>
-                        <a href="{{ route('admin.juzs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/juzs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
-                            الأجزاء
+                        <a href="{{ route('admin.juzs.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/juzs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
+                            <span class="text-sm sm:text-base">الأجزاء</span>
                         </a>
-                        <a href="{{ route('admin.verses.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/verses*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6M9 16h6M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            الآيات
+                        <a href="{{ route('admin.verses.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/verses*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6M9 16h6M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span class="text-sm sm:text-base">الآيات</span>
                         </a>
-                        <a href="{{ route('admin.words.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/words*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m-6 4h18M3 13h12m6-2v2M3 19h18"/></svg>
-                            الكلمات
+                        <a href="{{ route('admin.words.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/words*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m-6 4h18M3 13h12m6-2v2M3 19h18"/></svg>
+                            <span class="text-sm sm:text-base">الكلمات</span>
                         </a>
-                        <a href="{{ route('admin.tafsirs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/tafsirs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v7a3 3 0 006 0v-7c0-1.657-1.343-3-3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 014-4h0a4 4 0 014 4v4"/></svg>
-                            التفاسير
+                        <a href="{{ route('admin.tafsirs.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/tafsirs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v7a3 3 0 006 0v-7c0-1.657-1.343-3-3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 014-4h0a4 4 0 014 4v4"/></svg>
+                            <span class="text-sm sm:text-base">التفاسير</span>
                         </a>
-                        <a href="{{ route('admin.reciters.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/reciters*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            القراء
+                        <a href="{{ route('admin.reciters.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/reciters*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span class="text-sm sm:text-base">القراء</span>
                         </a>
-                        <a href="{{ route('admin.recitations.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2"/></svg>
-                            التسجيلات
+                        <a href="{{ route('admin.recitations.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/recitations*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-2v13M9 19l12-2M9 19L3 17V4l6 2"/></svg>
+                            <span class="text-sm sm:text-base">التسجيلات</span>
                         </a>
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <div class="px-4 py-2 text-slate-400 text-xs">خطط الحفظ</div>
+                    <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">خطط الحفظ</div>
                     <div class="space-y-1">
-                        <a href="{{ route('admin.memorization-plans.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/memorization-plans*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h10"/></svg>
-                            خطط الحفظ
+                        <a href="{{ route('admin.memorization-plans.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/memorization-plans*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h10"/></svg>
+                            <span class="text-sm sm:text-base">خطط الحفظ</span>
                         </a>
-                        <a href="{{ route('admin.plan-items.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/plan-items*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M4 6h16"/></svg>
-                            عناصر الخطة
+                        <a href="{{ route('admin.plan-items.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/plan-items*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M4 6h16"/></svg>
+                            <span class="text-sm sm:text-base">عناصر الخطة</span>
                         </a>
-                        <a href="{{ route('admin.spaced-repetitions.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/spaced-repetitions*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V8H3v11a2 2 0 002 2z"/></svg>
-                            مراجعات SRS
+                        <a href="{{ route('admin.spaced-repetitions.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/spaced-repetitions*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V8H3v11a2 2 0 002 2z"/></svg>
+                            <span class="text-sm sm:text-base">مراجعات SRS</span>
                         </a>
-                        <a href="{{ route('admin.review-records.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/review-records*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            تقييمات المراجعة
+                        <a href="{{ route('admin.review-records.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/review-records*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="text-sm sm:text-base">تقييمات المراجعة</span>
                         </a>
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <div class="px-4 py-2 text-slate-400 text-xs">المستخدمون والأجهزة</div>
+                    <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">المستخدمون والأجهزة</div>
                     <div class="space-y-1">
-                        <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/users*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1"/></svg>
-                            المستخدمون
+                        <a href="{{ route('admin.users.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/users*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1"/></svg>
+                            <span class="text-sm sm:text-base">المستخدمون</span>
                         </a>
-                        <a href="{{ route('admin.devices.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/devices*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18"/></svg>
-                            الأجهزة
+                        <a href="{{ route('admin.devices.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/devices*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18"/></svg>
+                            <span class="text-sm sm:text-base">الأجهزة</span>
                         </a>
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <div class="px-4 py-2 text-slate-400 text-xs">التحفيز والإنجازات</div>
+                    <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">التحفيز والإنجازات</div>
                     <div class="space-y-1">
-                        <a href="{{ route('admin.badges.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/badges*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138"/></svg>
-                            الشارات
+                        <a href="{{ route('admin.badges.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/badges*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138"/></svg>
+                            <span class="text-sm sm:text-base">الشارات</span>
                         </a>
-                        <a href="{{ route('admin.leaderboards.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/leaderboards*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 15l3 3 7-7"/></svg>
-                            لوحة المتصدرين
+                        <a href="{{ route('admin.leaderboards.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/leaderboards*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 15l3 3 7-7"/></svg>
+                            <span class="text-sm sm:text-base">لوحة المتصدرين</span>
                         </a>
-                        <a href="{{ route('admin.notifications.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/notifications*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                            التنبيهات
+                        <a href="{{ route('admin.notifications.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/notifications*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            <span class="text-sm sm:text-base">التنبيهات</span>
                         </a>
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <div class="px-4 py-2 text-slate-400 text-xs">النظام والسجلات</div>
+                    <div class="mobile-section-header px-4 py-2 text-slate-400 text-xs">النظام والسجلات</div>
                     <div class="space-y-1">
-                        <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/audit-logs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8m0 0V3m0 6l-8 8-4-4-6 6"/></svg>
-                            سجلات التدقيق
+                        <a href="{{ route('admin.audit-logs.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/audit-logs*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h8m0 0V3m0 6l-8 8-4-4-6 6"/></svg>
+                            <span class="text-sm sm:text-base">سجلات التدقيق</span>
                         </a>
-                        <a href="{{ route('admin.roles.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/roles*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                            الأدوار
+                        <a href="{{ route('admin.roles.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/roles*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            <span class="text-sm sm:text-base">الأدوار</span>
                         </a>
-                        <a href="{{ route('admin.permissions.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 {{ request()->is('admin/permissions*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            الصلاحيات
+                        <a href="{{ route('admin.permissions.index') }}" class="mobile-nav-item flex items-center gap-3 px-4 py-2 rounded-lg text-slate-300 hover:bg-emerald-900/20 hover:text-emerald-400 touch-manipulation {{ request()->is('admin/permissions*') ? 'bg-emerald-900/30 text-emerald-400' : '' }}" onclick="toggleMobileSidebar()">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="text-sm sm:text-base">الصلاحيات</span>
                         </a>
                     </div>
                 </div>
             </nav>
 
             <!-- Mobile Logout -->
-            <div class="absolute bottom-6 left-4 right-4">
+            <div class="flex-shrink-0 p-4 border-t border-slate-700/50">
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
-                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-900/20 text-red-400 hover:bg-red-900/30 transition-all duration-300 font-medium">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-900/20 text-red-400 hover:bg-red-900/30 transition-all duration-300 font-medium touch-manipulation">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                         </svg>
-                        تسجيل الخروج
+                        <span class="text-sm sm:text-base">تسجيل الخروج</span>
                     </button>
                 </form>
             </div>
@@ -598,8 +640,38 @@
 <script>
     function toggleMobileSidebar() {
         const sidebar = document.getElementById('mobileSidebar');
-        sidebar.classList.toggle('open');
+        const body = document.body;
+        
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            body.style.overflow = '';
+        } else {
+            sidebar.classList.add('open');
+            body.style.overflow = 'hidden';
+        }
     }
+    
+    // Close mobile sidebar when clicking outside
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('mobileSidebar');
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        
+        if (sidebar.classList.contains('open') && 
+            !sidebar.contains(event.target) && 
+            !mobileMenuBtn.contains(event.target)) {
+            toggleMobileSidebar();
+        }
+    });
+    
+    // Close mobile sidebar on escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const sidebar = document.getElementById('mobileSidebar');
+            if (sidebar.classList.contains('open')) {
+                toggleMobileSidebar();
+            }
+        }
+    });
 
     // Collapsible sidebar sections with localStorage
     const STORAGE_KEY = 'mishkat_admin_sidebar_sections';
