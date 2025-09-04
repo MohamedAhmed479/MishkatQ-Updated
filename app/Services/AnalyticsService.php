@@ -102,8 +102,8 @@ class AnalyticsService
         $dailyCompletions = PlanItem::where('plan_id', $plan->id)
             ->where('is_completed', true)
             ->where('target_date', '>=', $last30Days)
-            ->select(DB::raw('DATE(target_date) as date'), DB::raw('count(*) as count'))
-            ->groupBy('date')
+            ->select(DB::raw('CAST(target_date AS DATE) as date'), DB::raw('COUNT(*) as count'))
+            ->groupBy(DB::raw('CAST(target_date AS DATE)'))
             ->get();
 
         $currentStreak = $this->calculateCurrentStreak($dailyCompletions);
@@ -143,9 +143,11 @@ class AnalyticsService
     private function getSurahWiseProgress(MemorizationPlan $plan): array
     {
         $surahProgress = PlanItem::where('plan_id', $plan->id)
-            ->select('quran_surah_id',
-                DB::raw('count(*) as total_items'),
-                DB::raw('sum(case when is_completed = 1 then 1 else 0 end) as completed_items'))
+            ->select(
+                'quran_surah_id',
+                DB::raw('COUNT(*) as total_items'),
+                DB::raw('SUM(CASE WHEN is_completed THEN 1 ELSE 0 END) as completed_items')
+            )
             ->groupBy('quran_surah_id')
             ->get();
 

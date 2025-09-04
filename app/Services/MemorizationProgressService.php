@@ -66,7 +66,7 @@ class MemorizationProgressService
             $query->where('plan_id', $plan->id);
         })->select(
             DB::raw('COUNT(*) as total_reviews'),
-            DB::raw('SUM(CASE WHEN successful = 1 THEN 1 ELSE 0 END) as successful_reviews'),
+            DB::raw('SUM(CASE WHEN successful THEN 1 ELSE 0 END) as successful_reviews'),
             DB::raw('AVG(performance_rating) as average_rating')
         )->first();
 

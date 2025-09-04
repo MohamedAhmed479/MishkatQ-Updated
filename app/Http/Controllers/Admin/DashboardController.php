@@ -378,9 +378,9 @@ class DashboardController extends Controller implements HasMiddleware
     private function getAdvancedAnalytics(Carbon $start, Carbon $end, Carbon $prevStart, Carbon $prevEnd): array
     {
         // Most active hours analysis
-        $hourlyActivity = ReviewRecord::selectRaw('HOUR(review_date) as hour, COUNT(*) as count')
+        $hourlyActivity = ReviewRecord::selectRaw('EXTRACT(HOUR FROM review_date) as hour, COUNT(*) as count')
             ->whereBetween('review_date', [$start, $end])
-            ->groupBy('hour')
+            ->groupBy(DB::raw('EXTRACT(HOUR FROM review_date)'))
             ->orderBy('hour')
             ->get()
             ->pluck('count', 'hour')
@@ -390,14 +390,14 @@ class DashboardController extends Controller implements HasMiddleware
         $mostActiveHourCount = $hourlyActivity[$mostActiveHour] ?? 0;
 
         // Weekly patterns
-        $weeklyPattern = ReviewRecord::selectRaw('DAYOFWEEK(review_date) as day, COUNT(*) as count')
+        $weeklyPattern = ReviewRecord::selectRaw('EXTRACT(DOW FROM review_date) as day, COUNT(*) as count')
             ->whereBetween('review_date', [$start, $end])
-            ->groupBy('day')
+            ->groupBy(DB::raw('EXTRACT(DOW FROM review_date)'))
             ->get()
             ->pluck('count', 'day')
             ->toArray();
 
-        $dayNames = [1 => 'الأحد', 2 => 'الاثنين', 3 => 'الثلاثاء', 4 => 'الأربعاء', 5 => 'الخميس', 6 => 'الجمعة', 7 => 'السبت'];
+        $dayNames = [0 => 'الأحد', 1 => 'الاثنين', 2 => 'الثلاثاء', 3 => 'الأربعاء', 4 => 'الخميس', 5 => 'الجمعة', 6 => 'السبت'];
         $mostActiveDay = collect($weeklyPattern)->sortDesc()->keys()->first();
         $mostActiveDayName = $dayNames[$mostActiveDay] ?? 'غير محدد';
 
@@ -408,10 +408,10 @@ class DashboardController extends Controller implements HasMiddleware
 
         // Success rate analysis
         $currentSuccessRate = ReviewRecord::whereBetween('review_date', [$start, $end])
-            ->selectRaw('(SUM(CASE WHEN successful = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100 as rate')
+            ->selectRaw('(SUM(CASE WHEN successful THEN 1 ELSE 0 END) / COUNT(*)) * 100 as rate')
             ->value('rate');
         $prevSuccessRate = ReviewRecord::whereBetween('review_date', [$prevStart, $prevEnd])
-            ->selectRaw('(SUM(CASE WHEN successful = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100 as rate')
+            ->selectRaw('(SUM(CASE WHEN successful THEN 1 ELSE 0 END) / COUNT(*)) * 100 as rate')
             ->value('rate');
         $successRateTrend = $prevSuccessRate > 0 ? round($currentSuccessRate - $prevSuccessRate, 1) : 0;
 
