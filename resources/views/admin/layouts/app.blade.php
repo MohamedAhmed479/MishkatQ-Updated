@@ -12,6 +12,10 @@
 
     <!-- Vite Assets (includes Tailwind CSS) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
     <style>
         /* Arabic RTL Support and Global Styles */
         * {
@@ -81,7 +85,7 @@
 
         <!-- Logo Area -->
         <div class="p-6 border-b border-slate-700/50 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-500/30">م</div>
+            <img src="{{ asset('images/logo.svg') }}" alt="شعار مشكاة" class="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/30" />
             <div>
                 <a href="{{ route('admin.dashboard') }}" class="text-lg font-bold text-slate-100 hover:text-emerald-400 transition-colors">مركز مشكاة</a>
                 <p class="text-xs text-slate-400">لوحة التحكم</p>
@@ -450,7 +454,7 @@
             <!-- Mobile Header -->
             <div class="p-6 border-b border-slate-700/50 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-500/30">م</div>
+                    <img src="{{ asset('images/logo.svg') }}" alt="شعار مشكاة" class="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/30" />
                     <span class="text-lg font-bold text-slate-100">مركز مشكاة</span>
                 </div>
                 <button onclick="toggleMobileSidebar()" class="inline-flex items-center justify-center p-2 rounded-xl hover:bg-red-900/20 transition-colors">

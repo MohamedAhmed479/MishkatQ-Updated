@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
 use App\Http\Controllers\Admin\{
     AuthController as AdminAuthController,
     DashboardController,
@@ -181,4 +182,9 @@ Route::prefix('admin')->as('admin.')->middleware('auth:admin')->group(function (
     */
     Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('permissions', PermissionController::class)->only(['index', 'store', 'update', 'destroy']);
+});
+
+// Public landing page
+Route::get('/', function () {
+    return view('landing');
 });
