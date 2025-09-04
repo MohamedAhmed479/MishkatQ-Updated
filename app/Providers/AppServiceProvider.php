@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +36,9 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('permDisabled', function ($permission) {
             return "<?php echo (auth('admin')->check() && auth('admin')->user()->can($permission)) ? '' : 'disabled aria-disabled=\"true\" tabindex=\"-1\"'; ?>";
         });
+
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
