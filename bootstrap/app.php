@@ -37,7 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('leaderboards:update --type=daily')
             ->daily()
             ->timezone('Africa/Cairo')
-            ->at('00:25');
+            ->at('00:00');
 
         // Update weekly leaderboards at midnight on Sundays
         $schedule->command('leaderboards:update --type=weekly')
