@@ -126,9 +126,18 @@
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0% { 
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7), 0 0 0 0 rgba(255, 255, 255, 0.1);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0.3), 0 0 0 20px rgba(255, 255, 255, 0.05);
+                transform: scale(1.02);
+            }
+            100% { 
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 0 0 0 rgba(255, 255, 255, 0);
+                transform: scale(1);
+            }
         }
 
         /* Glass morphism effect - matching dashboard glass cards */
@@ -219,19 +228,8 @@
         <!-- Header Section -->
         <div class="text-center mb-8">
             <!-- Logo -->
-            <div class="logo-container mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white shadow-2xl shadow-emerald-500/30 logo-pulse mb-6">
-                <svg class="w-11 h-11" fill="currentColor" viewBox="0 0 24 24">
-                    <!-- Book Cover -->
-                    <path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2H6z" fill="currentColor" opacity="0.9"/>
-                    <!-- Book Pages -->
-                    <path d="M6 4h12v16H6V4z" fill="none" stroke="currentColor" stroke-width="0.8"/>
-                    <!-- Arabic Text Lines -->
-                    <path d="M8 7h8M8 9h8M8 11h6M8 13h8M8 15h5" stroke="currentColor" stroke-width="0.6" stroke-linecap="round"/>
-                    <!-- Bookmark -->
-                    <path d="M16 2v8l-1.5-1L13 10V2h3z" fill="currentColor" opacity="0.8"/>
-                    <!-- Decorative Border -->
-                    <rect x="7" y="5" width="10" height="14" fill="none" stroke="currentColor" stroke-width="0.4" rx="0.5"/>
-                </svg>
+            <div class="logo-container mx-auto w-24 h-24 rounded-2xl bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-2xl shadow-black/20 logo-pulse mb-6 border-2 border-emerald-400/30">
+                <img src="{{ asset('images/logo.svg') }}" alt="شعار مشكاة" class="w-16 h-16 rounded-xl" />
             </div>
             
             <!-- Title -->
