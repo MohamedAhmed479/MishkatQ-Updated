@@ -13,7 +13,7 @@ class AdminSeeder extends Seeder
             ['email' => 'superadmin@mishkatq.com'],
             [
                 'name' => 'Super Admin',
-                'password' => 'password',
+                'password' => 'superadmin@mishkatq.com',
             ]
         );
 

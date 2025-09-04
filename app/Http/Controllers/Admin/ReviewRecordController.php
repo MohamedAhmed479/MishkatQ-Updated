@@ -27,16 +27,16 @@ class ReviewRecordController extends Controller implements HasMiddleware
 	public function index(Request $request): View
 	{
 		$revisionId = (int) $request->integer('spaced_repetition_id');
-		$rating = $request->string('performance_rating');
-		$success = $request->string('successful');
-		$date = $request->string('review_date');
+		$rating = $request->input('performance_rating');
+		$success = $request->input('successful');
+		$date = $request->input('review_date');
 
 		$records = ReviewRecord::query()
 			->with(['spacedRepetition.planItem.memorizationPlan.user'])
 			->when($revisionId > 0, fn($q) => $q->where('spaced_repetition_id', $revisionId))
-			->when($rating !== '', fn($q) => $q->where('performance_rating', $rating))
-			->when($success !== '', fn($q) => $q->where('successful', $success === '1' || $success === 'true'))
-			->when($date !== '', fn($q) => $q->whereDate('review_date', $date))
+			->when(!empty($rating) && is_numeric($rating), fn($q) => $q->where('performance_rating', (int) $rating))
+			->when(!empty($success), fn($q) => $q->where('successful', $success === '1' || $success === 'true'))
+			->when(!empty($date), fn($q) => $q->whereDate('review_date', $date))
 			->latest('id')
 			->paginate(20)
 			->withQueryString();

@@ -92,11 +92,11 @@ class BadgeController extends Controller implements HasMiddleware
     public function show(Badge $badge): View
     {
         $badge->load(['users' => function($query) {
-            $query->withPivot('awarded_at')->latest('pivot_awarded_at')->take(10);
+            $query->withPivot('awarded_at')->orderBy('user_badges.awarded_at', 'desc')->take(10);
         }]);
 
         $totalAwarded = $badge->users()->count();
-        $recentAwards = $badge->users()->withPivot('awarded_at')->latest('pivot_awarded_at')->take(5)->get();
+        $recentAwards = $badge->users()->withPivot('awarded_at')->orderBy('user_badges.awarded_at', 'desc')->take(5)->get();
 
         return view('admin.badges.show', compact('badge', 'totalAwarded', 'recentAwards'));
     }
@@ -169,7 +169,7 @@ class BadgeController extends Controller implements HasMiddleware
     {
         $users = $badge->users()
             ->withPivot('awarded_at')
-            ->latest('pivot_awarded_at')
+            ->orderBy('user_badges.awarded_at', 'desc')
             ->paginate(20);
 
         return view('admin.badges.awarded-users', compact('badge', 'users'));
