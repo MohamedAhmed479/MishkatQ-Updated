@@ -36,22 +36,26 @@ return Application::configure(basePath: dirname(__DIR__))
         // Update daily leaderboards at midnight
         $schedule->command('leaderboards:update --type=daily')
             ->daily()
-            ->at('00:00');
+            ->timezone('Africa/Cairo')
+            ->at('00:25');
 
         // Update weekly leaderboards at midnight on Sundays
         $schedule->command('leaderboards:update --type=weekly')
             ->weekly()
             ->sundays()
+            ->timezone('Africa/Cairo')
             ->at('00:00');
 
         // Update monthly leaderboards at midnight on the first day of each month
         $schedule->command('leaderboards:update --type=monthly')
             ->monthly()
+            ->timezone('Africa/Cairo')
             ->at('00:00');
 
         // Update yearly leaderboards at midnight on January 1st
         $schedule->command('leaderboards:update --type=yearly')
             ->yearly()
+            ->timezone('Africa/Cairo')
             ->at('00:00');
     })
     ->withMiddleware(function (Middleware $middleware): void {
