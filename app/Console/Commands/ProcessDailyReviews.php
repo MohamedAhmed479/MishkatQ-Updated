@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use App\Services\SpacedRepetitionService;
+use App\Services\AuditService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -34,15 +35,24 @@ class ProcessDailyReviews extends Command
     protected $spacedRepetitionService;
 
     /**
+     * The audit service.
+     *
+     * @var AuditService
+     */
+    protected $auditService;
+
+    /**
      * Create a new command instance.
      *
      * @param SpacedRepetitionService $spacedRepetitionService
+     * @param AuditService $auditService
      * @return void
      */
-    public function __construct(SpacedRepetitionService $spacedRepetitionService)
+    public function __construct(SpacedRepetitionService $spacedRepetitionService, AuditService $auditService)
     {
         parent::__construct();
         $this->spacedRepetitionService = $spacedRepetitionService;
+        $this->auditService = $auditService;
     }
 
     /**
@@ -54,36 +64,90 @@ class ProcessDailyReviews extends Command
     {
         $this->info('Starting daily review process...');
 
-        // الحصول على جميع المستخدمين النشطين
-        // $users = User::where('last_active_at', '>=', Carbon::now()->subMinutes(2))->get();
-        $users = User::all();
-        $today = Carbon::today()->format('Y-m-d');
+        // تسجيل بداية المهمة
+        $this->auditService->log(
+            action: 'scheduled_task_started',
+            description: 'بدء عملية معالجة المراجعات اليومية',
+            severity: 'low',
+            category: 'scheduled_task',
+            metadata: [
+                'command' => 'reviews:process-daily',
+                'started_at' => Carbon::now()->toISOString()
+            ]
+        );
 
-        $totalNotificationsSent = 0;
+        try {
+            // الحصول على جميع المستخدمين النشطين
+            // $users = User::where('last_active_at', '>=', Carbon::now()->subMinutes(2))->get();
+            $users = User::all();
+            $today = Carbon::today()->format('Y-m-d');
 
-        foreach ($users as $user) {
-            try {
-                // الحصول على مراجعات اليوم للمستخدم
-                $todayReviews = $this->spacedRepetitionService->getTodayReviewsForUser($user->id);
+            $totalNotificationsSent = 0;
+            $totalUsersProcessed = 0;
+            $errors = [];
 
-                $reviewCount = $todayReviews->count();
+            foreach ($users as $user) {
+                try {
+                    $totalUsersProcessed++;
+                    
+                    // الحصول على مراجعات اليوم للمستخدم
+                    $todayReviews = $this->spacedRepetitionService->getTodayReviewsForUser($user->id);
 
-                if ($reviewCount > 0) {
-                    // إرسال إشعار للمستخدم
-                    Notification::send($user, new ReviewReminder($reviewCount, $today));
+                    $reviewCount = $todayReviews->count();
 
-                    $totalNotificationsSent++;
+                    if ($reviewCount > 0) {
+                        // إرسال إشعار للمستخدم
+                        Notification::send($user, new ReviewReminder($reviewCount, $today));
 
-                    $this->info("Sent notification to user #{$user->id} for {$reviewCount} reviews");
+                        $totalNotificationsSent++;
+
+                        $this->info("Sent notification to user #{$user->id} for {$reviewCount} reviews");
+                    }
+                } catch (\Exception $e) {
+                    $errorMessage = "Error processing reviews for user #{$user->id}: {$e->getMessage()}";
+                    $errors[] = $errorMessage;
+                    
+                    Log::error($errorMessage);
+                    $this->error($errorMessage);
                 }
-            } catch (\Exception $e) {
-                Log::error("Error processing reviews for user #{$user->id}: {$e->getMessage()}");
-                $this->error("Error processing reviews for user #{$user->id}: {$e->getMessage()}");
             }
+
+            $this->info("Process completed. Sent notifications to {$totalNotificationsSent} users.");
+
+            // تسجيل نجاح المهمة
+            $this->auditService->log(
+                action: 'scheduled_task_completed',
+                description: 'تم إنجاز عملية معالجة المراجعات اليومية بنجاح',
+                severity: 'low',
+                category: 'scheduled_task',
+                metadata: [
+                    'command' => 'reviews:process-daily',
+                    'total_users_processed' => $totalUsersProcessed,
+                    'notifications_sent' => $totalNotificationsSent,
+                    'errors_count' => count($errors),
+                    'completed_at' => Carbon::now()->toISOString()
+                ]
+            );
+
+            return 0;
+
+        } catch (\Exception $e) {
+            // تسجيل فشل المهمة
+            $this->auditService->log(
+                action: 'scheduled_task_failed',
+                description: 'فشل في عملية معالجة المراجعات اليومية: ' . $e->getMessage(),
+                severity: 'high',
+                category: 'scheduled_task',
+                status: 'failed',
+                metadata: [
+                    'command' => 'reviews:process-daily',
+                    'error_message' => $e->getMessage(),
+                    'failed_at' => Carbon::now()->toISOString()
+                ]
+            );
+
+            $this->error('Daily review process failed: ' . $e->getMessage());
+            return 1;
         }
-
-        $this->info("Process completed. Sent notifications to {$totalNotificationsSent} users.");
-
-        return 0;
     }
 }
