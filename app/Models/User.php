@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\CustomResetPassword;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, AuditableTrait;
@@ -28,7 +30,11 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'gender',
         'password',
+        'provider',
+        'provider_id',
+        'provider_token',
     ];
 
     /**
@@ -38,6 +44,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'provider_token',
     ];
 
     /**
@@ -50,6 +57,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'provider_token' => 'encrypted',
         ];
     }
 
@@ -170,16 +178,7 @@ class User extends Authenticatable
 
     public function sendEmailVerificationNotification()
     {
-        $code = (string) random_int(100000, 999999);
-
-        // Cache the code for 60 minutes associated with this user
-        \Illuminate\Support\Facades\Cache::put(
-            "email_verification_code_user_{$this->id}",
-            $code,
-            now()->addMinutes(60)
-        );
-
-        $this->notify(new UserVerifyEmailNotification($code));
+        $this->notify(new UserVerifyEmailNotification());
     }
 
 
