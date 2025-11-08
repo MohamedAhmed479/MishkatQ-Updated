@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use App\Http\Controllers\Api\V1\SocialLoginController;
+
 use App\Http\Controllers\Admin\{
     AuthController as AdminAuthController,
     DashboardController,
@@ -188,3 +190,9 @@ Route::prefix('admin')->as('admin.')->middleware('auth:admin')->group(function (
 Route::get('/', function () {
     return view('landing');
 });
+
+// OAuth Routes
+Route::get('auth/{provider}/redirect', [SocialLoginController::class, 'redirect'])
+    ->name('auth.socilaite.redirect');
+Route::get('auth/{provider}/callback', [SocialLoginController::class, 'Callback'])
+    ->name('auth.socilaite.callback');
