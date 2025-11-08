@@ -2,18 +2,19 @@
 
 namespace App\Services;
 
-use App\Events\UserRegisteredEvent;
-use App\Helpers\ApiResponse;
-use App\Models\Device;
-use App\Models\PersonalAccessToken;
 use App\Models\User;
-use App\Repositories\Interfaces\UserInterface;
-use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Auth\Events\Verified;
+use App\Models\Device;
+use Illuminate\Support\Str;
+use App\Helpers\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use App\Events\UserRegisteredEvent;
+use App\Models\PersonalAccessToken;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use App\Repositories\Interfaces\UserInterface;
 
 class AuthService
 {
@@ -39,6 +40,7 @@ class AuthService
         return [
             "name" => $user->name,
             "email" => $user->email,
+            "gender" => $user->gender,
             "email_verified_at" => $user->email_verified_at ?? null,
             "created_at" => $user->created_at,
             "token" => $tokenResult->plainTextToken,
@@ -264,4 +266,103 @@ class AuthService
             422
         );
     }
+
+
+ // Find or create a social user, create token, store device and return unified response.
+
+public function loginOrRegisterSocialUser(array $userData, array $deviceData)
+{
+    $email = $userData['email'] ?? null;
+    $provider = $userData['provider'] ?? null;
+    $providerId = $userData['provider_id'] ?? null;
+
+    $user = null;
+    if ($provider && $providerId) {
+        $user = $this->userRepository->findByProvider($provider, $providerId);
+    }
+
+    if (!$user && $email) {
+        $user = $this->userRepository->findByEmail($email);
+    }
+
+    if (! $user) {
+        $password = $userData['password'] ?? Str::random(12);
+        $createData = [
+            'name' => $userData['name'] ?? 'Unknown User',
+            'email' => $email,
+            'password' => $password,
+            'gender' => $userData['gender'] ?? null,
+            'provider' => $provider,
+            'provider_id' => $providerId,
+            'provider_token' => $userData['provider_token'] ?? null,
+            'email_verified_at' => $userData['email_verified_at'] ?? now(),
+        ];
+
+        $user = $this->storeUser($createData);
+
+        event(new UserRegisteredEvent($user));
+    } else {
+        $update = [];
+        if ($provider && empty($user->provider)) {
+            $update['provider'] = $provider;
+        }
+        if ($providerId && empty($user->provider_id)) {
+            $update['provider_id'] = $providerId;
+        }
+        if (!empty($userData['provider_token'])) {
+            $update['provider_token'] = $userData['provider_token'];
+        }
+        if (!empty($update)) {
+            $this->userRepository->update($user->id, $update);
+            $user = $this->userRepository->findById($user->id);
+        }
+        if (empty($user->email_verified_at)) {
+            $user->email_verified_at = now();
+            $user->save();
+        }
+    }
+
+    $tokenResult = $user->createToken("user-login", ['*'], now()->addDays(10));
+
+    $deviceData["user_id"] = $user->id;
+    $deviceData["token_id"] = $tokenResult->accessToken->id ?? null;
+
+    if (! $this->deviceExistsForUser($user->id, $deviceData)) {
+        $device = $this->storeUserDevice($deviceData);
+    } else {
+        $device = $this->getUserDevice($user->id, $deviceData);
+    }
+
+    $data = [
+        "name" => $user->name,
+        "email" => $user->email,
+        "gender" => $user->gender ?? null,
+        "email_verified_at" => $user->email_verified_at ?? null,
+        "created_at" => $user->created_at,
+        "token" => $tokenResult->plainTextToken,
+        "profile" => [
+            "username" => $user->profile->username ?? null,
+            "profile_image" => $user->profile->profile_image ?? null,
+            "verses_memorized_count" => $user->profile->verses_memorized_count ?? 0,
+        ],
+        "preferences" => [
+            "daily_minutes" => $user->preference->daily_minutes ?? null,
+            "sessions_per_day" => $user->preference->sessions_per_day ?? null,
+            "preferred_times" => $user->preference->preferred_times ?? null,
+            "current_level" => $user->preference->current_level ?? null,
+            "tafsir_id" => $user->preference->tafsir_id ?? null,
+            "tafsir_name" => $user->preference->tafsir->name ?? null,
+        ],
+        "deviceInfo" => [
+            "device_type" => $device->device_type ?? $deviceData['device_type'] ?? null,
+            "device_name" => $device->device_name ?? $deviceData['device_name'] ?? null,
+            "platform" => $device->platform ?? $deviceData['platform'] ?? null,
+            "browser" => $device->browser ?? $deviceData['browser'] ?? null,
+            "ip_address" => $device->ip_address ?? $deviceData['ip_address'] ?? null,
+        ],
+    ];
+
+    return $data;
+}
+
 }
