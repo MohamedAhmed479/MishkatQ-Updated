@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\Api\V1\SocialLoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\UserAuthController;
 
@@ -18,12 +19,12 @@ Route::controller(UserAuthController::class)->prefix("auth")->group(function () 
 });
 
 Route::controller(UserAuthController::class)->middleware("auth:user")->prefix("auth")->group(function () {
-    Route::post('verify-email',  "verifyEmail")
-        ->middleware(['throttle:6,1'])
+    Route::get('verify-email/{id}/{hash}', 'verifyEmail')
+        ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
 
-    Route::post('email/verification-notification', "sendEmailVerificationNotification")
-        ->middleware('throttle:6,1')
+    Route::post('email/verification-notification', 'sendEmailVerificationNotification')
+        ->middleware(['auth:user', 'throttle:6,1'])
         ->name('verification.send');
 
     Route::post('logout', "logout")
