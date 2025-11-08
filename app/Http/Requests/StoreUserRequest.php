@@ -31,6 +31,7 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', Rule::unique('users', 'email')],
+            'gender' => ['required', Rule::in(['female', 'male'])],
             'password' => [
                 'required',
                 'confirmed',
