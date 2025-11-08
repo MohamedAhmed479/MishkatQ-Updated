@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Events\UserRegisteredEvent;
+use App\Models\User;
 use App\Helpers\ApiResponse;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\PasswordResetLinkRequest;
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UserEmailVerificationRequest;
-use App\Http\Requests\UserLoginRequest;
-use App\Http\Requests\UserResetPasswordRequest;
-use App\Models\PersonalAccessToken;
+use Illuminate\Http\Request;
 use App\Services\AuthService;
 use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Events\UserRegisteredEvent;
+use App\Models\PersonalAccessToken;
+use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UserLoginRequest;
 use Illuminate\Support\Facades\Password;
+use App\Http\Requests\PasswordResetLinkRequest;
+use App\Http\Requests\UserResetPasswordRequest;
+use App\Http\Requests\UserEmailVerificationRequest;
 
 class UserAuthController extends Controller
 {
@@ -38,7 +39,7 @@ class UserAuthController extends Controller
             DB::beginTransaction();
 
             $data = $this->authService->registerUserWithDeviceAndToken(
-                $request->only(['name', 'email', 'password']),
+                $request->only(['name', 'email', 'gender', 'password']),
                 $request->only(['device_type', 'device_name', 'platform', 'browser', 'ip_address'])
             );
 
@@ -56,7 +57,7 @@ class UserAuthController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            
+
             // Log failed registration
             $this->auditService->logAuth(
                 'register',
@@ -74,13 +75,13 @@ class UserAuthController extends Controller
     public function login(UserLoginRequest $request): JsonResponse
     {
         $email = $request->input('email');
-        
+
         try {
             $credentials = $request->only(['email', 'password']);
             $deviceInfo = $request->only(["device_type", "device_name", "platform", "browser", "ip_address"]);
 
             $response = $this->authService->loginWithDevice($credentials, $deviceInfo);
-            
+
             // Log successful login
             $user = Auth::user();
             $this->auditService->logAuth(
@@ -171,42 +172,35 @@ class UserAuthController extends Controller
         }
     }
 
-    public function verifyEmail(UserEmailVerificationRequest $request): JsonResponse
+    public function verifyEmail(Request $request, $id, $hash): JsonResponse
     {
         try {
-            $response = $this->authService->handleEmailVerification($request->validated());
-            
-            $user = Auth::user();
-            // Log successful email verification
-            $this->auditService->logAuth(
-                'email_verified',
-                $user,
-                'success',
-                "Email verified successfully: {$user->email}"
-            );
+            $user = User::findOrFail($id);
 
-            return $response;
+            if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+                return ApiResponse::error('رابط التحقق غير صالح', 403);
+            }
 
+            if ($user->hasVerifiedEmail()) {
+                return ApiResponse::success('البريد الإلكتروني تم التحقق منه مسبقاً');
+            }
+
+            $user->markEmailAsVerified();
+
+            // Log verification success
+            $this->auditService->logAuth('email_verified', $user, 'success', "Email verified successfully: {$user->email}");
+
+            return ApiResponse::success('تم التحقق من البريد الإلكتروني بنجاح');
         } catch (\Exception $e) {
-            // Log failed email verification
-            $user = Auth::user();
-            $this->auditService->logAuth(
-                'email_verification_failed',
-                $user,
-                'failed',
-                "Email verification failed: {$e->getMessage()}"
-            );
-
-            return ApiResponse::error('فشل في ارسال بريد التحقق', 500, [
-                'error' => $e->getMessage(),
-            ]);
+            $this->auditService->logAuth('email_verification_failed', null, 'failed', $e->getMessage());
+            return ApiResponse::error('فشل التحقق من البريد الإلكتروني', 500, ['error' => $e->getMessage()]);
         }
     }
 
     public function passwordResetLink(PasswordResetLinkRequest $request): JsonResponse
     {
         $email = $request->input('email');
-        
+
         try {
             $response = $this->authService->handlePasswordResetLink($request->only('email'));
 
@@ -238,7 +232,7 @@ class UserAuthController extends Controller
     public function resetPassword(UserResetPasswordRequest $request): JsonResponse
     {
         $email = $request->input('email');
-        
+
         try {
             $data = $request->only('email', 'password', 'password_confirmation', 'code');
             $response = $this->authService->handleResetPassword($data);
