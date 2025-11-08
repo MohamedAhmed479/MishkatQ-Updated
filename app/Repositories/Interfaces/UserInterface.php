@@ -17,4 +17,8 @@ interface UserInterface
     public function updateTotalPoints(User $user, int $newPoints): void;
 
     public function getUsersWithHigherPoints(int $points): int;
+
+    public function update(int $id, array $data);
+
+    public function findByProvider(string $provider, string $providerId);
 }
