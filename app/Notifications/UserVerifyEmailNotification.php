@@ -3,22 +3,25 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class UserVerifyEmailNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public $code;
+    // public $code;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($code)
+    public function __construct()
     {
-        $this->code = $code;
+        // $this->code = $code;
     }
 
     /**
@@ -32,14 +35,28 @@ class UserVerifyEmailNotification extends Notification implements ShouldQueue
     }
 
     /**
+     * Get the verification URL for the given notifiable.
+     */
+    protected function verificationUrl(object $notifiable)
+    {
+        return URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::now()->addMinutes(60),
+            ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())]
+        );
+    }
+
+    /**
      * Get the mail representation of the notification.
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $url = $this->verificationUrl($notifiable);
         return (new MailMessage)
-            ->subject('رمز تأكيد البريد الإلكتروني')
+            ->subject('تأكيد البريد الإلكتروني')
             ->view('emails.verify-email', [
-                'code' => $this->code,
+                // 'code' => $this->code,
+                'url' => $url,
                 'user' => $notifiable,
             ]);
 
