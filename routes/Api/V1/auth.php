@@ -14,11 +14,14 @@ Route::controller(UserAuthController::class)->prefix("auth")->group(function () 
     Route::post('forgot-password', 'passwordResetLink')
         ->name('password.email');
 
+    Route::post('verify-otp', 'verifyOtp')
+        ->name('password.verify.otp');
+
     Route::post('reset-password', 'resetPassword')
         ->name('password.store');
 });
 
-Route::controller(UserAuthController::class)->middleware("auth:user")->prefix("auth")->group(function () {
+Route::controller(UserAuthController::class)->prefix("auth")->group(function () {
     Route::get('verify-email/{id}/{hash}', 'verifyEmail')
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
@@ -28,5 +31,6 @@ Route::controller(UserAuthController::class)->middleware("auth:user")->prefix("a
         ->name('verification.send');
 
     Route::post('logout', "logout")
+        ->middleware('auth:user')
         ->name('logout');
 });
