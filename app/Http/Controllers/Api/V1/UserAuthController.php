@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UserLoginRequest;
+use App\Http\Requests\VerifyOtpRequest;
 use Illuminate\Support\Facades\Password;
 use App\Http\Requests\PasswordResetLinkRequest;
 use App\Http\Requests\UserResetPasswordRequest;
@@ -229,12 +230,44 @@ class UserAuthController extends Controller
         }
     }
 
+    public function verifyOtp(VerifyOtpRequest $request): JsonResponse{
+        $email = $request->input('email');
+
+        try {
+            $data = $request->only('email', 'code');
+            $response = $this->authService->handleVerifyOtp($data);
+
+            // Log successful OTP verification
+            $this->auditService->logAuth(
+                'otp_verification_successful',
+                null,
+                'success',
+                "OTP verified successfully for: {$email}"
+            );
+
+            return $response;
+
+        } catch (\Exception $e) {
+            // Log failed OTP verification
+            $this->auditService->logAuth(
+                'otp_verification_failed',
+                null,
+                'failed',
+                "OTP verification failed for: {$email} - {$e->getMessage()}"
+            );
+
+            return ApiResponse::error('فشل في التحقق من رمز إعادة التعيين', 500, [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     public function resetPassword(UserResetPasswordRequest $request): JsonResponse
     {
         $email = $request->input('email');
 
         try {
-            $data = $request->only('email', 'password', 'password_confirmation', 'code');
+            $data = $request->only('email', 'password', 'password_confirmation', 'token');
             $response = $this->authService->handleResetPassword($data);
 
             // Log successful password reset
