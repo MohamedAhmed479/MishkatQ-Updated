@@ -27,7 +27,7 @@ class UserResetPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required','digits:6'],
+            'token' => ['required'],
             'email' => ['required', 'email'],
             'password' => [
                 'required',
@@ -44,8 +44,7 @@ class UserResetPasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'code.required' => 'رمز إعادة التعيين مطلوب.',
-            'code.digits' => 'رمز إعادة التعيين يجب أن يتكون من 6 أرقام.',
+            'token.required' => 'رمز إعادة التعيين مطلوب.',
             'email.required' => 'البريد الإلكتروني مطلوب.',
             'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
             'password.required' => 'كلمة المرور مطلوبة.',
