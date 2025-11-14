@@ -220,15 +220,33 @@ class AuthService
         );
     }
 
-    public function handleResetPassword(Array $data):  JsonResponse
-    {
+    public function handleVerifyOtp(Array $data): JsonResponse{
         $email = $data['email'] ?? '';
         $code = $data['code'] ?? '';
 
         $cachedCode = \Illuminate\Support\Facades\Cache::get("password_reset_code_{$email}");
-        $cachedToken = \Illuminate\Support\Facades\Cache::get("password_reset_token_{$email}");
 
         if (!$cachedCode || !hash_equals((string)$cachedCode, (string)$code)) {
+            return ApiResponse::error('رمز إعادة التعيين غير صالح أو منتهي الصلاحية', 422);
+        }
+
+        return ApiResponse::success(
+            [
+                'email' => $email,
+                'token' => \Illuminate\Support\Facades\Cache::get("password_reset_token_{$email}"),
+            ],
+            'تم التحقق من رمز إعادة التعيين بنجاح'
+        );
+    }
+
+    public function handleResetPassword(Array $data):  JsonResponse
+    {
+        $email = $data['email'] ?? '';
+        $token = $data['token'] ?? '';
+
+        $cachedToken = \Illuminate\Support\Facades\Cache::get("password_reset_token_{$email}");
+
+        if (!$cachedToken || !hash_equals((string)$cachedToken, (string)$token)) {
             return ApiResponse::error('رمز إعادة التعيين غير صالح أو منتهي الصلاحية', 422);
         }
 
