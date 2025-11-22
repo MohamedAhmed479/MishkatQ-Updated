@@ -9,7 +9,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rules\Password;
 
-class UserResetPasswordRequest extends FormRequest
+class VerifyOtpRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,34 +27,18 @@ class UserResetPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'token' => ['required'],
+            'code' => ['required','digits:6'],
             'email' => ['required', 'email'],
-            'password' => [
-                'required',
-                'confirmed',
-                Password::min(8)
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised(),
-            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'token.required' => 'رمز إعادة التعيين مطلوب.',
+            'code.required' => 'رمز إعادة التعيين مطلوب.',
+            'code.digits' => 'رمز إعادة التعيين يجب أن يتكون من 6 أرقام.',
             'email.required' => 'البريد الإلكتروني مطلوب.',
             'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
-            'password.required' => 'كلمة المرور مطلوبة.',
-            'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
-            'password.min' => 'كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل.',
-            'password.lowercase' => 'كلمة المرور يجب أن تحتوي على حرف صغير واحد على الأقل.',
-            'password.uppercase' => 'كلمة المرور يجب أن تحتوي على حرف كبير واحد على الأقل.',
-            'password.symbols' => 'كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل (مثل @ أو !).',
-            'password.numbers' => 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.',
-            'password.uncompromised' => 'هذه الكلمة تم تسريبها من قبل، يُرجى استخدام كلمة مرور أقوى.',
         ];
     }
 

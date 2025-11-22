@@ -37,4 +37,21 @@ class UserRepository implements UserInterface
     {
         return UserProfile::where('total_points', '>', $points)->count();
     }
+
+    public function update(int $id, array $data)
+    {
+        $user = $this->findById($id);
+        if (!$user) {
+            return null;
+        }
+        $user->update($data);
+        return $user;
+    }
+
+    public function findByProvider(string $provider, string $providerId)
+    {
+        return User::where('provider', $provider)
+            ->where('provider_id', $providerId)
+            ->first();
+    }
 }

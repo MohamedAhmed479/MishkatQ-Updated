@@ -30,6 +30,7 @@ class UserRegisterTest extends TestCase
             "name" => "Mohamed Ahmed",
             "email" => "mohamed@gmail.com",
             "password" => "MySecurePass123#",
+            "gender" => "male",
             "password_confirmation" => "MySecurePass123#",
             "device_type" => "mobile",
             "device_name" => "iPhone 12",
@@ -49,6 +50,7 @@ class UserRegisterTest extends TestCase
                 'data' => [
                     'name',
                     'email',
+                    'gender',
                     'email_verified_at',
                     'created_at',
                     'token',
@@ -127,6 +129,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Ahmed Ali",
             "email" => "ahmed@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
         ];
@@ -235,6 +238,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Test User",
             "email" => "test@example.com",
+            "gender" => "male",
             "password" => "weak",
             "password_confirmation" => "weak",
         ];
@@ -262,6 +266,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Test User",
             "email" => "test@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "DifferentSecurePass123#",
         ];
@@ -289,6 +294,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => str_repeat("a", 101), // 101 characters
             "email" => "test@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
         ];
@@ -308,6 +314,33 @@ class UserRegisterTest extends TestCase
     }
 
     /**
+     * Test registration validation - invalid gender
+     */
+    public function test_registration_fails_with_invalid_gender(){
+        // Arrange
+        $registerData = [
+            "name" => "Test User",
+            "email" => "test@example.com",
+            "gender" => "unknown",
+            "password" => "MySecurePass123#",
+            "password_confirmation" => "MySecurePass123#",
+        ];
+
+        // Act
+        $response = $this->postJson(route("auth.register"), $registerData);
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'errors' => [
+                    'gender',
+                ],
+            ]);
+    }
+
+    /**
      * Test registration validation - invalid IP address
      */
     public function test_registration_fails_with_invalid_ip_address(): void
@@ -316,6 +349,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Test User",
             "email" => "test@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
             "ip_address" => "invalid-ip",
@@ -344,6 +378,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Profile Test User",
             "email" => "profile@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
         ];
@@ -372,6 +407,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Preferences Test User",
             "email" => "preferences@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
         ];
@@ -401,6 +437,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Token Test User",
             "email" => "token@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
         ];
@@ -427,6 +464,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Email Test User",
             "email" => "email@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
         ];
@@ -449,6 +487,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Device Test User",
             "email" => "device@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
             "device_type" => "desktop",
@@ -484,6 +523,7 @@ class UserRegisterTest extends TestCase
         $registerData = [
             "name" => "Message Test User",
             "email" => "message@example.com",
+            "gender" => "male",
             "password" => "MySecurePass123#",
             "password_confirmation" => "MySecurePass123#",
         ];

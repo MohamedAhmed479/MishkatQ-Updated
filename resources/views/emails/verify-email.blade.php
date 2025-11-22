@@ -6,7 +6,7 @@
     <style>
         body {
             background: #f5fdf7;
-            font-family: 'Tajawal', Arial, sans-serif;
+            font-family: 'Tajawal', 'Cairo', Arial, sans-serif;
             color: #2e7d32;
             margin: 0;
             padding: 0;
@@ -43,20 +43,34 @@
             margin: 20px 0;
         }
 
+        .button-wrapper {
+            text-align: center;
+            margin: 30px 0;
+        }
+
         .verify-button {
             display: inline-block;
             background-color: #4caf50;
-            color: white;
+            color: white !important;
             padding: 12px 25px;
             border-radius: 30px;
             text-decoration: none;
             font-size: 16px;
-            margin-top: 20px;
+            font-weight: bold;
             transition: background-color 0.3s ease;
         }
 
         .verify-button:hover {
             background-color: #388e3c;
+        }
+
+        .link-text {
+            word-break: break-all;
+            direction: ltr;
+            font-size: 12px;
+            color: #558b2f;
+            display: block;
+            margin-top: 10px;
         }
 
         .footer {
@@ -71,19 +85,24 @@
 <body>
 <div class="email-container">
     <div class="header">
-        <h1>مرحبًا بك في مشكاة</h1>
+        <h1>تفعيل حسابك في مشكاة</h1>
     </div>
 
     <div class="content">
         <p>السلام عليكم ورحمة الله وبركاته،</p>
-        <p>نشكرك على انضمامك إلى منصة <strong>مشكاة</strong>، التي تسعى لمساعدتك على حفظ كتاب الله تعالى بطريقة منظمة ومشوقة.</p>
-        <p>لتفعيل حسابك والبدء في رحلتك المباركة، يرجى إدخال الرمز التالي في التطبيق خلال 60 دقيقة:</p>
+        <p>مرحباً بك يا <strong>{{ $user->name }}</strong>، نشكرك على انضمامك إلى منصة <strong>مشكاة</strong>.</p>
+        <p>لتفعيل حسابك والبدء في رحلتك المباركة لحفظ كتاب الله تعالى، يرجى النقر على الزر أدناه:</p>
 
-        <p style="text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px;">
-            {{ $code }}
-        </p>
+        <div class="button-wrapper">
+            <a href="{{ $url }}" class="verify-button">
+                تفعيل البريد الإلكتروني
+            </a>
+        </div>
 
-        <p>إذا لم تقم بإنشاء هذا الحساب، يمكنك تجاهل هذه الرسالة.</p>
+        <p>الرابط صالح لمدة <strong>60 دقيقة</strong>. إذا لم يعمل الزر، يرجى نسخ الرابط ولصقه في متصفح الويب الخاص بك:</p>
+        <span class="link-text">{{ $url }}</span>
+
+        <p style="margin-top: 30px;">إذا لم تقم بإنشاء هذا الحساب، يمكنك تجاهل هذه الرسالة.</p>
         <p>نسأل الله أن يبارك فيك ويعينك على حفظ كتابه الكريم.</p>
     </div>
 
