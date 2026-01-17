@@ -3,9 +3,142 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
-@source '../**/*.js';
+@source '../**/*.jsx';
+@source '../**/*.tsx';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Font Families */
+    --font-tajawal: 'Tajawal', ui-sans-serif, system-ui, sans-serif;
+    --font-cairo: 'Cairo', ui-sans-serif, system-ui, sans-serif;
+    --font-amiri: 'Amiri', ui-serif, Georgia, serif;
+
+    /* Primary Colors - Emerald/Sage */
+    --color-primary-50: #ecfdf5;
+    --color-primary-100: #d1fae5;
+    --color-primary-200: #a7f3d0;
+    --color-primary-300: #6ee7b7;
+    --color-primary-400: #34d399;
+    --color-primary-500: #10b981;
+    --color-primary-600: #059669;
+    --color-primary-700: #047857;
+    --color-primary-800: #065f46;
+    --color-primary-900: #064e3b;
+    --color-primary-950: #022c22;
+
+    /* Accent Colors - Gold/Sand */
+    --color-accent-50: #fefce8;
+    --color-accent-100: #fef9c3;
+    --color-accent-200: #fef08a;
+    --color-accent-300: #fde047;
+    --color-accent-400: #facc15;
+    --color-accent-500: #D4AF37;
+    --color-accent-600: #ca8a04;
+    --color-accent-700: #a16207;
+    --color-accent-800: #854d0e;
+    --color-accent-900: #713f12;
+
+    /* Surface Colors - Light Mode (Cream/Paper) */
+    --color-surface-50: #FDFCF0;
+    --color-surface-100: #FAF9F3;
+    --color-surface-200: #F5F4EE;
+    --color-surface-300: #E8E7E1;
+    --color-surface-400: #D4D3CD;
+
+    /* Surface Colors - Dark Mode (Charcoal) */
+    --color-dark-50: #3a3a3a;
+    --color-dark-100: #2d2d2d;
+    --color-dark-200: #252525;
+    --color-dark-300: #1e1e1e;
+    --color-dark-400: #171717;
+    --color-dark-500: #121212;
+    --color-dark-600: #0d0d0d;
+
+    /* Text Colors */
+    --color-text-primary: #2D3748;
+    --color-text-secondary: #4A5568;
+    --color-text-muted: #718096;
+    --color-text-light: #A0AEC0;
+    --color-text-dark-primary: #E2E8F0;
+    --color-text-dark-secondary: #CBD5E0;
+    --color-text-dark-muted: #A0AEC0;
+
+    /* Semantic Colors */
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --color-info: #3b82f6;
+}
+
+/* Base Styles */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-tajawal);
+    background-color: var(--color-surface-50);
+    color: var(--color-text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode */
+.dark body,
+body.dark {
+    background-color: var(--color-dark-500);
+    color: var(--color-text-dark-primary);
+}
+
+/* Quran Text Styling */
+.quran-text {
+    font-family: var(--font-amiri);
+    line-height: 2.5;
+    font-size: 1.5rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-surface-200);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-primary-400);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-500);
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: var(--color-dark-300);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: var(--color-primary-600);
+}
+
+/* Glass Effect */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dark .glass {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Focus Ring */
+.focus-ring {
+    outline: none;
+    ring: 2px;
+    ring-color: var(--color-primary-500);
+    ring-offset: 2px;
 }

@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 
     <!-- Vite Assets (includes Tailwind CSS) -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logo.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logo.png') }}">

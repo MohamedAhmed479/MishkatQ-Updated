@@ -5,467 +5,638 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>مشكاة - منصة الحفظ والمراجعة الذكية</title>
     <meta name="description" content="مشكاة: خطط حفظ القرآن الذكية، المراجعة بالتكرار المتباعد، تتبُّع التقدّم، التحفيز والشارات">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            200: '#a7f3d0',
-                            300: '#6ee7b7',
-                            400: '#34d399',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
-                            950: '#022c22'
-                        }
-                    },
-                    fontFamily: {
-                        arabic: ['Tajawal', 'Cairo', 'system-ui', 'sans-serif']
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                        'slide-up': 'slideUp 0.8s ease-out',
-                        'gradient': 'gradient 15s ease infinite',
-                    }
-                }
-            }
-        }
-    </script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
+
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
-        
+        :root {
+            --primary-50: #ecfdf5;
+            --primary-100: #d1fae5;
+            --primary-200: #a7f3d0;
+            --primary-300: #6ee7b7;
+            --primary-400: #34d399;
+            --primary-500: #10b981;
+            --primary-600: #059669;
+            --primary-700: #047857;
+            --primary-800: #065f46;
+            --primary-900: #064e3b;
+            --primary-950: #022c22;
+            --accent-500: #D4AF37;
+            --surface-50: #FDFCF0;
+            --dark-500: #121212;
+        }
+
+        body {
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+        }
+
+        .font-amiri {
+            font-family: 'Amiri', serif;
+        }
+
+        /* Animated gradient background */
+        .hero-gradient {
+            background: linear-gradient(135deg, var(--primary-950) 0%, var(--primary-900) 25%, var(--primary-800) 50%, var(--primary-900) 75%, var(--primary-950) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Floating animation */
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-20px) rotate(3deg); }
-            66% { transform: translateY(-10px) rotate(-2deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
         }
 
-        @keyframes glow {
-            0% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.5), 0 0 10px rgba(16, 185, 129, 0.3); }
-            100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 30px rgba(16, 185, 129, 0.4); }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(50px); }
-            to { opacity: 1; transform: translateY(0); }
+        .animate-float-delayed {
+            animation: float 6s ease-in-out infinite;
+            animation-delay: -3s;
         }
 
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* Glow effect */
+        .glow-primary {
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), 0 0 60px rgba(16, 185, 129, 0.2);
         }
 
-        .gradient-bg {
-            background: linear-gradient(-45deg, #064e3b, #047857, #065f46, #022c22);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+        .glow-accent {
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4), 0 0 60px rgba(212, 175, 55, 0.2);
         }
 
-        .glass-effect {
+        /* Glass morphism */
+        .glass {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Card hover effect */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Gradient text */
         .text-gradient {
-            background: linear-gradient(135deg, #10b981, #34d399, #6ee7b7);
+            background: linear-gradient(135deg, var(--primary-400), var(--primary-300), var(--accent-500));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .hover-lift {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .hover-lift:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-shine {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card-shine::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            transition: all 0.5s;
-            opacity: 0;
-        }
-
-        .card-shine:hover::before {
-            opacity: 1;
-            animation: shine 0.8s ease-in-out;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
-        }
-
-        .floating-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
+        /* Particles */
         .particle {
             position: absolute;
+            width: 4px;
+            height: 4px;
             background: radial-gradient(circle, rgba(16, 185, 129, 0.8) 0%, transparent 70%);
             border-radius: 50%;
-            animation: float 8s ease-in-out infinite;
+            pointer-events: none;
         }
 
-        .nav-blur {
-            backdrop-filter: blur(20px);
-            background: rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        /* Responsive nav */
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-400);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Feature icon animation */
+        .feature-icon {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Step connector */
+        .step-connector {
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-500), transparent);
+        }
+
+        /* Dark mode toggle */
+        .dark body {
+            background-color: var(--dark-500);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-950);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-600);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-500);
         }
     </style>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logo.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
 </head>
 
-<body class="font-arabic gradient-bg text-white overflow-x-hidden">
-    <!-- خلفية الجزيئات المتحركة -->
-    <div class="floating-particles" id="particles"></div>
+<body class="antialiased text-white overflow-x-hidden">
+    <!-- Particles Background -->
+    <div id="particles" class="fixed inset-0 pointer-events-none z-0"></div>
 
-    <!-- شريط التنقل -->
-    <nav class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-4">
-        <div class="nav-blur rounded-full px-8 py-4 flex items-center gap-8">
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.svg') }}" alt="شعار مشكاة" class="w-10 h-10 rounded-xl animate-float" />
-                <span class="text-xl font-bold text-primary-300">مشكاة</span>
-            </div>
-            <div class="hidden md:flex gap-6">
-                <a href="#features" class="text-white/80 hover:text-primary-300 transition-colors px-4 py-2 rounded-full hover:bg-white/10">المزايا</a>
-                <a href="#how" class="text-white/80 hover:text-primary-300 transition-colors px-4 py-2 rounded-full hover:bg-white/10">كيف يعمل</a>
-                <a href="#faq" class="text-white/80 hover:text-primary-300 transition-colors px-4 py-2 rounded-full hover:bg-white/10">الأسئلة</a>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 py-4 px-4 md:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="glass rounded-2xl px-6 py-3 flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/" class="flex items-center gap-3">
+                    <img src="{{ asset('images/logo.svg') }}" alt="مشكاة" class="w-10 h-10 animate-float">
+                    <span class="text-xl font-bold text-gradient">مشكاة</span>
+                </a>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#features" class="nav-link text-white/80 hover:text-white transition-colors">المزايا</a>
+                    <a href="#how-it-works" class="nav-link text-white/80 hover:text-white transition-colors">كيف يعمل</a>
+                    <a href="#testimonials" class="nav-link text-white/80 hover:text-white transition-colors">آراء المستخدمين</a>
+                    <a href="#faq" class="nav-link text-white/80 hover:text-white transition-colors">الأسئلة الشائعة</a>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="flex items-center gap-3">
+                    @guest
+                        <a href="/login" class="hidden sm:block px-4 py-2 text-white/80 hover:text-white transition-colors">
+                            دخول
+                        </a>
+                        <a href="/register" class="px-5 py-2.5 bg-gradient-to-r from-[#059669] to-[#10b981] rounded-xl font-medium hover:shadow-lg hover:shadow-[#059669]/30 transition-all">
+                            ابدأ مجاناً
+                        </a>
+                    @else
+                        <a href="/app/dashboard" class="px-5 py-2.5 bg-gradient-to-r from-[#059669] to-[#10b981] rounded-xl font-medium hover:shadow-lg hover:shadow-[#059669]/30 transition-all">
+                            لوحة التحكم
+                        </a>
+                    @endguest
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- القسم الرئيسي -->
-    <section class="min-h-screen flex items-center justify-center relative pt-24 pb-16 px-4">
+    <!-- Hero Section -->
+    <section class="hero-gradient min-h-screen flex items-center justify-center pt-24 pb-16 px-4 relative overflow-hidden">
+        <!-- Decorative Elements -->
+        <div class="absolute top-20 right-10 w-72 h-72 bg-[#10b981]/20 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute bottom-20 left-10 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl animate-float-delayed"></div>
+
         <div class="max-w-6xl mx-auto text-center relative z-10">
-            <div class="animate-slide-up">
-                <h1 class="text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-tight">
-                    <span class="text-gradient">منصة ذكية</span>
-                    <br>
-                    <span class="text-white">لحفظ القرآن</span>
-                </h1>
-                
-                <p class="text-xl md:text-2xl text-white/80 mb-12 max-w-4xl mx-auto leading-relaxed">
-                    تجربة عملية للحفظ والمراجعة مع خطط مخصصة وتكرار متباعد علمي لضمان ثبات الحفظ، بالإضافة إلى تتبُّع التقدّم والتحفيز بالشارات والنقاط والتعديل التلقائي للخطط
-                </p>
-
-                <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-                    <button class="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 px-8 py-4 rounded-full text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 animate-glow">
-                        🚀 ابدأ رحلتك الآن
-                    </button>
-                    <button class="glass-effect px-8 py-4 rounded-full text-white/70 font-semibold cursor-not-allowed">
-                        📱 تحميل التطبيق (قريباً)
-                    </button>
-                </div>
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-2 glass rounded-full mb-8">
+                <span class="w-2 h-2 bg-[#10b981] rounded-full animate-pulse"></span>
+                <span class="text-sm text-white/80">منصة الحفظ الذكية الأولى عربياً</span>
             </div>
 
-            <!-- إحصائيات -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-                <div class="glass-effect p-6 rounded-2xl text-center hover-lift card-shine">
-                    <div class="text-3xl font-black text-gradient mb-2">خطط</div>
-                    <div class="text-sm text-white/60">خطط حفظ مخصّصة</div>
+            <!-- Headline -->
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6">
+                احفظ القرآن الكريم
+                <br>
+                <span class="text-gradient">بطريقة علمية ذكية</span>
+            </h1>
+
+            <!-- Subheadline -->
+            <p class="text-lg md:text-xl text-white/70 max-w-3xl mx-auto mb-10 leading-relaxed">
+                خطط حفظ مخصصة، مراجعة بالتكرار المتباعد، تتبع تقدمك، واكسب الشارات والنقاط.
+                <br class="hidden md:block">
+                رحلتك نحو إتمام حفظ كتاب الله تبدأ من هنا.
+            </p>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+                @guest
+                    <a href="/register" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#059669] to-[#10b981] rounded-2xl font-bold text-lg glow-primary hover:scale-105 transition-all">
+                        🚀 ابدأ رحلتك مجاناً
+                    </a>
+                @else
+                    <a href="/app/dashboard" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#059669] to-[#10b981] rounded-2xl font-bold text-lg glow-primary hover:scale-105 transition-all">
+                        📊 انتقل للوحة التحكم
+                    </a>
+                @endguest
+                <a href="#how-it-works" class="w-full sm:w-auto px-8 py-4 glass rounded-2xl font-semibold hover:bg-white/10 transition-all">
+                    شاهد كيف يعمل
+                </a>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="text-3xl md:text-4xl font-black text-gradient mb-1">خطط</div>
+                    <div class="text-sm text-white/60">مخصصة لك</div>
                 </div>
-                <div class="glass-effect p-6 rounded-2xl text-center hover-lift card-shine">
-                    <div class="text-3xl font-black text-gradient mb-2">مراجعات</div>
-                    <div class="text-sm text-white/60">جداول تكرار متباعد</div>
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="text-3xl md:text-4xl font-black text-gradient mb-1">تكرار</div>
+                    <div class="text-sm text-white/60">متباعد علمي</div>
                 </div>
-                <div class="glass-effect p-6 rounded-2xl text-center hover-lift card-shine">
-                    <div class="text-3xl font-black text-gradient mb-2">شارات</div>
-                    <div class="text-sm text-white/60">نقاط وتحفيز</div>
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="text-3xl md:text-4xl font-black text-gradient mb-1">شارات</div>
+                    <div class="text-sm text-white/60">وتحفيز مستمر</div>
                 </div>
-                <div class="glass-effect p-6 rounded-2xl text-center hover-lift card-shine">
-                    <div class="text-3xl font-black text-gradient mb-2">تحليلات</div>
-                    <div class="text-sm text-white/60">مؤشرات التقدّم</div>
+                <div class="glass rounded-2xl p-6 card-hover">
+                    <div class="text-3xl md:text-4xl font-black text-gradient mb-1">تحليلات</div>
+                    <div class="text-sm text-white/60">لأدائك</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2">
+            <div class="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-2">
+                <div class="w-1.5 h-3 bg-white/50 rounded-full animate-bounce"></div>
             </div>
         </div>
     </section>
 
-    <!-- قسم المزايا -->
-    <section id="features" class="py-20 px-4 relative">
+    <!-- Features Section -->
+    <section id="features" class="py-24 px-4 bg-gradient-to-b from-[#022c22] to-[#064e3b]">
         <div class="max-w-7xl mx-auto">
+            <!-- Section Header -->
             <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-6xl font-black mb-6">
-                    <span class="text-gradient">مزايا متقدمة</span> للحفظ الذكي
+                <span class="inline-block px-4 py-2 glass rounded-full text-sm text-[#10b981] mb-4">المزايا</span>
+                <h2 class="text-3xl md:text-5xl font-black mb-4">
+                    كل ما تحتاجه <span class="text-gradient">لحفظ القرآن</span>
                 </h2>
-                <p class="text-xl text-white/70 max-w-3xl mx-auto">
-                    تقنيات متقدمة مصممة خصيصاً لتسريع الحفظ وضمان الثبات مع تجربة تفاعلية ممتعة
+                <p class="text-lg text-white/60 max-w-2xl mx-auto">
+                    تقنيات متقدمة مصممة خصيصاً لتسريع الحفظ وضمان الثبات
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">🧩</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">خطط حفظ مخصّصة</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        أنشئ خطة حفظ تناسب وقتك اليومي ومستواك مع توزيع تلقائي للآيات على أيامك حسب قدرتك
+            <!-- Features Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Feature 1 -->
+                <div class="feature-card glass rounded-3xl p-8 card-hover">
+                    <div class="feature-icon w-16 h-16 bg-gradient-to-br from-[#10b981] to-[#059669] rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        🎯
+                    </div>
+                    <h3 class="text-xl font-bold text-[#6ee7b7] mb-3">خطط حفظ مخصصة</h3>
+                    <p class="text-white/70 leading-relaxed">
+                        أنشئ خطة تناسب وقتك ومستواك مع توزيع تلقائي للآيات على الأيام
                     </p>
                 </div>
 
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">🔄</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">مراجعة علمية متباعدة</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        نظام مراجعة متقدم بفترات متدرجة (1، 3، 7، 14، 30، 60، 90 يوم) لضمان ثبات الحفظ
+                <!-- Feature 2 -->
+                <div class="feature-card glass rounded-3xl p-8 card-hover">
+                    <div class="feature-icon w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#ca8a04] rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        🔄
+                    </div>
+                    <h3 class="text-xl font-bold text-[#6ee7b7] mb-3">التكرار المتباعد</h3>
+                    <p class="text-white/70 leading-relaxed">
+                        نظام مراجعة علمي بفترات متدرجة (1، 3، 7، 14، 30، 60، 90 يوم)
                     </p>
                 </div>
 
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">📊</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">تتبع التقدم المفصل</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        مراقبة دقيقة لتقدمك مع إحصائيات مفصلة لكل سورة ومعدلات النجاح والأداء
+                <!-- Feature 3 -->
+                <div class="feature-card glass rounded-3xl p-8 card-hover">
+                    <div class="feature-icon w-16 h-16 bg-gradient-to-br from-[#10b981] to-[#059669] rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        📊
+                    </div>
+                    <h3 class="text-xl font-bold text-[#6ee7b7] mb-3">تتبع التقدم</h3>
+                    <p class="text-white/70 leading-relaxed">
+                        إحصائيات مفصلة لكل سورة ومعدلات النجاح وتحليلات الأداء
                     </p>
                 </div>
 
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">🎯</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">نظام التحفيز المتقدم</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        شارات متنوعة ونقاط وجوائز للانجازات المختلفة مع لوحة صدارة شهرية وأسبوعية
+                <!-- Feature 4 -->
+                <div class="feature-card glass rounded-3xl p-8 card-hover">
+                    <div class="feature-icon w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#ca8a04] rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        🏆
+                    </div>
+                    <h3 class="text-xl font-bold text-[#6ee7b7] mb-3">نظام التحفيز</h3>
+                    <p class="text-white/70 leading-relaxed">
+                        شارات ونقاط ولوحة صدارة للتنافس مع الآخرين
                     </p>
                 </div>
 
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">⚙️</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">تعديل تلقائي للخطط</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        النظام يراقب أداءك ويعدل خطتك تلقائياً - يسرعها للأداء الممتاز أو يبطئها للتركيز على المراجعة
+                <!-- Feature 5 -->
+                <div class="feature-card glass rounded-3xl p-8 card-hover">
+                    <div class="feature-icon w-16 h-16 bg-gradient-to-br from-[#10b981] to-[#059669] rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        ⚙️
+                    </div>
+                    <h3 class="text-xl font-bold text-[#6ee7b7] mb-3">تعديل تلقائي</h3>
+                    <p class="text-white/70 leading-relaxed">
+                        النظام يراقب أداءك ويعدل خطتك تلقائياً حسب مستواك
                     </p>
                 </div>
 
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">🔔</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">تذكيرات تلقائية</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        إشعارات تلقائية لمواعيد المراجعة مع تذكيرات مخصصة حسب عاداتك وأوقات نشاطك
-                    </p>
-                </div>
-
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">📈</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">تحليلات الأداء</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        تقارير شاملة عن معدلات النجاح والوقت المستغرق ونقاط القوة والضعف في الحفظ
-                    </p>
-                </div>
-
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">🎮</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">تجربة تفاعلية</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        واجهة سهلة الاستخدام مع تقييم فوري للأداء وتفاعل سلس مع المحتوى
-                    </p>
-                </div>
-
-                <div class="glass-effect p-8 rounded-3xl hover-lift card-shine">
-                    <div class="text-5xl mb-6">🔒</div>
-                    <h3 class="text-2xl font-bold text-primary-300 mb-4">أمان وخصوصية</h3>
-                    <p class="text-white/80 leading-relaxed">
-                        حماية كاملة لبياناتك مع نظام تسجيل دخول آمن وتشفير البيانات الحساسة
+                <!-- Feature 6 -->
+                <div class="feature-card glass rounded-3xl p-8 card-hover">
+                    <div class="feature-icon w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#ca8a04] rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        🔔
+                    </div>
+                    <h3 class="text-xl font-bold text-[#6ee7b7] mb-3">تذكيرات ذكية</h3>
+                    <p class="text-white/70 leading-relaxed">
+                        إشعارات مخصصة لمواعيد الحفظ والمراجعة
                     </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- قسم كيف يعمل -->
-    <section id="how" class="py-20 px-4 bg-black/20 backdrop-blur-sm">
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-24 px-4 bg-[#064e3b]">
+        <div class="max-w-6xl mx-auto">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-2 glass rounded-full text-sm text-[#D4AF37] mb-4">كيف يعمل</span>
+                <h2 class="text-3xl md:text-5xl font-black mb-4">
+                    أربع خطوات <span class="text-gradient">نحو الحفظ</span>
+                </h2>
+                <p class="text-lg text-white/60 max-w-2xl mx-auto">
+                    رحلة بسيطة ومنظمة تبدأ معك من الصفر
+                </p>
+            </div>
+
+            <!-- Steps -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Step 1 -->
+                <div class="relative text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-[#10b981] to-[#059669] rounded-full flex items-center justify-center text-3xl font-black text-white glow-primary">
+                        1
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">حدد مستواك</h3>
+                    <p class="text-white/60">
+                        اختر بين مبتدئ أو متوسط أو متقدم مع الوقت اليومي المتاح
+                    </p>
+                    <div class="hidden lg:block step-connector"></div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-[#D4AF37] to-[#ca8a04] rounded-full flex items-center justify-center text-3xl font-black text-white glow-accent">
+                        2
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">أنشئ خطتك</h3>
+                    <p class="text-white/60">
+                        اختر السور والنظام يحسب ويوزع الآيات تلقائياً
+                    </p>
+                    <div class="hidden lg:block step-connector"></div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="relative text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-[#10b981] to-[#059669] rounded-full flex items-center justify-center text-3xl font-black text-white glow-primary">
+                        3
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">احفظ يومياً</h3>
+                    <p class="text-white/60">
+                        اتبع خطتك مع تقييم أدائك بعد كل جلسة
+                    </p>
+                    <div class="hidden lg:block step-connector"></div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-[#D4AF37] to-[#ca8a04] rounded-full flex items-center justify-center text-3xl font-black text-white glow-accent">
+                        4
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">راجع بانتظام</h3>
+                    <p class="text-white/60">
+                        النظام يجدول مراجعاتك بفترات متدرجة لثبات الحفظ
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-24 px-4 bg-gradient-to-b from-[#064e3b] to-[#022c22]">
         <div class="max-w-6xl mx-auto">
             <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-6xl font-black mb-6 text-gradient">كيف تعمل المنصة؟</h2>
-                <p class="text-xl text-white/70">أربع خطوات بسيطة لبداية رحلة حفظ ناجحة</p>
+                <span class="inline-block px-4 py-2 glass rounded-full text-sm text-[#10b981] mb-4">آراء المستخدمين</span>
+                <h2 class="text-3xl md:text-5xl font-black mb-4">
+                    ماذا يقولون <span class="text-gradient">عن مشكاة</span>
+                </h2>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="glass-effect p-8 rounded-3xl text-center hover-lift card-shine">
-                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-2xl font-black text-white mx-auto mb-6">1</div>
-                    <h3 class="text-xl font-bold text-white mb-4">إعداد التفضيلات</h3>
-                    <p class="text-white/70">حدد وقتك اليومي المتاح ومستواك الحالي (مبتدئ/متوسط/متقدم) لإنشاء خطة مناسبة</p>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="glass rounded-3xl p-8 card-hover">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-[#10b981] to-[#059669] rounded-full flex items-center justify-center text-xl font-bold">أ</div>
+                        <div>
+                            <div class="font-bold text-white">أحمد محمد</div>
+                            <div class="text-sm text-white/60">حافظ 5 أجزاء</div>
+                        </div>
+                    </div>
+                    <p class="text-white/80 leading-relaxed">
+                        "نظام المراجعة المتباعد غيّر طريقة حفظي تماماً. لم أعد أنسى ما حفظته بفضل الجدولة الذكية."
+                    </p>
+                    <div class="flex gap-1 mt-4">
+                        @for($i = 0; $i < 5; $i++)
+                            <span class="text-[#D4AF37]">★</span>
+                        @endfor
+                    </div>
                 </div>
 
-                <div class="glass-effect p-8 rounded-3xl text-center hover-lift card-shine">
-                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-2xl font-black text-white mx-auto mb-6">2</div>
-                    <h3 class="text-xl font-bold text-white mb-4">إنشاء خطة مخصصة</h3>
-                    <p class="text-white/70">اختر السور المراد حفظها والنظام يحسب تلقائياً عدد الأيام المطلوبة ويوزع الآيات</p>
+                <div class="glass rounded-3xl p-8 card-hover">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-[#D4AF37] to-[#ca8a04] rounded-full flex items-center justify-center text-xl font-bold">س</div>
+                        <div>
+                            <div class="font-bold text-white">سارة علي</div>
+                            <div class="text-sm text-white/60">طالبة جامعية</div>
+                        </div>
+                    </div>
+                    <p class="text-white/80 leading-relaxed">
+                        "التطبيق يناسب جدولي المشغول. 30 دقيقة يومياً كافية لتحقيق تقدم ملموس."
+                    </p>
+                    <div class="flex gap-1 mt-4">
+                        @for($i = 0; $i < 5; $i++)
+                            <span class="text-[#D4AF37]">★</span>
+                        @endfor
+                    </div>
                 </div>
 
-                <div class="glass-effect p-8 rounded-3xl text-center hover-lift card-shine">
-                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-2xl font-black text-white mx-auto mb-6">3</div>
-                    <h3 class="text-xl font-bold text-white mb-4">حفظ وتقييم يومي</h3>
-                    <p class="text-white/70">اتبع خطتك اليومية مع تقييم أدائك (0-5) وتسجيل ملاحظاتك الشخصية</p>
-                </div>
-
-                <div class="glass-effect p-8 rounded-3xl text-center hover-lift card-shine">
-                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-2xl font-black text-white mx-auto mb-6">4</div>
-                    <h3 class="text-xl font-bold text-white mb-4">مراجعة متباعدة تلقائية</h3>
-                    <p class="text-white/70">النظام يجدول مراجعاتك بفترات متدرجة (1، 3، 7، 14، 30، 60، 90 يوم) حسب أدائك</p>
+                <div class="glass rounded-3xl p-8 card-hover">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-[#10b981] to-[#059669] rounded-full flex items-center justify-center text-xl font-bold">م</div>
+                        <div>
+                            <div class="font-bold text-white">محمد عبدالله</div>
+                            <div class="text-sm text-white/60">معلم قرآن</div>
+                        </div>
+                    </div>
+                    <p class="text-white/80 leading-relaxed">
+                        "أنصح طلابي باستخدام مشكاة. نظام الشارات يحفزهم على الاستمرار والتنافس."
+                    </p>
+                    <div class="flex gap-1 mt-4">
+                        @for($i = 0; $i < 5; $i++)
+                            <span class="text-[#D4AF37]">★</span>
+                        @endfor
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- قسم الأسئلة الشائعة -->
-    <section id="faq" class="py-20 px-4">
+    <!-- FAQ Section -->
+    <section id="faq" class="py-24 px-4 bg-[#022c22]">
         <div class="max-w-4xl mx-auto">
-            <h2 class="text-4xl md:text-6xl font-black text-center mb-16 text-gradient">الأسئلة الشائعة</h2>
-            
-            <div class="space-y-6">
-                <div class="glass-effect rounded-2xl overflow-hidden hover-lift">
-                    <div class="p-8 cursor-pointer" onclick="toggleFaq(this)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-white">هل التطبيق متاح للهواتف الذكية؟</h3>
-                            <span class="text-2xl text-primary-400">+</span>
-                        </div>
-                        <div class="hidden mt-6 text-white/80 leading-relaxed">
-                            التطبيق قيد التطوير وسيتم إتاحته للتنزيل عند الإطلاق. زر التحميل الحالي معطّل إلى حين صدور النسخة الأولى.
-                        </div>
-                    </div>
-                </div>
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-2 glass rounded-full text-sm text-[#D4AF37] mb-4">الأسئلة الشائعة</span>
+                <h2 class="text-3xl md:text-5xl font-black text-gradient">أسئلة متكررة</h2>
+            </div>
 
-                <div class="glass-effect rounded-2xl overflow-hidden hover-lift">
-                    <div class="p-8 cursor-pointer" onclick="toggleFaq(this)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-white">كيف يعمل نظام التكرار المتباعد؟</h3>
-                            <span class="text-2xl text-primary-400">+</span>
-                        </div>
-                        <div class="hidden mt-6 text-white/80 leading-relaxed">
-                            النظام يستخدم فترات مراجعة متدرجة: 1 يوم، 3 أيام، 7 أيام، 14 يوم، 30 يوم، 60 يوم، 90 يوم. كلما كان أداؤك أفضل، كلما زادت الفترة بين المراجعات لضمان ثبات الحفظ في الذاكرة طويلة المدى.
-                        </div>
-                    </div>
-                </div>
+            <div class="space-y-4" x-data="{ openFaq: null }">
+                <!-- FAQ Items -->
+                @php
+                    $faqs = [
+                        ['q' => 'هل التطبيق مجاني؟', 'a' => 'نعم، التطبيق مجاني بالكامل مع جميع المزايا الأساسية. نخطط لإضافة مزايا متقدمة مستقبلاً.'],
+                        ['q' => 'كيف يعمل نظام التكرار المتباعد؟', 'a' => 'النظام يستخدم فترات مراجعة متدرجة: 1، 3، 7، 14، 30، 60، 90 يوم. كلما كان أداؤك أفضل، زادت الفترة بين المراجعات لضمان ثبات الحفظ.'],
+                        ['q' => 'هل يمكنني تعديل الخطة يدوياً؟', 'a' => 'نعم، يمكنك إيقاف الخطة مؤقتاً أو تعديل التفضيلات. النظام سيعيد حساب الخطة تلقائياً حسب التغييرات.'],
+                        ['q' => 'ما أنواع الشارات المتاحة؟', 'a' => 'لدينا شارات متنوعة: أولى الخطوات، المتعلم المتفاني، عالم القرآن، المتعلم المنتظم، المراجعة المثالية، وغيرها الكثير.'],
+                        ['q' => 'كيف يتم حساب الوقت المطلوب للحفظ؟', 'a' => 'النظام يحسب الوقت حسب مستواك: المبتدئ (1.5 كلمة/دقيقة)، المتوسط (2.5 كلمة/دقيقة)، المتقدم (6 كلمات/دقيقة). 60% للحفظ و40% للمراجعة.'],
+                    ];
+                @endphp
 
-                <div class="glass-effect rounded-2xl overflow-hidden hover-lift">
-                    <div class="p-8 cursor-pointer" onclick="toggleFaq(this)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-white">كيف يعمل التعديل التلقائي للخطط؟</h3>
-                            <span class="text-2xl text-primary-400">+</span>
-                        </div>
-                        <div class="hidden mt-6 text-white/80 leading-relaxed">
-                            النظام يراقب أداءك لمدة 7 أيام ويحلل معدل النجاح والتقييمات. إذا كان أداؤك ممتازاً (90%+ نجاح) يسرع الخطة، وإذا كان ضعيفاً يبطئها للتركيز على المراجعة، وإذا فاتتك 3 جلسات متتالية يوقف الخطة مؤقتاً.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-effect rounded-2xl overflow-hidden hover-lift">
-                    <div class="p-8 cursor-pointer" onclick="toggleFaq(this)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-white">ما أنواع الشارات والنقاط المتاحة؟</h3>
-                            <span class="text-2xl text-primary-400">+</span>
-                        </div>
-                        <div class="hidden mt-6 text-white/80 leading-relaxed">
-                            لدينا شارات متنوعة: أولى الخطوات (10 آيات)، المتعلم المتفاني (50 آية)، عالم القرآن (100 آية)، المتعلم المنتظم (7 أيام متتالية)، المراجعة المثالية (5 مراجعات ممتازة)، جامع النقاط (1000 نقطة). كل شارة تعطيك نقاط إضافية.
+                @foreach($faqs as $index => $faq)
+                    <div class="glass rounded-2xl overflow-hidden">
+                        <button 
+                            onclick="toggleFaq({{ $index }})" 
+                            class="w-full p-6 text-right flex items-center justify-between gap-4 hover:bg-white/5 transition-colors"
+                        >
+                            <span class="text-lg font-bold text-white">{{ $faq['q'] }}</span>
+                            <span id="faq-icon-{{ $index }}" class="text-2xl text-[#10b981] transition-transform">+</span>
+                        </button>
+                        <div id="faq-answer-{{ $index }}" class="hidden px-6 pb-6 text-white/70 leading-relaxed">
+                            {{ $faq['a'] }}
                         </div>
                     </div>
-                </div>
-
-                <div class="glass-effect rounded-2xl overflow-hidden hover-lift">
-                    <div class="p-8 cursor-pointer" onclick="toggleFaq(this)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-white">كيف يتم حساب الوقت المطلوب للحفظ؟</h3>
-                            <span class="text-2xl text-primary-400">+</span>
-                        </div>
-                        <div class="hidden mt-6 text-white/80 leading-relaxed">
-                            النظام يحسب الوقت حسب مستواك: المبتدئ (1.5 كلمة/دقيقة)، المتوسط (2.5 كلمة/دقيقة)، المتقدم (6 كلمات/دقيقة). 60% من وقتك للحفظ الجديد و40% للمراجعة. النظام يحسب تلقائياً عدد الأيام المطلوبة لكل خطة.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-effect rounded-2xl overflow-hidden hover-lift">
-                    <div class="p-8 cursor-pointer" onclick="toggleFaq(this)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-white">هل يمكنني تعديل الخطة يدوياً؟</h3>
-                            <span class="text-2xl text-primary-400">+</span>
-                        </div>
-                        <div class="hidden mt-6 text-white/80 leading-relaxed">
-                            نعم، يمكنك إيقاف الخطة مؤقتاً أو تفعيلها، وتعديل التفضيلات (الوقت اليومي والمستوى) مما يؤدي إلى إعادة حساب الخطة تلقائياً. كما يمكنك تأجيل المراجعات إذا احتجت وقتاً إضافياً.
-                        </div>
-                    </div>
-                </div>
+                @endforeach
             </div>
         </div>
     </section>
 
-    <!-- التذييل -->
-    <footer class="py-12 px-4 border-t border-white/10 bg-black/20 backdrop-blur-sm">
+    <!-- CTA Section -->
+    <section class="py-24 px-4 hero-gradient relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-[#022c22]/80 to-[#064e3b]/80"></div>
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            @guest
+                <h2 class="text-3xl md:text-5xl font-black mb-6">
+                    ابدأ رحلتك اليوم
+                </h2>
+                <p class="text-xl text-white/70 mb-10 max-w-2xl mx-auto">
+                    انضم لآلاف المستخدمين الذين يحفظون القرآن بطريقة ذكية ومنظمة
+                </p>
+                <a href="/register" class="inline-block px-10 py-5 bg-gradient-to-r from-[#D4AF37] to-[#ca8a04] rounded-2xl font-bold text-xl text-white glow-accent hover:scale-105 transition-all">
+                    🚀 أنشئ حسابك المجاني الآن
+                </a>
+            @else
+                <h2 class="text-3xl md:text-5xl font-black mb-6">
+                    أكمل رحلتك معنا
+                </h2>
+                <p class="text-xl text-white/70 mb-10 max-w-2xl mx-auto">
+                    تابع تقدمك في حفظ القرآن الكريم واستمر في رحلتك
+                </p>
+                <a href="/app/dashboard" class="inline-block px-10 py-5 bg-gradient-to-r from-[#D4AF37] to-[#ca8a04] rounded-2xl font-bold text-xl text-white glow-accent hover:scale-105 transition-all">
+                    📊 انتقل للوحة التحكم
+                </a>
+            @endguest
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-4 bg-[#022c22] border-t border-white/10">
         <div class="max-w-6xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-8">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/logo.svg') }}" alt="شعار مشكاة" class="w-12 h-12 rounded-xl animate-float" />
-                    <span class="text-2xl font-bold text-primary-300">مشكاة 2025</span>
+                    <img src="{{ asset('images/logo.svg') }}" alt="مشكاة" class="w-12 h-12 animate-float">
+                    <div>
+                        <span class="text-xl font-bold text-gradient">مشكاة</span>
+                        <span class="block text-sm text-white/60">منصة الحفظ الذكية</span>
+                    </div>
                 </div>
-                
+
                 <div class="flex gap-8 text-white/60">
-                    <a href="#features" class="hover:text-primary-300 transition-colors">المزايا</a>
-                    <a href="#how" class="hover:text-primary-300 transition-colors">كيف يعمل</a>
-                    <a href="#faq" class="hover:text-primary-300 transition-colors">الأسئلة</a>
+                    <a href="#features" class="hover:text-[#10b981] transition-colors">المزايا</a>
+                    <a href="#how-it-works" class="hover:text-[#10b981] transition-colors">كيف يعمل</a>
+                    <a href="#faq" class="hover:text-[#10b981] transition-colors">الأسئلة</a>
                 </div>
             </div>
-            
-            <div class="text-center mt-8 pt-8 border-t border-white/10 text-white/50">
-                © 2025 مشكاة. جميع الحقوق محفوظة. | منصة الحفظ الذكية الأولى عربياً
+
+            <div class="text-center mt-8 pt-8 border-t border-white/10 text-white/40">
+                © {{ date('Y') }} مشكاة. جميع الحقوق محفوظة.
             </div>
         </div>
     </footer>
 
     <script>
-        // إنشاء الجزيئات المتحركة
+        // Create floating particles
         function createParticles() {
-            const particlesContainer = document.getElementById('particles');
+            const container = document.getElementById('particles');
             const particleCount = 50;
 
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
-                
-                const size = Math.random() * 4 + 2;
-                particle.style.width = size + 'px';
-                particle.style.height = size + 'px';
                 particle.style.left = Math.random() * 100 + '%';
                 particle.style.top = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 8 + 's';
-                particle.style.animationDuration = (Math.random() * 8 + 8) + 's';
-                
-                particlesContainer.appendChild(particle);
+                particle.style.width = (Math.random() * 4 + 2) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animation = `float ${8 + Math.random() * 4}s ease-in-out infinite`;
+                particle.style.animationDelay = Math.random() * 4 + 's';
+                container.appendChild(particle);
             }
         }
 
-        // تبديل الأسئلة الشائعة
-        function toggleFaq(element) {
-            const answer = element.querySelector('div:last-child');
-            const icon = element.querySelector('span');
+        // Toggle FAQ
+        function toggleFaq(index) {
+            const answer = document.getElementById(`faq-answer-${index}`);
+            const icon = document.getElementById(`faq-icon-${index}`);
             
             if (answer.classList.contains('hidden')) {
                 answer.classList.remove('hidden');
@@ -478,7 +649,7 @@
             }
         }
 
-        // تمرير سلس للروابط
+        // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -492,23 +663,7 @@
             });
         });
 
-        // تحريك شريط التنقل عند التمرير
-        let lastScrollY = window.scrollY;
-        const nav = document.querySelector('nav');
-
-        window.addEventListener('scroll', () => {
-            const currentScrollY = window.scrollY;
-            
-            if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                nav.style.transform = 'translateX(-50%) translateY(-100%)';
-            } else {
-                nav.style.transform = 'translateX(-50%) translateY(0)';
-            }
-            
-            lastScrollY = currentScrollY;
-        });
-
-        // تهيئة الصفحة
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             createParticles();
         });

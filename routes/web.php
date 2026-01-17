@@ -191,6 +191,63 @@ Route::get('/', function () {
     return view('landing');
 });
 
+/*
+|--------------------------------------------------------------------------
+| User Frontend Routes (Inertia)
+|--------------------------------------------------------------------------
+*/
+
+// Guest routes
+Route::middleware('guest:web')->group(function () {
+    Route::get('login', fn () => \Inertia\Inertia::render('Auth/Login'))->name('user.login');
+    Route::post('login', [\App\Http\Controllers\Web\AuthController::class, 'login'])->name('user.login.post');
+    Route::get('register', fn () => \Inertia\Inertia::render('Auth/Register'))->name('user.register');
+    Route::post('register', [\App\Http\Controllers\Web\AuthController::class, 'register'])->name('user.register.post');
+    Route::get('forgot-password', fn () => \Inertia\Inertia::render('Auth/ForgotPassword'))->name('user.password.request');
+    Route::get('verify-otp', fn () => \Inertia\Inertia::render('Auth/VerifyOtp'))->name('user.password.verify');
+});
+
+// Logout
+Route::post('logout', [\App\Http\Controllers\Web\AuthController::class, 'logout'])->middleware('auth:web')->name('user.logout');
+
+// Protected user routes
+Route::prefix('app')->middleware(['auth:web'])->group(function () {
+    // Onboarding
+    Route::get('preferences', fn () => \Inertia\Inertia::render('Onboarding/Preferences'))->name('user.preferences');
+    
+    // Dashboard
+    Route::get('dashboard', [\App\Http\Controllers\Web\DashboardController::class, 'index'])->name('user.dashboard');
+    
+    // Plans
+    Route::get('plans', [\App\Http\Controllers\Web\PlanController::class, 'index'])->name('user.plans');
+    Route::get('plans/create', [\App\Http\Controllers\Web\PlanController::class, 'create'])->name('user.plans.create');
+    Route::post('plans', [\App\Http\Controllers\Web\PlanController::class, 'store'])->name('user.plans.store');
+    Route::get('plans/{plan}', [\App\Http\Controllers\Web\PlanController::class, 'show'])->name('user.plans.show');
+    
+    // Memorization Session
+    Route::get('session/{planItem}', [\App\Http\Controllers\Web\SessionController::class, 'memorize'])->name('user.session.memorize');
+    Route::post('session/{planItem}/complete', [\App\Http\Controllers\Web\SessionController::class, 'complete'])->name('user.session.complete');
+    
+    // Revisions
+    Route::get('revisions', [\App\Http\Controllers\Web\RevisionController::class, 'index'])->name('user.revisions');
+    Route::get('revisions/{revision}', [\App\Http\Controllers\Web\RevisionController::class, 'show'])->name('user.revisions.show');
+    
+    // Quran Browser
+    Route::get('quran', [\App\Http\Controllers\Web\QuranController::class, 'index'])->name('user.quran');
+    Route::get('quran/chapter/{chapter}', [\App\Http\Controllers\Web\QuranController::class, 'chapter'])->name('user.quran.chapter');
+    
+    // Achievements & Gamification
+    Route::get('achievements', [\App\Http\Controllers\Web\AchievementController::class, 'index'])->name('user.achievements');
+    Route::get('leaderboard', [\App\Http\Controllers\Web\LeaderboardController::class, 'index'])->name('user.leaderboard');
+    
+    // Analytics
+    Route::get('analytics', [\App\Http\Controllers\Web\AnalyticsController::class, 'index'])->name('user.analytics');
+    
+    // Settings
+    Route::get('settings', [\App\Http\Controllers\Web\SettingsController::class, 'index'])->name('user.settings');
+    Route::put('settings', [\App\Http\Controllers\Web\SettingsController::class, 'update'])->name('user.settings.update');
+});
+
 // OAuth Routes
 Route::get('auth/{provider}/redirect', [SocialLoginController::class, 'redirect'])
     ->name('auth.socilaite.redirect');

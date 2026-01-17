@@ -65,7 +65,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'verified.user' => \App\Http\Middleware\EnsureUserEmailIsVerified::class,
             'audit' => \App\Http\Middleware\AuditMiddleware::class,
-
+        ]);
+        // Add Inertia middleware to web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
         // Apply audit middleware to API routes
         $middleware->api(append: [
