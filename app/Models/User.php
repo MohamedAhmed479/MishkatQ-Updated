@@ -81,6 +81,23 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(MemorizationPlan::class);
     }
 
+    public function readingPlans(): HasMany
+    {
+        return $this->hasMany(ReadingPlan::class);
+    }
+
+    public function activeReadingPlan()
+    {
+        return $this->readingPlans()
+            ->where('status', ReadingPlan::STATUS_ACTIVE)
+            ->first();
+    }
+
+    public function readingProgress(): HasMany
+    {
+        return $this->hasMany(ReadingProgress::class);
+    }
+
     public function memorizationProgress()
     {
         return $this->hasMany(MemorizationProgress::class);

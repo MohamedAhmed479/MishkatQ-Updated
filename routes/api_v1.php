@@ -12,3 +12,8 @@ require __DIR__ . '/Api/V1/user.php';
 
 
 require __DIR__ . '/Api/V1/quran.php';
+
+
+// Load all routes related to reading plans (Hatmah/Wird system).
+// These routes are defined in: routes/api/V1/reading.php
+require __DIR__ . '/Api/V1/reading.php';

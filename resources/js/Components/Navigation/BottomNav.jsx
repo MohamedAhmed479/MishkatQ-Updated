@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import {
     Home,
     BookOpen,
+    BookMarked,
     RefreshCw,
     Trophy,
     User
@@ -10,7 +11,7 @@ import {
 
 const navItems = [
     { name: 'الرئيسية', href: '/app/dashboard', icon: Home },
-    { name: 'الخطط', href: '/app/plans', icon: BookOpen },
+    { name: 'الورد', href: '/app/reading', icon: BookMarked },
     { name: 'المراجعات', href: '/app/revisions', icon: RefreshCw },
     { name: 'الإنجازات', href: '/app/achievements', icon: Trophy },
     { name: 'حسابي', href: '/app/settings', icon: User },

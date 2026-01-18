@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Home,
     BookOpen,
+    BookMarked,
     RefreshCw,
     Trophy,
     BarChart3,
@@ -14,6 +15,7 @@ import {
 
 const navItems = [
     { name: 'الرئيسية', href: '/app/dashboard', icon: Home },
+    { name: 'ورد القراءة', href: '/app/reading', icon: BookMarked },
     { name: 'خططي', href: '/app/plans', icon: BookOpen },
     { name: 'المراجعات', href: '/app/revisions', icon: RefreshCw },
     { name: 'تصفح القرآن', href: '/app/quran', icon: BookOpen },

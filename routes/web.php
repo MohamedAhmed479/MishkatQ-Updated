@@ -270,6 +270,26 @@ Route::prefix('app')->middleware(['auth:web'])->group(function () {
     Route::get('notifications', [\App\Http\Controllers\Web\NotificationController::class, 'index'])->name('user.notifications');
     Route::get('notifications/api', [\App\Http\Controllers\Web\NotificationController::class, 'api'])->name('user.notifications.api');
     Route::patch('notifications/{id}/read', [\App\Http\Controllers\Web\NotificationController::class, 'markAsRead'])->name('user.notifications.read');
+
+    // Reading System (Hatmah/Wird)
+    Route::prefix('reading')->name('user.reading.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Web\ReadingController::class, 'index'])->name('index');
+        Route::get('plans/create', [\App\Http\Controllers\Web\ReadingController::class, 'create'])->name('create');
+        Route::post('plans', [\App\Http\Controllers\Web\ReadingController::class, 'store'])->name('store');
+        Route::get('experience/{planId}', [\App\Http\Controllers\Web\ReadingController::class, 'experience'])->name('experience');
+        Route::get('plans/{planId}/settings', [\App\Http\Controllers\Web\ReadingController::class, 'settings'])->name('settings');
+        Route::get('statistics', [\App\Http\Controllers\Web\ReadingController::class, 'statistics'])->name('statistics');
+        
+        // API-like routes for AJAX calls (using web middleware for session auth)
+        Route::prefix('api')->group(function () {
+            Route::patch('plans/{planId}/settings', [\App\Http\Controllers\Web\ReadingController::class, 'updateSettings'])->name('api.settings');
+            Route::post('plans/{planId}/progress', [\App\Http\Controllers\Web\ReadingController::class, 'markProgress'])->name('api.progress');
+            Route::post('plans/{planId}/pause', [\App\Http\Controllers\Web\ReadingController::class, 'pausePlan'])->name('api.pause');
+            Route::post('plans/{planId}/resume', [\App\Http\Controllers\Web\ReadingController::class, 'resumePlan'])->name('api.resume');
+            Route::post('plans/{planId}/adjust', [\App\Http\Controllers\Web\ReadingController::class, 'autoAdjust'])->name('api.adjust');
+            Route::delete('plans/{planId}', [\App\Http\Controllers\Web\ReadingController::class, 'deletePlan'])->name('api.delete');
+        });
+    });
 });
 
 // OAuth Routes
