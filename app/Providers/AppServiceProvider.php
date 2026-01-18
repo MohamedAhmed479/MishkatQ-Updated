@@ -39,6 +39,10 @@ class AppServiceProvider extends ServiceProvider
 
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
+            // Ensure APP_URL is set correctly for signed URLs
+            if (config('app.url')) {
+                URL::forceRootUrl(config('app.url'));
+            }
         }
 
 

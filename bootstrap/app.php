@@ -76,5 +76,27 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Handle InvalidSignatureException for API routes
+        $exceptions->render(function (\Illuminate\Routing\Exceptions\InvalidSignatureException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('api/*')) {
+                // Log the failed signature verification for debugging
+                \Illuminate\Support\Facades\Log::warning('Invalid signature for email verification', [
+                    'url' => $request->fullUrl(),
+                    'app_url' => config('app.url'),
+                    'request_url' => $request->url(),
+                    'signature' => $request->query('signature'),
+                    'expires' => $request->query('expires'),
+                    'ip' => $request->ip(),
+                ]);
+                
+                return response()->json([
+                    'status' => false,
+                    'message' => 'رابط التحقق غير صالح أو منتهي الصلاحية',
+                    'data' => [
+                        'error' => 'Invalid signature',
+                        'hint' => 'تأكد من أن الرابط لم يتم تعديله وأنه لم ينتهِ صلاحيته'
+                    ]
+                ], 403);
+            }
+        });
     })->create();

@@ -39,11 +39,22 @@ class UserVerifyEmailNotification extends Notification implements ShouldQueue
      */
     protected function verificationUrl(object $notifiable)
     {
-        return URL::temporarySignedRoute(
+        // Ensure we're using the correct root URL for signed routes
+        $url = URL::temporarySignedRoute(
             'verification.verify',
             Carbon::now()->addMinutes(60),
             ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())]
         );
+        
+        // Log URL generation for debugging (remove in production if not needed)
+        \Illuminate\Support\Facades\Log::info('Email verification URL generated', [
+            'user_id' => $notifiable->getKey(),
+            'email' => $notifiable->getEmailForVerification(),
+            'app_url' => config('app.url'),
+            'url' => $url
+        ]);
+        
+        return $url;
     }
 
     /**
