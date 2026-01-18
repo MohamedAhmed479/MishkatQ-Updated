@@ -39,19 +39,27 @@ class UserVerifyEmailNotification extends Notification implements ShouldQueue
      */
     protected function verificationUrl(object $notifiable)
     {
-        // Ensure we're using the correct root URL for signed routes
-        $url = URL::temporarySignedRoute(
+        // Generate relative signed route to avoid domain/proxy issues
+        // The signature will be based on the path only, not the domain
+        $relativeUrl = URL::temporarySignedRoute(
             'verification.verify',
             Carbon::now()->addMinutes(60),
-            ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())]
+            ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())],
+            false // absolute = false, creates relative URL
         );
         
-        // Log URL generation for debugging (remove in production if not needed)
+        // Build absolute URL using APP_URL for email
+        $baseUrl = config('app.url', 'https://mishkatq.app');
+        $url = rtrim($baseUrl, '/') . $relativeUrl;
+        
+        // Log URL generation for debugging
         \Illuminate\Support\Facades\Log::info('Email verification URL generated', [
             'user_id' => $notifiable->getKey(),
             'email' => $notifiable->getEmailForVerification(),
             'app_url' => config('app.url'),
-            'url' => $url
+            'base_url' => $baseUrl,
+            'relative_url' => $relativeUrl,
+            'final_url' => $url
         ]);
         
         return $url;
