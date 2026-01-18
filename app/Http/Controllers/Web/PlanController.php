@@ -28,15 +28,20 @@ class PlanController extends Controller
                 $firstItem = $plan->planItems()->orderBy('sequence')->with('quranSurah')->first();
                 $lastItem = $plan->planItems()->orderBy('sequence', 'desc')->with('quranSurah')->first();
                 
+                // Calculate progress dynamically
+                $totalItems = $plan->planItems()->count();
+                $completedItems = $plan->planItems()->where('is_completed', true)->count();
+                $progress = $totalItems > 0 ? round(($completedItems / $totalItems) * 100, 2) : 0;
+                
                 return [
                     'id' => $plan->id,
                     'name' => $plan->name,
                     'status' => $plan->status,
                     'start_chapter' => $firstItem?->quranSurah?->name_ar,
                     'end_chapter' => $lastItem?->quranSurah?->name_ar,
-                    'progress' => $plan->progress_percentage ?? 0,
-                    'total_items' => $plan->planItems()->count(),
-                    'completed_items' => $plan->planItems()->where('is_completed', true)->count(),
+                    'progress' => $progress,
+                    'total_items' => $totalItems,
+                    'completed_items' => $completedItems,
                     'created_at' => $plan->created_at->format('Y-m-d'),
                 ];
             }),
@@ -79,6 +84,9 @@ class PlanController extends Controller
         // Get total stats
         $totalItems = $plan->planItems()->count();
         $completedItems = $plan->planItems()->where('is_completed', true)->count();
+        
+        // Calculate progress percentage dynamically
+        $progress = $totalItems > 0 ? round(($completedItems / $totalItems) * 100, 2) : 0;
 
         return Inertia::render('Plans/Show', [
             'plan' => [
@@ -89,7 +97,7 @@ class PlanController extends Controller
                 'end_chapter' => $lastItem?->quranSurah?->name_ar,
                 'start_date' => $plan->start_date?->format('Y-m-d'),
                 'end_date' => $plan->end_date?->format('Y-m-d'),
-                'progress' => $plan->progress_percentage ?? 0,
+                'progress' => $progress,
                 'created_at' => $plan->created_at->format('Y-m-d'),
                 'total_items' => $totalItems,
                 'completed_items' => $completedItems,
@@ -155,5 +163,117 @@ class PlanController extends Controller
             DB::rollBack();
             return back()->withErrors(['error' => 'حدث خطأ أثناء إنشاء الخطة: ' . $e->getMessage()])->withInput();
         }
+    }
+
+    /**
+     * Pause a memorization plan
+     */
+    public function pause(Request $request, MemorizationPlan $plan)
+    {
+        $user = $request->user();
+        
+        // Check if the plan belongs to the authenticated user
+        if ($plan->user_id !== $user->id) {
+            abort(403, 'غير مصرح لك بالوصول إلى هذه الخطة');
+        }
+
+        if ($plan->status === 'paused') {
+            return back()->withErrors(['error' => 'الخطة متوقفة بالفعل']);
+        }
+
+        try {
+            $this->planRepository->pausePlan($plan->id);
+            return back()->with('success', 'تم إيقاف الخطة مؤقتًا بنجاح');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'حدث خطأ أثناء إيقاف الخطة: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Activate a paused memorization plan
+     */
+    public function activate(Request $request, MemorizationPlan $plan)
+    {
+        $user = $request->user();
+        
+        // Check if the plan belongs to the authenticated user
+        if ($plan->user_id !== $user->id) {
+            abort(403, 'غير مصرح لك بالوصول إلى هذه الخطة');
+        }
+
+        if ($plan->status === 'active') {
+            return back()->withErrors(['error' => 'الخطة نشطة بالفعل']);
+        }
+
+        try {
+            $this->planRepository->avtivePlan($plan->id);
+            return back()->with('success', 'تم استئناف الخطة بنجاح');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'حدث خطأ أثناء استئناف الخطة: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get detailed information about a plan item including spaced repetitions
+     */
+    public function itemDetails(Request $request, MemorizationPlan $plan, $itemId)
+    {
+        $user = $request->user();
+        
+        // Check if the plan belongs to the authenticated user
+        if ($plan->user_id !== $user->id) {
+            abort(403, 'غير مصرح لك بالوصول إلى هذه الخطة');
+        }
+
+        $planItem = $plan->planItems()
+            ->where('id', $itemId)
+            ->with([
+                'quranSurah',
+                'verseStart',
+                'verseEnd',
+                'spacedRepetitions.reviewRecord' => function ($query) {
+                    $query->orderBy('review_date', 'desc');
+                }
+            ])
+            ->first();
+
+        if (!$planItem) {
+            abort(404, 'عنصر الخطة غير موجود');
+        }
+
+        return response()->json([
+            'item' => [
+                'id' => $planItem->id,
+                'sequence' => $planItem->sequence,
+                'chapter_name' => $planItem->quranSurah?->name_ar,
+                'start_verse' => $planItem->verseStart?->verse_number,
+                'end_verse' => $planItem->verseEnd?->verse_number,
+                'target_date' => $planItem->target_date?->format('Y-m-d'),
+                'is_completed' => $planItem->is_completed,
+                'completed_at' => $planItem->is_completed ? $planItem->updated_at?->format('Y-m-d H:i:s') : null,
+                'created_at' => $planItem->created_at?->format('Y-m-d H:i:s'),
+            ],
+            'spaced_repetitions' => $planItem->spacedRepetitions->map(function ($repetition) {
+                return [
+                    'id' => $repetition->id,
+                    'interval_index' => $repetition->interval_index,
+                    'scheduled_date' => $repetition->scheduled_date?->format('Y-m-d'),
+                    'last_reviewed_at' => $repetition->last_reviewed_at?->format('Y-m-d H:i:s'),
+                    'is_completed' => $repetition->isCompleted(),
+                    'is_overdue' => $repetition->isOverdue(),
+                    'stability' => $repetition->stability,
+                    'difficulty' => $repetition->difficulty,
+                    'repetition_count' => $repetition->repetition_count,
+                    'memory_state' => $repetition->getMemoryStateArabic(),
+                    'review_record' => $repetition->reviewRecord ? [
+                        'review_date' => $repetition->reviewRecord->review_date?->format('Y-m-d H:i:s'),
+                        'performance_rating' => $repetition->reviewRecord->performance_rating,
+                        'performance_description' => $repetition->reviewRecord->getPerformanceDescription(),
+                        'successful' => $repetition->reviewRecord->successful,
+                        'notes' => $repetition->reviewRecord->notes,
+                    ] : null,
+                ];
+            })->sortBy('scheduled_date')->values(),
+        ]);
     }
 }

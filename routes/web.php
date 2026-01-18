@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Api\V1\SocialLoginController;
 
 use App\Http\Controllers\Admin\{
@@ -204,7 +205,16 @@ Route::middleware('guest:web')->group(function () {
     Route::get('register', fn () => \Inertia\Inertia::render('Auth/Register'))->name('user.register');
     Route::post('register', [\App\Http\Controllers\Web\AuthController::class, 'register'])->name('user.register.post');
     Route::get('forgot-password', fn () => \Inertia\Inertia::render('Auth/ForgotPassword'))->name('user.password.request');
-    Route::get('verify-otp', fn () => \Inertia\Inertia::render('Auth/VerifyOtp'))->name('user.password.verify');
+    Route::post('forgot-password', [\App\Http\Controllers\Web\AuthController::class, 'forgotPassword'])->name('user.password.email');
+    Route::get('verify-otp', function (Request $request) {
+        return \Inertia\Inertia::render('Auth/VerifyOtp', [
+            'email' => $request->session()->get('email'),
+            'status' => $request->session()->get('status'),
+        ]);
+    })->name('user.password.verify');
+    Route::post('verify-otp', [\App\Http\Controllers\Web\AuthController::class, 'verifyOtp'])->name('user.password.verify.post');
+    Route::get('reset-password', [\App\Http\Controllers\Web\AuthController::class, 'showResetPasswordForm'])->name('user.password.reset');
+    Route::post('reset-password', [\App\Http\Controllers\Web\AuthController::class, 'resetPassword'])->name('user.password.reset.post');
 });
 
 // Logout
@@ -223,6 +233,9 @@ Route::prefix('app')->middleware(['auth:web'])->group(function () {
     Route::get('plans/create', [\App\Http\Controllers\Web\PlanController::class, 'create'])->name('user.plans.create');
     Route::post('plans', [\App\Http\Controllers\Web\PlanController::class, 'store'])->name('user.plans.store');
     Route::get('plans/{plan}', [\App\Http\Controllers\Web\PlanController::class, 'show'])->name('user.plans.show');
+    Route::get('plans/{plan}/items/{item}', [\App\Http\Controllers\Web\PlanController::class, 'itemDetails'])->name('user.plans.item-details');
+    Route::post('plans/{plan}/pause', [\App\Http\Controllers\Web\PlanController::class, 'pause'])->name('user.plans.pause');
+    Route::post('plans/{plan}/activate', [\App\Http\Controllers\Web\PlanController::class, 'activate'])->name('user.plans.activate');
     
     // Memorization Session
     Route::get('session/{planItem}', [\App\Http\Controllers\Web\SessionController::class, 'memorize'])->name('user.session.memorize');
@@ -231,6 +244,7 @@ Route::prefix('app')->middleware(['auth:web'])->group(function () {
     // Revisions
     Route::get('revisions', [\App\Http\Controllers\Web\RevisionController::class, 'index'])->name('user.revisions');
     Route::get('revisions/{revision}', [\App\Http\Controllers\Web\RevisionController::class, 'show'])->name('user.revisions.show');
+    Route::post('revisions/{revision}/record', [\App\Http\Controllers\Web\RevisionController::class, 'record'])->name('user.revisions.record');
     
     // Quran Browser
     Route::get('quran', [\App\Http\Controllers\Web\QuranController::class, 'index'])->name('user.quran');
@@ -246,6 +260,11 @@ Route::prefix('app')->middleware(['auth:web'])->group(function () {
     // Settings
     Route::get('settings', [\App\Http\Controllers\Web\SettingsController::class, 'index'])->name('user.settings');
     Route::put('settings', [\App\Http\Controllers\Web\SettingsController::class, 'update'])->name('user.settings.update');
+    
+    // Notifications
+    Route::get('notifications', [\App\Http\Controllers\Web\NotificationController::class, 'index'])->name('user.notifications');
+    Route::get('notifications/api', [\App\Http\Controllers\Web\NotificationController::class, 'api'])->name('user.notifications.api');
+    Route::patch('notifications/{id}/read', [\App\Http\Controllers\Web\NotificationController::class, 'markAsRead'])->name('user.notifications.read');
 });
 
 // OAuth Routes

@@ -30,7 +30,18 @@ class UserRepository implements UserInterface
 
     public function updateTotalPoints(User $user, int $newPoints): void
     {
-        $user->update(['total_points' => $newPoints]);
+        // total_points is stored in user_profiles table, not users table
+        if ($user->profile) {
+            $user->profile->update(['total_points' => $newPoints]);
+        } else {
+            // Create profile if it doesn't exist
+            UserProfile::create([
+                'user_id' => $user->id,
+                'username' => $user->name ?? 'user_' . $user->id,
+                'total_points' => $newPoints,
+                'verses_memorized_count' => 0,
+            ]);
+        }
     }
 
     public function getUsersWithHigherPoints(int $points): int

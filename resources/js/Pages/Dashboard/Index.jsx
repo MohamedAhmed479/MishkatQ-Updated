@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import {
     BookOpen,
     RefreshCw,
@@ -276,18 +277,7 @@ export default function Dashboard({
                             <CardContent>
                                 <div className="flex gap-4">
                                     {recentBadges.map((badge) => (
-                                        <motion.div
-                                            key={badge.id}
-                                            whileHover={{ scale: 1.1 }}
-                                            className="text-center"
-                                        >
-                                            <div className="w-14 h-14 mx-auto mb-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center text-2xl">
-                                                {badge.icon || '🏆'}
-                                            </div>
-                                            <p className="text-xs text-text-muted dark:text-text-dark-muted">
-                                                {badge.name}
-                                            </p>
-                                        </motion.div>
+                                        <BadgeDisplay key={badge.id} badge={badge} />
                                     ))}
                                 </div>
                             </CardContent>
@@ -355,6 +345,50 @@ function StatCard({ icon: Icon, label, value, color }) {
                 </div>
             </div>
         </Card>
+    );
+}
+
+function BadgeDisplay({ badge }) {
+    // Check if icon is an SVG file path or emoji
+    const isSvgPath = badge.icon && (badge.icon.endsWith('.svg') || badge.icon.endsWith('.png') || badge.icon.endsWith('.jpg'));
+    const iconUrl = isSvgPath ? `/images/badges/${badge.icon}` : null;
+    const [imageError, setImageError] = useState(false);
+
+    // Badge icon mapping for fallback
+    const badgeEmojis = {
+        'first-steps.svg': '🎯',
+        'dedicated-learner.svg': '📚',
+        'quran-scholar.svg': '🎓',
+        'consistent-learner.svg': '🔥',
+        'perfect-review.svg': '⭐',
+        'point-collector.svg': '💰',
+    };
+
+    const displayIcon = imageError || !iconUrl
+        ? (badgeEmojis[badge.icon] || badge.icon || '🏆')
+        : null;
+
+    return (
+        <motion.div
+            whileHover={{ scale: 1.1 }}
+            className="text-center"
+        >
+            <div className="w-14 h-14 mx-auto mb-2 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center">
+                {iconUrl && !imageError ? (
+                    <img
+                        src={iconUrl}
+                        alt={badge.name}
+                        className="w-8 h-8 object-contain"
+                        onError={() => setImageError(true)}
+                    />
+                ) : (
+                    <span className="text-2xl">{displayIcon}</span>
+                )}
+            </div>
+            <p className="text-xs text-text-muted dark:text-text-dark-muted">
+                {badge.name}
+            </p>
+        </motion.div>
     );
 }
 

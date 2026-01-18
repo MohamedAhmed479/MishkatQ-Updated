@@ -77,10 +77,14 @@ export default function Sidebar({ isOpen, onClose, user }) {
                         </div>
                         <div className="mt-4 flex items-center justify-between text-sm">
                             <span>النقاط</span>
-                            <span className="font-bold text-accent-300">0</span>
+                            <span className="font-bold text-accent-300">{user.total_points || 0}</span>
                         </div>
                         <div className="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
-                            <div className="h-full w-0 bg-accent-400 rounded-full transition-all duration-500"></div>
+                            {/* Progress bar - can be calculated based on milestones (e.g., next 100 points) */}
+                            <div 
+                                className="h-full bg-accent-400 rounded-full transition-all duration-500"
+                                style={{ width: `${Math.min(((user.total_points || 0) % 1000) / 10, 100)}%` }}
+                            ></div>
                         </div>
                     </div>
                 </div>
@@ -122,11 +126,15 @@ export default function Sidebar({ isOpen, onClose, user }) {
                         </h4>
                         <div className="grid grid-cols-2 gap-3">
                             <div className="text-center">
-                                <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">0</p>
+                                <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                    {user.total_verses_memorized || 0}
+                                </p>
                                 <p className="text-xs text-text-muted dark:text-text-dark-muted">آية محفوظة</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-2xl font-bold text-accent-500">0</p>
+                                <p className="text-2xl font-bold text-accent-500">
+                                    {user.current_streak || 0}
+                                </p>
                                 <p className="text-xs text-text-muted dark:text-text-dark-muted">يوم متتالي</p>
                             </div>
                         </div>

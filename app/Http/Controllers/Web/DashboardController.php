@@ -23,6 +23,9 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         
+        // Eager load profile to avoid lazy loading issues
+        $user->load('profile');
+        
         // Get active plan
         $activePlan = $this->planRepository->findActivePlanForUser($user->id);
         
@@ -44,16 +47,25 @@ class DashboardController extends Controller
         
         // Get today's revisions
         $todayRevisions = $this->spacedRepetitionRepository->getTodayRevisionsForUser($user->id) ?? collect();
-        $pendingRevisionsCount = $todayRevisions->where('status', 'pending')->count();
+        // Pending revisions are those where last_reviewed_at is null
+        $pendingRevisionsCount = $todayRevisions->whereNull('last_reviewed_at')->count();
         
         // Get user stats
         $userStats = $this->getUserStats($user);
         
-        // Get recent badges
-        $recentBadges = $user->badges()->latest('pivot_created_at')->take(3)->get();
+        // Get recent badges - order by pivot created_at timestamp
+        $recentBadges = $user->badges()->orderByPivot('created_at', 'desc')->take(3)->get();
         
         // Get weekly activity
         $weeklyActivity = $this->getWeeklyActivity($user);
+        
+        // Calculate plan progress percentage dynamically
+        $planProgress = 0;
+        if ($activePlan) {
+            $totalItems = $activePlan->planItems()->count();
+            $completedItems = $activePlan->planItems()->where('is_completed', true)->count();
+            $planProgress = $totalItems > 0 ? round(($completedItems / $totalItems) * 100, 2) : 0;
+        }
         
         return Inertia::render('Dashboard/Index', [
             'activePlan' => $activePlan ? [
@@ -61,7 +73,7 @@ class DashboardController extends Controller
                 'name' => $activePlan->name,
                 'start_chapter' => $firstItem?->quranSurah?->name_ar,
                 'end_chapter' => $lastItem?->quranSurah?->name_ar,
-                'progress' => $activePlan->progress_percentage ?? 0,
+                'progress' => $planProgress,
                 'total_items' => $activePlan->planItems()->count(),
                 'completed_items' => $activePlan->planItems()->where('is_completed', true)->count(),
             ] : null,
@@ -85,54 +97,77 @@ class DashboardController extends Controller
     
     private function getUserStats($user): array
     {
-        // Calculate current streak
+        // Calculate current streak - simple: count consecutive days with activity from most recent
         $currentStreak = 0;
-        $lastActive = $user->last_active_at;
+        $lastActiveDate = null;
         
-        if ($lastActive) {
-            $currentDate = now()->startOfDay();
-            $checkDate = $lastActive->copy()->startOfDay();
+        // Find the most recent day with activity (today or before)
+        for ($i = 0; $i < 365; $i++) {
+            $dateToCheck = now()->startOfDay()->subDays($i);
+            $hasActivity = false;
             
-            // Check if user was active today or yesterday
-            $daysDiff = $currentDate->diffInDays($checkDate);
+            // Check plan items completion
+            $hasActivity = $user->memorizationPlans()
+                ->whereHas('planItems', function ($query) use ($dateToCheck) {
+                    $query->where('is_completed', true)
+                        ->whereDate('updated_at', $dateToCheck->toDateString());
+                })
+                ->exists();
             
-            if ($daysDiff <= 1) {
-                $currentStreak = 1;
-                $checkDate = $checkDate->subDay();
-                
-                // Count consecutive days
-                while ($checkDate->lte(now()->startOfDay())) {
-                    $hasActivity = false;
-                    
-                    // Check plan items completion
-                    $hasActivity = $user->memorizationPlans()
-                        ->whereHas('planItems', function ($query) use ($checkDate) {
-                            $query->where('is_completed', true)
-                                ->whereDate('updated_at', $checkDate->toDateString());
-                        })
-                        ->exists();
-                    
-                    // Check review records via spaced repetitions
-                    if (!$hasActivity) {
-                        $hasActivity = \App\Models\ReviewRecord::whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($user) {
-                            $query->where('user_id', $user->id);
-                        })
-                        ->whereDate('review_date', $checkDate->toDateString())
-                        ->exists();
-                    }
-                    
-                    if ($hasActivity) {
-                        $currentStreak++;
-                        $checkDate = $checkDate->subDay();
-                    } else {
-                        break;
-                    }
+            // Check review records via spaced repetitions
+            if (!$hasActivity) {
+                $hasActivity = \App\Models\ReviewRecord::whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->whereDate('review_date', $dateToCheck->toDateString())
+                ->exists();
+            }
+            
+            if ($hasActivity) {
+                if ($lastActiveDate === null) {
+                    $lastActiveDate = $dateToCheck; // First active day found (most recent)
+                }
+                $currentStreak++;
+            } else {
+                // If we've started counting (found an active day), and now found a gap, stop
+                if ($lastActiveDate !== null) {
+                    break;
                 }
             }
         }
         
+        // Get total points - always calculate from transactions first as source of truth
+        // Then sync with profile if needed
+        $totalPointsFromTransactions = (int) $user->pointsTransactions()->sum('points');
+        
+        // Use profile total_points if it exists and matches or is close
+        // Otherwise, use transactions sum and update profile
+        if ($user->profile) {
+            $profilePoints = (int) ($user->profile->total_points ?? 0);
+            
+            // If transactions show points but profile doesn't, update profile
+            if ($totalPointsFromTransactions > 0 && $profilePoints == 0) {
+                $user->profile->update(['total_points' => $totalPointsFromTransactions]);
+                $totalPoints = $totalPointsFromTransactions;
+            } elseif ($profilePoints > 0) {
+                // Use profile if it has points (it should be synced, but prefer transactions if they differ significantly)
+                $totalPoints = max($profilePoints, $totalPointsFromTransactions);
+                
+                // If transactions are higher, update profile
+                if ($totalPointsFromTransactions > $profilePoints) {
+                    $user->profile->update(['total_points' => $totalPointsFromTransactions]);
+                    $totalPoints = $totalPointsFromTransactions;
+                }
+            } else {
+                $totalPoints = $totalPointsFromTransactions;
+            }
+        } else {
+            // No profile exists, use transactions
+            $totalPoints = $totalPointsFromTransactions;
+        }
+        
         return [
-            'total_points' => $user->getTotalPoints() ?? 0,
+            'total_points' => $totalPoints,
             'current_streak' => $currentStreak,
             'total_verses_memorized' => $user->getTotalMemorizedVerses() ?? 0,
             'badges_count' => $user->badges()->count(),

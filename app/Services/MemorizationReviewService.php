@@ -19,32 +19,13 @@ use Illuminate\Support\Facades\Log;
 
 class MemorizationReviewService
 {
-    /**
-     * Define default review intervals in days
-     * @var array
-     */
-    protected $defaultIntervals = [
-        1,      // First review after 1 day
-        3,      // Second review after 3 days
-        7,      // Third review after 7 days
-        14,     // Fourth review after 14 days
-        30,     // Fifth review after 30 days
-        60,     // Sixth review after 60 days
-        90      //Seventh review after 90 days
-    ];
-
-    /**
-     * Default Ease Factor
-     * @var float
-     */
-    protected $defaultEaseFactor = 2.5;
-
     public function __construct(
         protected PlanItemInterface $planItemRepository,
         protected SpacedRepetitionInterface $spacedRepetitionRepository,
         protected RevisionReviewsInterface $revisionReviewsRepository,
         protected MemorizationPlanInterface $memorizationPlanRepository,
         protected IncentiveService $incentiveService,
+        protected FSRSService $fsrsService,
     ) {
 
     }
@@ -78,9 +59,7 @@ class MemorizationReviewService
 
     /**
      * Record the performance of a user's revision attempt for a specific spaced repetition item.
-     *
-     * Validates ownership of the revision, records the review data, and returns both the review result
-     * and upcoming scheduled revisions for the same plan item.
+     * Uses the FSRS algorithm to dynamically calculate the next review date based on memory model.
      *
      * @param array $validatedData The validated performance data (e.g., performance_rating)
      * @param int $revisionId The ID of the spaced repetition record to update
@@ -103,6 +82,13 @@ class MemorizationReviewService
             $validatedData,
         );
 
+        // Refresh revision to get updated FSRS data
+        $revision->refresh();
+
+        // Get FSRS memory state info
+        $stability = $revision->stability ?? 1.0;
+        $memoryState = $this->fsrsService->getMemoryStateArabic($stability);
+
         $data =  [
             'review_record' => [
                 'id' => $reviewRecord->id,
@@ -111,15 +97,23 @@ class MemorizationReviewService
                 'review_date' => $reviewRecord->review_date->format('Y-m-d H:i:s'),
                 'successful' => $reviewRecord->successful
             ],
+            'fsrs_state' => [
+                'stability' => round($stability, 2),
+                'difficulty' => round($revision->difficulty ?? 5.0, 2),
+                'memory_state' => $memoryState,
+                'next_interval_days' => $this->fsrsService->calculateNextInterval($stability),
+            ],
             'next_reviews' => SpacedRepetition::where('plan_item_id', $revision->plan_item_id)
                 ->whereNull('last_reviewed_at')
                 ->orderBy('scheduled_date')
                 ->get()
                 ->map(function ($rep) {
+                    $stability = $rep->stability ?? 1.0;
                     return [
                         'id' => $rep->id,
                         'scheduled_date' => $rep->scheduled_date->format('Y-m-d'),
-                        'interval_index' => $rep->interval_index
+                        'interval_index' => $rep->interval_index,
+                        'memory_state' => $this->fsrsService->getMemoryStateArabic($stability),
                     ];
                 })
         ];
@@ -128,7 +122,7 @@ class MemorizationReviewService
     }
 
     /**
-     * Record a review and update the table for future reviews.
+     * Record a review and update memory state using FSRS algorithm.
      *
      * @param SpacedRepetition $revision
      * @param array $validatedData
@@ -138,14 +132,29 @@ class MemorizationReviewService
     {
         $reviewRecord = $this->revisionReviewsRepository->createOrUpdate($revision->id, $validatedData);
 
+        // Process review using FSRS algorithm
+        $fsrsResult = $this->fsrsService->processReview(
+            $revision->stability,
+            $revision->difficulty,
+            $validatedData['performance_rating'],
+            $revision->last_reviewed_at
+        );
+
+        // Update current revision with new FSRS state
         $this->spacedRepetitionRepository->update($revision->id, [
             'repetition_count' => $revision->repetition_count + 1,
-            'last_reviewed_at' => now()
+            'last_reviewed_at' => now(),
+            'stability' => $fsrsResult['stability'],
+            'difficulty' => $fsrsResult['difficulty'],
+            'ease_factor' => $fsrsResult['difficulty'], // Keep for backward compatibility
         ]);
 
-
-        // Reschedule the next review
-        $this->rescheduleNextReview($revision, $validatedData["performance_rating"]);
+        // Schedule next review based on FSRS calculation
+        $this->scheduleNextReviewWithFSRS(
+            $revision->planItem,
+            $revision->interval_index + 1,
+            $fsrsResult
+        );
 
         // Award points for completing the review
         $this->incentiveService->awardReviewPoints($revision->planItem->memorizationPlan->user, $reviewRecord);
@@ -160,100 +169,118 @@ class MemorizationReviewService
             );
         }
 
+        // Award mastery badges if item reaches mastered state
+        if ($fsrsResult['memory_state'] === 'mastered') {
+            $this->checkAndAwardMasteryBadge($revision);
+        }
+
         return $reviewRecord;
     }
 
     /**
-     * Reschedule the next review based on the rating
-     *
-     * @param SpacedRepetition $revision
-     * @param int $performanceRating
-     * @return SpacedRepetition
+     * Schedule next review using FSRS algorithm results.
+     * Creates a new SpacedRepetition entry with optimally calculated date.
      */
-    protected function rescheduleNextReview(SpacedRepetition $revision, int $performanceRating): SpacedRepetition
-    {
-        $planItem = $revision->planItem;
-        $currentEaseFactor = $revision->ease_factor;
-
-        // تحديد معامل السهولة الجديد بناءً على التقييم
-        $newEaseFactor = match (true) {
-            $performanceRating >= 4 => $currentEaseFactor + 0.1,
-            $performanceRating <= 2 => max(1.3, $currentEaseFactor - 0.2),
-            default => $currentEaseFactor
-        };
-
-        // حساب الفاصل الزمني التالي
-        $nextInterval = $this->calculateNextInterval($revision, $performanceRating, $newEaseFactor);
-
-        // تحديث المراجعة الحالية
-        $this->spacedRepetitionRepository->update($revision->id, [
-            'ease_factor' => $newEaseFactor
-        ]);
-
-        // مراجعة ضعيفة: إعادة مراجعة بعد يوم واحد
-        if ($performanceRating <= 2) {
-            $this->scheduleNextReview($planItem, $revision->interval_index, 1, $newEaseFactor);
-        }
-
-        // نهاية الجدول مع تقييم جيد: الانتقال للمراجعة التالية
-        $maxIntervalIndex = $this->spacedRepetitionRepository->getMaxIntervalIndex($planItem->id);
-        if ($revision->interval_index >= $maxIntervalIndex && $performanceRating >= 3) {
-            $this->scheduleNextReview($planItem, $revision->interval_index + 1, $nextInterval, $newEaseFactor);
-        }
-
-        return $revision->refresh();
-    }
-
-    /**
-     * Schedule a new review
-     */
-    protected function scheduleNextReview(PlanItem $planItem, int $intervalIndex, int $days, float $easeFactor): void
+    protected function scheduleNextReviewWithFSRS(PlanItem $planItem, int $intervalIndex, array $fsrsResult): void
     {
         $this->spacedRepetitionRepository->create([
             'plan_item_id' => $planItem->id,
             'interval_index' => $intervalIndex,
-            'scheduled_date' => Carbon::now()->addDays($days),
-            'ease_factor' => $easeFactor,
+            'scheduled_date' => $fsrsResult['scheduled_date'],
+            'ease_factor' => $fsrsResult['difficulty'],
+            'stability' => $fsrsResult['stability'],
+            'difficulty' => $fsrsResult['difficulty'],
             'repetition_count' => 0,
             'last_reviewed_at' => null,
         ]);
     }
 
     /**
-     * Calculates the next time interval based on the rating and ease factor.
-     *
-     * @param SpacedRepetition $repetition
-     * @param int $performanceRating
-     * @param float $easeFactor
-     * @return int
+     * Check if user has mastered an entire Surah and award badge
      */
-    protected function calculateNextInterval(SpacedRepetition $repetition, int $performanceRating, float $easeFactor)
+    protected function checkAndAwardMasteryBadge(SpacedRepetition $revision): void
     {
-        if ($performanceRating <= 2) {
-            // إذا كان التقييم منخفضاً، نعيد الجدولة بعد يوم أو يومين
-            return $performanceRating + 1; // 0->1, 1->2, 2->3
-        } elseif ($performanceRating == 3) {
-            // إذا كان التقييم متوسطاً، نستخدم نفس الفترة
-            $currentInterval = $this->getCurrentInterval($repetition);
-            return $currentInterval;
-        } else {
-            // إذا كان التقييم عالياً، نزيد الفترة بناءً على معامل السهولة
-            $currentInterval = $this->getCurrentInterval($repetition);
-            return ceil($currentInterval * $easeFactor);
+        $planItem = $revision->planItem;
+        $userId = $planItem->memorizationPlan->user_id;
+        $surahId = $planItem->quran_surah_id;
+
+        // Check if all items for this Surah are mastered
+        $allMastered = SpacedRepetition::whereHas('planItem', function ($query) use ($userId, $surahId) {
+            $query->where('quran_surah_id', $surahId)
+                ->whereHas('memorizationPlan', function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                });
+        })
+            ->get()
+            ->every(function ($rep) {
+                $stability = $rep->stability ?? 0;
+                return $this->fsrsService->getMemoryState($stability) === 'mastered';
+            });
+
+        if ($allMastered) {
+            Log::info("User {$userId} has mastered Surah {$surahId}");
+            // The IncentiveService will handle badge awarding based on criteria
         }
     }
 
     /**
-     * Get the current time period
-     *
-     * @param SpacedRepetition $revision
-     * @return int
+     * Get enhanced review statistics with FSRS memory metrics
      */
-    protected function getCurrentInterval(SpacedRepetition $revision): int
+    public function getEnhancedReviewStatistics(int $userId, int $planId): JsonResponse
     {
-        $index = $revision->interval_index - 1;
-        return $index >= 0 && $index < count($this->defaultIntervals)
-            ? $this->defaultIntervals[$index]
-            : end($this->defaultIntervals);
+        $plan = $this->memorizationPlanRepository->findPlanForUser($userId, $planId);
+        if(!$plan) return ApiResponse::notFound("لم يتم العثور علي الخطة");
+
+        $averageRating = $this->revisionReviewsRepository->getAverageRating($planId);
+        $overdueReviews = $this->spacedRepetitionRepository->getOverdueRevisionsCount($planId);
+        $successfulRevisions = $this->revisionReviewsRepository->getSuccessfulRevisionsCount($planId);
+        $completedRevisions = $this->revisionReviewsRepository->getCompletedRevisionsCount($planId);
+        $successRate = $completedRevisions > 0 ? ($successfulRevisions / $completedRevisions) * 100 : 0;
+
+        // Get FSRS-based memory statistics
+        $revisions = SpacedRepetition::whereHas('planItem.memorizationPlan', function ($query) use ($planId) {
+            $query->where('id', $planId);
+        })->get();
+
+        $youngCount = 0;
+        $matureCount = 0;
+        $masteredCount = 0;
+        $totalRetrievability = 0;
+
+        foreach ($revisions as $revision) {
+            $stability = $revision->stability ?? 1.0;
+            $daysElapsed = $revision->last_reviewed_at 
+                ? Carbon::now()->diffInDays($revision->last_reviewed_at) 
+                : 0;
+            
+            $retrievability = $this->fsrsService->calculateRetrievability($stability, $daysElapsed);
+            $totalRetrievability += $retrievability;
+
+            $state = $this->fsrsService->getMemoryState($stability);
+            match ($state) {
+                'young' => $youngCount++,
+                'mature' => $matureCount++,
+                'mastered' => $masteredCount++,
+            };
+        }
+
+        $itemCount = $revisions->count();
+        $avgRetrievability = $itemCount > 0 ? $totalRetrievability / $itemCount : 0;
+
+        return ApiResponse::success([
+            'last_review_date' => $this->spacedRepetitionRepository->lastRevisionAt($planId)?->diffForHumans() ?? 'لا يوجد',
+            'completed_reviews' => $completedRevisions,
+            'successful_reviews' => $successfulRevisions,
+            'average_rating' => round($averageRating, 2),
+            'overdue_reviews' => $overdueReviews,
+            'success_rate' => round($successRate, 2) . "%",
+            'memory_health' => [
+                'average_retrievability' => round($avgRetrievability * 100, 1) . "%",
+                'young_items' => $youngCount,
+                'mature_items' => $matureCount,
+                'mastered_items' => $masteredCount,
+                'total_items' => $itemCount,
+            ],
+        ], "احصائيات الخطة المتقدمة");
     }
 }

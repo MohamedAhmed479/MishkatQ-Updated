@@ -5,7 +5,7 @@ import { useRef, useEffect } from 'react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import Button from '@/Components/UI/Button';
 
-export default function VerifyOtp({ email }) {
+export default function VerifyOtp({ email, status }) {
     const { data, setData, post, processing, errors } = useForm({
         email: email || '',
         otp: ['', '', '', '', '', ''],
@@ -44,10 +44,8 @@ export default function VerifyOtp({ email }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/verify-otp', {
-            data: {
-                email: data.email,
-                otp: data.otp.join(''),
-            }
+            email: data.email,
+            otp: data.otp.join(''),
         });
     };
 
@@ -77,6 +75,17 @@ export default function VerifyOtp({ email }) {
                         </span>
                     </p>
                 </div>
+
+                {/* Success Message */}
+                {status && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-6 p-4 bg-success/10 border border-success/20 rounded-xl text-success text-center"
+                    >
+                        {status}
+                    </motion.div>
+                )}
 
                 {/* OTP Input */}
                 <form onSubmit={handleSubmit} className="space-y-6">

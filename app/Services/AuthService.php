@@ -243,45 +243,43 @@ class AuthService
     {
         $email = $data['email'] ?? '';
         $token = $data['token'] ?? '';
+        $password = $data['password'] ?? '';
+        $passwordConfirmation = $data['password_confirmation'] ?? '';
 
+        // Validate password confirmation
+        if ($password !== $passwordConfirmation) {
+            return ApiResponse::error('كلمات المرور غير متطابقة', 422);
+        }
+
+        // Verify token from cache
         $cachedToken = \Illuminate\Support\Facades\Cache::get("password_reset_token_{$email}");
 
         if (!$cachedToken || !hash_equals((string)$cachedToken, (string)$token)) {
             return ApiResponse::error('رمز إعادة التعيين غير صالح أو منتهي الصلاحية', 422);
         }
 
-        $payload = [
-            'email' => $email,
-            'token' => $cachedToken,
-            'password' => $data['password'] ?? '',
-            'password_confirmation' => $data['password_confirmation'] ?? '',
-        ];
+        // Find user by email
+        $user = $this->userRepository->findByEmail($email);
 
-        $status = Password::reset(
-            $payload,
-            function ($user, $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password)
-                ])->save();
-
-                event(new PasswordReset($user));
-            }
-        );
-
-        if ($status === Password::PASSWORD_RESET) {
-            // Invalidate reset code/token after success
-            \Illuminate\Support\Facades\Cache::forget("password_reset_code_{$email}");
-            \Illuminate\Support\Facades\Cache::forget("password_reset_token_{$email}");
-
-            return ApiResponse::success(
-                null,
-                'تم إعادة تعيين كلمة المرور بنجاح'
-            );
+        if (!$user) {
+            return ApiResponse::error('المستخدم غير موجود', 404);
         }
 
-        return ApiResponse::error(
-            'غير قادر على إعادة تعيين كلمة المرور',
-            422
+        // Update password directly - User model has 'password' => 'hashed' cast, so it will hash automatically
+        $user->update([
+            'password' => $password,
+        ]);
+
+        // Invalidate reset code/token after success
+        \Illuminate\Support\Facades\Cache::forget("password_reset_code_{$email}");
+        \Illuminate\Support\Facades\Cache::forget("password_reset_token_{$email}");
+
+        // Fire password reset event
+        event(new PasswordReset($user));
+
+        return ApiResponse::success(
+            null,
+            'تم إعادة تعيين كلمة المرور بنجاح'
         );
     }
 

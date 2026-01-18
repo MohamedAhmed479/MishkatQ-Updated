@@ -56,9 +56,7 @@ function SettingsContent({ user = {}, preferences = {}, tafsirs = [] }) {
     };
 
     const handleLogout = () => {
-        if (confirm('هل تريد تسجيل الخروج؟')) {
-            router.post('/app/logout');
-        }
+        router.post('/logout');
     };
 
     return (

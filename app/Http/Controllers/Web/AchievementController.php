@@ -59,46 +59,41 @@ class AchievementController extends Controller
 
     private function getUserStats($user): array
     {
-        // Calculate current streak
+        // Calculate current streak - count consecutive days with activity from most recent
         $currentStreak = 0;
-        $lastActive = $user->last_active_at;
+        $lastActiveDate = null;
         
-        if ($lastActive) {
-            $currentDate = now()->startOfDay();
-            $checkDate = $lastActive->copy()->startOfDay();
+        // Find the most recent day with activity (today or before)
+        for ($i = 0; $i < 365; $i++) {
+            $dateToCheck = now()->startOfDay()->subDays($i);
+            $hasActivity = false;
             
-            $daysDiff = $currentDate->diffInDays($checkDate);
+            // Check plan items completion
+            $hasActivity = $user->memorizationPlans()
+                ->whereHas('planItems', function ($query) use ($dateToCheck) {
+                    $query->where('is_completed', true)
+                        ->whereDate('updated_at', $dateToCheck->toDateString());
+                })
+                ->exists();
             
-            if ($daysDiff <= 1) {
-                $currentStreak = 1;
-                $checkDate = $checkDate->subDay();
-                
-                while ($checkDate->lte(now()->startOfDay())) {
-                    $hasActivity = false;
-                    
-                    // Check plan items completion
-                    $hasActivity = $user->memorizationPlans()
-                        ->whereHas('planItems', function ($query) use ($checkDate) {
-                            $query->where('is_completed', true)
-                                ->whereDate('updated_at', $checkDate->toDateString());
-                        })
-                        ->exists();
-                    
-                    // Check review records via spaced repetitions
-                    if (!$hasActivity) {
-                        $hasActivity = \App\Models\ReviewRecord::whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($user) {
-                            $query->where('user_id', $user->id);
-                        })
-                        ->whereDate('review_date', $checkDate->toDateString())
-                        ->exists();
-                    }
-                    
-                    if ($hasActivity) {
-                        $currentStreak++;
-                        $checkDate = $checkDate->subDay();
-                    } else {
-                        break;
-                    }
+            // Check review records via spaced repetitions
+            if (!$hasActivity) {
+                $hasActivity = \App\Models\ReviewRecord::whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->whereDate('review_date', $dateToCheck->toDateString())
+                ->exists();
+            }
+            
+            if ($hasActivity) {
+                if ($lastActiveDate === null) {
+                    $lastActiveDate = $dateToCheck; // First active day found (most recent)
+                }
+                $currentStreak++;
+            } else {
+                // If we've started counting (found an active day), and now found a gap, stop
+                if ($lastActiveDate !== null) {
+                    break;
                 }
             }
         }

@@ -148,7 +148,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getTotalPoints(): int
     {
-        return $this->profile->total_points;
+        // Try to get from profile first
+        if ($this->profile && $this->profile->total_points) {
+            return (int) $this->profile->total_points;
+        }
+        
+        // Fallback: calculate from points transactions
+        return (int) $this->pointsTransactions()->sum('points');
     }
 
     public function getCurrentRank(string $periodType = 'monthly'): ?int

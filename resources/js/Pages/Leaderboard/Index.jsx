@@ -104,13 +104,14 @@ export default function LeaderboardIndex({ leaderboard, userRank, period }) {
                 <Card>
                     <CardHeader>
                         <h2 className="font-bold text-text-primary dark:text-text-dark-primary">
-                            الترتيب الكامل
+                            {leaderboard.length >= 3 ? 'الترتيب الكامل' : 'لوحة الصدارة'}
                         </h2>
                     </CardHeader>
                     <CardContent>
                         {leaderboard.length > 0 ? (
                             <div className="divide-y divide-surface-200 dark:divide-dark-300">
-                                {leaderboard.slice(3).map((entry, index) => (
+                                {/* Show all entries if less than 3, otherwise show from rank 4 */}
+                                {(leaderboard.length < 3 ? leaderboard : leaderboard.slice(3)).map((entry, index) => (
                                     <LeaderboardRow
                                         key={entry.user_id}
                                         rank={entry.rank}

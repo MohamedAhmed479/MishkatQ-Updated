@@ -38,6 +38,8 @@ class AnalyticsService
                 'consistency_metrics' => $this->getConsistencyMetrics($activePlan),
                 'recent_activity' => $this->getRecentActivity($activePlan),
                 'surah_wise_progress' => $this->getSurahWiseProgress($activePlan),
+                'weekly_activity' => $this->getWeeklyActivity($activePlan),
+                'performance_distribution' => $this->getPerformanceDistribution($activePlan),
             ]
         ];
     }
@@ -381,5 +383,105 @@ class AnalyticsService
                 ];
             })
             ->toArray();
+    }
+
+    /**
+     * Get weekly activity for chart
+     *
+     * @param MemorizationPlan $plan
+     * @return array
+     */
+    private function getWeeklyActivity(MemorizationPlan $plan): array
+    {
+        $weeklyData = [];
+        $dayNames = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i)->startOfDay();
+            $dayName = $dayNames[$date->dayOfWeek];
+            
+            // Count completions on this day - use updated_at as it reflects when is_completed was set to true
+            $completionsCount = PlanItem::where('plan_id', $plan->id)
+                ->where('is_completed', true)
+                ->whereDate('updated_at', $date->toDateString())
+                ->count();
+            
+            // Count reviews on this day
+            $reviewsCount = ReviewRecord::whereHas('spacedRepetition.planItem', function ($query) use ($plan) {
+                $query->where('plan_id', $plan->id);
+            })
+            ->whereDate('review_date', $date->toDateString())
+            ->count();
+            
+            // Total activity = completions + reviews
+            $totalActivity = $completionsCount + $reviewsCount;
+            
+            // Calculate percentage for chart (max 100 based on max activity in week)
+            $weeklyData[] = [
+                'day' => $dayName,
+                'activity' => $totalActivity,
+            ];
+        }
+        
+        // Normalize to percentages (max 100)
+        $activities = array_column($weeklyData, 'activity');
+        $maxActivity = !empty($activities) ? max($activities) : 1;
+        
+        $weeklyData = array_map(function ($day) use ($maxActivity) {
+            return [
+                'day' => $day['day'],
+                'activity' => $day['activity'],
+                'percentage' => $maxActivity > 0 ? round(($day['activity'] / $maxActivity) * 100, 2) : 0,
+            ];
+        }, $weeklyData);
+        
+        return $weeklyData;
+    }
+
+    /**
+     * Get performance rating distribution
+     *
+     * @param MemorizationPlan $plan
+     * @return array
+     */
+    private function getPerformanceDistribution(MemorizationPlan $plan): array
+    {
+        $reviews = ReviewRecord::whereHas('spacedRepetition', function ($query) use ($plan) {
+            $query->whereHas('planItem', function ($q) use ($plan) {
+                $q->where('plan_id', $plan->id);
+            });
+        })->get();
+
+        if ($reviews->isEmpty()) {
+            return [
+                5 => 0,
+                4 => 0,
+                3 => 0,
+                2 => 0,
+                1 => 0,
+            ];
+        }
+
+        $distribution = [
+            5 => 0,
+            4 => 0,
+            3 => 0,
+            2 => 0,
+            1 => 0,
+        ];
+
+        foreach ($reviews as $review) {
+            $rating = (int) $review->performance_rating;
+            if (isset($distribution[$rating])) {
+                $distribution[$rating]++;
+            }
+        }
+
+        $total = $reviews->count();
+        $distribution = array_map(function ($count) use ($total) {
+            return $total > 0 ? round(($count / $total) * 100, 2) : 0;
+        }, $distribution);
+
+        return $distribution;
     }
 }

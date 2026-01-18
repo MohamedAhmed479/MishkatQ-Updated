@@ -14,6 +14,7 @@ class UserProfile extends Model
         'username',
         'profile_image',
         'verses_memorized_count',
+        'total_points',
     ];
 
     public function user()

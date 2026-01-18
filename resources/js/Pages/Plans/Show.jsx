@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import {
     ArrowRight,
     BookOpen,
@@ -12,11 +13,14 @@ import {
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
-    ChevronsRight
+    ChevronsRight,
+    Info,
+    Loader2
 } from 'lucide-react';
 import MainLayout from '@/Layouts/MainLayout';
 import Card, { CardContent, CardHeader } from '@/Components/UI/Card';
 import Button from '@/Components/UI/Button';
+import Modal from '@/Components/UI/Modal';
 
 const statusLabels = {
     active: { label: 'نشطة', color: 'bg-success text-white' },
@@ -170,18 +174,71 @@ function Pagination({ items, planId }) {
 }
 
 export default function PlanShow({ plan, items }) {
+    const [modalOpen, setModalOpen] = useState(false);
+    const [itemDetails, setItemDetails] = useState(null);
+    const [loadingDetails, setLoadingDetails] = useState(false);
+
     const handlePause = () => {
-        router.post(`/api/v1/memorization-plans/${plan.id}/pause`);
+        if (confirm('هل أنت متأكد من إيقاف الخطة مؤقتًا؟')) {
+            router.post(`/app/plans/${plan.id}/pause`, {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Refresh the page to update the plan status
+                    router.reload({ only: ['plan'] });
+                },
+            });
+        }
     };
 
     const handleActivate = () => {
-        router.post(`/api/v1/memorization-plans/${plan.id}/active`);
+        if (confirm('هل تريد استئناف الخطة؟')) {
+            router.post(`/app/plans/${plan.id}/activate`, {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Refresh the page to update the plan status
+                    router.reload({ only: ['plan'] });
+                },
+            });
+        }
     };
 
     const handleDelete = () => {
         if (confirm('هل أنت متأكد من حذف هذه الخطة؟')) {
             router.delete(`/api/v1/memorization-plans/${plan.id}`);
         }
+    };
+
+    const handleShowDetails = async (itemId) => {
+        setLoadingDetails(true);
+        setModalOpen(true);
+        
+        try {
+            const response = await fetch(`/app/plans/${plan.id}/items/${itemId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setItemDetails(data);
+            } else {
+                alert('حدث خطأ أثناء جلب التفاصيل');
+                setModalOpen(false);
+            }
+        } catch (error) {
+            console.error('Error fetching item details:', error);
+            alert('حدث خطأ أثناء جلب التفاصيل');
+            setModalOpen(false);
+        } finally {
+            setLoadingDetails(false);
+        }
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        setItemDetails(null);
     };
 
     // Get items array from paginated data
@@ -362,13 +419,23 @@ export default function PlanShow({ plan, items }) {
                                             )}
                                         </div>
 
-                                        {!item.is_completed && (
-                                            <Link href={`/app/session/${item.id}`}>
-                                                <Button size="sm" icon={ChevronLeft} iconPosition="left">
-                                                    ابدأ
-                                                </Button>
-                                            </Link>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            <Button 
+                                                size="sm" 
+                                                variant="outline"
+                                                icon={Info}
+                                                onClick={() => handleShowDetails(item.id)}
+                                            >
+                                                التفاصيل
+                                            </Button>
+                                            {!item.is_completed && (
+                                                <Link href={`/app/session/${item.id}`}>
+                                                    <Button size="sm" icon={ChevronLeft} iconPosition="left">
+                                                        ابدأ
+                                                    </Button>
+                                                </Link>
+                                            )}
+                                        </div>
                                     </motion.div>
                                 ))
                             )}
@@ -379,6 +446,200 @@ export default function PlanShow({ plan, items }) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Item Details Modal */}
+            <Modal 
+                isOpen={modalOpen} 
+                onClose={handleCloseModal}
+                title={itemDetails ? `تفاصيل العنصر - ${itemDetails.item.chapter_name}` : 'تفاصيل العنصر'}
+                size="xl"
+            >
+                {loadingDetails ? (
+                    <div className="flex items-center justify-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                    </div>
+                ) : itemDetails ? (
+                    <div className="space-y-6">
+                        {/* Item Basic Info */}
+                        <Card>
+                            <CardHeader>
+                                <h3 className="font-bold text-text-primary dark:text-text-dark-primary">
+                                    معلومات العنصر
+                                </h3>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-sm text-text-muted dark:text-text-dark-muted">السورة</p>
+                                        <p className="font-semibold text-text-primary dark:text-text-dark-primary">
+                                            {itemDetails.item.chapter_name}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-text-muted dark:text-text-dark-muted">الآيات</p>
+                                        <p className="font-semibold text-text-primary dark:text-text-dark-primary">
+                                            من {itemDetails.item.start_verse} إلى {itemDetails.item.end_verse}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-text-muted dark:text-text-dark-muted">تاريخ الاستحقاق</p>
+                                        <p className="font-semibold text-text-primary dark:text-text-dark-primary">
+                                            {itemDetails.item.target_date || '-'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-text-muted dark:text-text-dark-muted">الحالة</p>
+                                        <p className={`font-semibold ${itemDetails.item.is_completed ? 'text-success' : 'text-warning'}`}>
+                                            {itemDetails.item.is_completed ? 'مكتمل' : 'غير مكتمل'}
+                                        </p>
+                                    </div>
+                                    {itemDetails.item.completed_at && (
+                                        <div>
+                                            <p className="text-sm text-text-muted dark:text-text-dark-muted">تاريخ الإكمال</p>
+                                            <p className="font-semibold text-success">
+                                                {itemDetails.item.completed_at}
+                                            </p>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="text-sm text-text-muted dark:text-text-dark-muted">تاريخ الإنشاء</p>
+                                        <p className="font-semibold text-text-primary dark:text-text-dark-primary">
+                                            {itemDetails.item.created_at || '-'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Spaced Repetitions */}
+                        <Card>
+                            <CardHeader>
+                                <h3 className="font-bold text-text-primary dark:text-text-dark-primary">
+                                    المراجعات المتباعدة ({itemDetails.spaced_repetitions.length})
+                                </h3>
+                            </CardHeader>
+                            <CardContent>
+                                {itemDetails.spaced_repetitions.length === 0 ? (
+                                    <p className="text-center py-6 text-text-muted dark:text-text-dark-muted">
+                                        لا توجد مراجعات متباعدة لهذا العنصر بعد
+                                    </p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {itemDetails.spaced_repetitions.map((repetition, index) => (
+                                            <div
+                                                key={repetition.id}
+                                                className={`
+                                                    p-4 rounded-xl border
+                                                    ${repetition.is_completed 
+                                                        ? 'bg-success/10 border-success/20' 
+                                                        : repetition.is_overdue
+                                                        ? 'bg-error/10 border-error/20'
+                                                        : 'bg-surface-100 dark:bg-dark-300 border-surface-200 dark:border-dark-200'
+                                                    }
+                                                `}
+                                            >
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div>
+                                                        <p className="font-semibold text-text-primary dark:text-text-dark-primary">
+                                                            مراجعة #{index + 1} - فهرس الفترة: {repetition.interval_index}
+                                                        </p>
+                                                        <p className="text-sm text-text-muted dark:text-text-dark-muted mt-1">
+                                                            {repetition.memory_state}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        {repetition.is_completed && (
+                                                            <span className="px-2 py-1 text-xs rounded-full bg-success text-white">
+                                                                مكتملة
+                                                            </span>
+                                                        )}
+                                                        {repetition.is_overdue && (
+                                                            <span className="px-2 py-1 text-xs rounded-full bg-error text-white">
+                                                                متأخرة
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                                    <div>
+                                                        <p className="text-text-muted dark:text-text-dark-muted">تاريخ الجدولة</p>
+                                                        <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                                                            {repetition.scheduled_date || '-'}
+                                                        </p>
+                                                    </div>
+                                                    {repetition.last_reviewed_at && (
+                                                        <div>
+                                                            <p className="text-text-muted dark:text-text-dark-muted">آخر مراجعة</p>
+                                                            <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                                                                {repetition.last_reviewed_at}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-text-muted dark:text-text-dark-muted">الاستقرار</p>
+                                                        <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                                                            {repetition.stability?.toFixed(2) || '-'}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-text-muted dark:text-text-dark-muted">الصعوبة</p>
+                                                        <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                                                            {repetition.difficulty?.toFixed(2) || '-'}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-text-muted dark:text-text-dark-muted">عدد المراجعات</p>
+                                                        <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                                                            {repetition.repetition_count || 0}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {repetition.review_record && (
+                                                    <div className="mt-4 pt-4 border-t border-surface-200 dark:border-dark-300">
+                                                        <p className="text-sm font-semibold text-text-primary dark:text-text-dark-primary mb-2">
+                                                            تفاصيل التقييم
+                                                        </p>
+                                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                                            <div>
+                                                                <p className="text-text-muted dark:text-text-dark-muted">تاريخ التقييم</p>
+                                                                <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                                                                    {repetition.review_record.review_date || '-'}
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-text-muted dark:text-text-dark-muted">التقييم</p>
+                                                                <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                                                                    {repetition.review_record.performance_description} ({repetition.review_record.performance_rating}/5)
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-text-muted dark:text-text-dark-muted">النتيجة</p>
+                                                                <p className={`font-medium ${repetition.review_record.successful ? 'text-success' : 'text-error'}`}>
+                                                                    {repetition.review_record.successful ? 'نجح' : 'فشل'}
+                                                                </p>
+                                                            </div>
+                                                            {repetition.review_record.notes && (
+                                                                <div className="col-span-2">
+                                                                    <p className="text-text-muted dark:text-text-dark-muted">ملاحظات</p>
+                                                                    <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                                                                        {repetition.review_record.notes}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+                ) : null}
+            </Modal>
         </MainLayout>
     );
 }

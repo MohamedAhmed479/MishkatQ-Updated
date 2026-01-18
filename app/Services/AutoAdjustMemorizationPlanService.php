@@ -13,14 +13,19 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\IncentiveService;
+use App\Services\FSRSService;
 
 class AutoAdjustMemorizationPlanService
 {
-    protected $incentiveService;
+    protected IncentiveService $incentiveService;
+    protected FSRSService $fsrsService;
 
-    public function __construct(IncentiveService $incentiveService)
-    {
+    public function __construct(
+        IncentiveService $incentiveService,
+        FSRSService $fsrsService
+    ) {
         $this->incentiveService = $incentiveService;
+        $this->fsrsService = $fsrsService;
     }
 
     /**
@@ -28,6 +33,20 @@ class AutoAdjustMemorizationPlanService
      */
     const EVALUATION_PERIOD = 7;
 
+    /**
+     * Critical retrievability threshold - below this, memory is at risk
+     */
+    const CRITICAL_RETRIEVABILITY = 0.7;
+
+    /**
+     * Warning retrievability threshold - approaching memory decay
+     */
+    const WARNING_RETRIEVABILITY = 0.85;
+
+    /**
+     * Maximum items to review in recovery mode per day
+     */
+    const RECOVERY_MODE_DAILY_LIMIT = 10;
 
     /**
      * Thresholds for determining user performance status
@@ -43,9 +62,8 @@ class AutoAdjustMemorizationPlanService
         ],
     ];
 
-
     /**
-     * Maximum consecutive missed sessions that trigger plan pausing
+     * Maximum consecutive missed sessions that trigger recovery mode
      */
     const MAX_CONSECUTIVE_MISSED_SESSIONS = 3;
 
@@ -249,42 +267,331 @@ class AutoAdjustMemorizationPlanService
 
     /**
      * Apply adjustments to the plan based on performance status
+     * Now includes FSRS-based recovery mode instead of just pausing
      *
      * @param MemorizationPlan $plan
      * @param string $status Performance status
-     * @param array $performanceData
      * @return bool Whether any adjustments were made
      */
     private function applyAdjustments(MemorizationPlan $plan, string $status): bool
     {
         $adjustmentsMade = false;
 
-        $adjustmentsMade = $this->pausePlanIfOverdueSessionsExist($plan);
-        if ($adjustmentsMade) {
-            return true;
-        } else {
-            $adjustmentsMade = false;
+        // Check for critical items that need immediate attention
+        $criticalItems = $this->getCriticalItems($plan);
+        
+        if ($criticalItems->count() > 0) {
+            $this->enableRecoveryMode($plan, $criticalItems);
+            $adjustmentsMade = true;
         }
 
         switch ($status) {
             case 'excellent':
-                // No changes needed for good performance
+                // For excellent performance, we can slightly accelerate the plan
+                // by adjusting future memorization items closer
                 break;
 
             case 'good':
-                // No changes needed for good performance
+                // Maintain current pace
                 break;
 
             case 'poor':
-                // No changes needed for good performance
+                // Enable gentle recovery - prioritize weak items
+                $this->prioritizeWeakItems($plan);
+                $adjustmentsMade = true;
                 break;
 
             case 'overdue':
-                $adjustmentsMade = $this->pausePlan($plan);
+                // Instead of pausing, enable recovery mode
+                $this->enableRecoveryMode($plan, $criticalItems);
+                $adjustmentsMade = true;
                 break;
         }
 
         return $adjustmentsMade;
+    }
+
+    /**
+     * Get items with critically low retrievability using FSRS
+     */
+    private function getCriticalItems(MemorizationPlan $plan): \Illuminate\Support\Collection
+    {
+        $revisions = SpacedRepetition::whereHas('planItem', function ($query) use ($plan) {
+            $query->where('plan_id', $plan->id);
+        })
+            ->with(['planItem.quranSurah', 'planItem.verseStart', 'planItem.verseEnd'])
+            ->get();
+
+        return $revisions->map(function ($revision) {
+            $stability = $revision->stability ?? 1.0;
+            $daysElapsed = $revision->last_reviewed_at 
+                ? Carbon::now()->diffInDays($revision->last_reviewed_at) 
+                : 0;
+
+            $retrievability = $this->fsrsService->calculateRetrievability($stability, $daysElapsed);
+
+            $revision->current_retrievability = $retrievability;
+            $revision->priority_score = $this->fsrsService->calculatePriorityScore(
+                $retrievability,
+                $stability,
+                max(0, Carbon::today()->diffInDays($revision->scheduled_date, false))
+            );
+
+            return $revision;
+        })
+            ->filter(function ($revision) {
+                return $revision->current_retrievability < self::CRITICAL_RETRIEVABILITY;
+            })
+            ->sortByDesc('priority_score');
+    }
+
+    /**
+     * Enable recovery mode for a plan
+     * Creates a focused review schedule for the most critical items
+     */
+    private function enableRecoveryMode(MemorizationPlan $plan, \Illuminate\Support\Collection $criticalItems): void
+    {
+        Log::info("Enabling recovery mode for plan {$plan->id} with {$criticalItems->count()} critical items");
+
+        // Mark plan as in recovery mode
+        $plan->update([
+            'status' => 'recovery',
+            'recovery_started_at' => Carbon::now(),
+        ]);
+
+        // Reschedule critical items for immediate review, spread across days
+        $itemsPerDay = min(self::RECOVERY_MODE_DAILY_LIMIT, ceil($criticalItems->count() / 7));
+        $currentDate = Carbon::today();
+        $dayOffset = 0;
+
+        foreach ($criticalItems->take(self::RECOVERY_MODE_DAILY_LIMIT * 7) as $index => $revision) {
+            if ($index > 0 && $index % $itemsPerDay === 0) {
+                $dayOffset++;
+            }
+
+            $newScheduledDate = (clone $currentDate)->addDays($dayOffset);
+
+            $revision->update([
+                'scheduled_date' => $newScheduledDate,
+                'is_recovery_item' => true,
+            ]);
+        }
+
+        // Temporarily pause new memorization items
+        $this->pauseNewMemorization($plan);
+    }
+
+    /**
+     * Pause new memorization items during recovery mode
+     */
+    private function pauseNewMemorization(MemorizationPlan $plan): void
+    {
+        // Postpone any upcoming memorization items by the recovery period
+        PlanItem::where('plan_id', $plan->id)
+            ->where('is_completed', false)
+            ->where('target_date', '>=', Carbon::today())
+            ->update([
+                'target_date' => DB::raw('DATE_ADD(target_date, INTERVAL 7 DAY)'),
+            ]);
+    }
+
+    /**
+     * Prioritize weak items by adjusting their schedule
+     */
+    private function prioritizeWeakItems(MemorizationPlan $plan): void
+    {
+        $revisions = SpacedRepetition::whereHas('planItem', function ($query) use ($plan) {
+            $query->where('plan_id', $plan->id);
+        })
+            ->whereNull('last_reviewed_at')
+            ->get();
+
+        foreach ($revisions as $revision) {
+            $stability = $revision->stability ?? 1.0;
+            
+            // If stability is low, schedule sooner
+            if ($stability < 21) {
+                $daysElapsed = $revision->last_reviewed_at 
+                    ? Carbon::now()->diffInDays($revision->last_reviewed_at) 
+                    : 0;
+                
+                $retrievability = $this->fsrsService->calculateRetrievability($stability, $daysElapsed);
+                
+                if ($retrievability < self::WARNING_RETRIEVABILITY) {
+                    // Reschedule to today or tomorrow
+                    $revision->update([
+                        'scheduled_date' => Carbon::today()->addDay(),
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get items that are approaching memory decay (for predictive notifications)
+     */
+    public function getItemsApproachingDecay(int $userId): \Illuminate\Support\Collection
+    {
+        $revisions = SpacedRepetition::whereHas('planItem.memorizationPlan', function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        })
+            ->whereNotNull('last_reviewed_at')
+            ->get();
+
+        return $revisions->map(function ($revision) {
+            $stability = $revision->stability ?? 1.0;
+            $daysElapsed = $revision->last_reviewed_at 
+                ? Carbon::now()->diffInDays($revision->last_reviewed_at) 
+                : 0;
+
+            $retrievability = $this->fsrsService->calculateRetrievability($stability, $daysElapsed);
+
+            // Calculate days until retrievability drops below warning threshold
+            $daysUntilDecay = $this->calculateDaysUntilDecay($stability, $daysElapsed);
+
+            $revision->current_retrievability = $retrievability;
+            $revision->days_until_decay = $daysUntilDecay;
+
+            return $revision;
+        })
+            ->filter(function ($revision) {
+                // Return items that will decay within the next 3 days
+                return $revision->days_until_decay <= 3 && $revision->days_until_decay >= 0;
+            })
+            ->sortBy('days_until_decay');
+    }
+
+    /**
+     * Calculate days until retrievability drops below warning threshold
+     */
+    private function calculateDaysUntilDecay(float $stability, int $daysElapsed): int
+    {
+        // Binary search for the day when R drops below threshold
+        $targetR = self::WARNING_RETRIEVABILITY;
+        $low = $daysElapsed;
+        $high = $daysElapsed + 365;
+
+        while ($low < $high) {
+            $mid = (int) (($low + $high) / 2);
+            $r = $this->fsrsService->calculateRetrievability($stability, $mid);
+            
+            if ($r > $targetR) {
+                $low = $mid + 1;
+            } else {
+                $high = $mid;
+            }
+        }
+
+        return max(0, $low - $daysElapsed);
+    }
+
+    /**
+     * Send predictive notifications for items about to decay
+     */
+    public function sendPredictiveNotifications(): void
+    {
+        $users = User::whereHas('memorizationPlans', function ($query) {
+            $query->where('status', 'active');
+        })->get();
+
+        foreach ($users as $user) {
+            $decayingItems = $this->getItemsApproachingDecay($user->id);
+            
+            if ($decayingItems->count() > 0) {
+                $this->sendDecayWarningNotification($user, $decayingItems);
+            }
+        }
+    }
+
+    /**
+     * Send decay warning notification to user
+     */
+    private function sendDecayWarningNotification(User $user, \Illuminate\Support\Collection $decayingItems): void
+    {
+        $itemCount = $decayingItems->count();
+        $firstItem = $decayingItems->first();
+        
+        $surahName = $firstItem->planItem?->quranSurah?->name_ar ?? 'غير معروف';
+
+        $notificationData = [
+            'type' => 'memory_decay_warning',
+            'message' => $itemCount === 1
+                ? "ذاكرتك لـ {$surahName} بدأت تضعف. راجع اليوم للحفاظ عليها!"
+                : "لديك {$itemCount} أجزاء تحتاج مراجعة قبل أن تُنسى. راجع اليوم!",
+            'item_count' => $itemCount,
+            'priority' => 'high',
+        ];
+
+        $user->notify(new MemorizationPlanAdjustedNotification($notificationData));
+
+        Log::info("Sent decay warning to user {$user->id} for {$itemCount} items");
+    }
+
+    /**
+     * Check if a plan should exit recovery mode
+     */
+    public function checkRecoveryModeCompletion(MemorizationPlan $plan): bool
+    {
+        if ($plan->status !== 'recovery') {
+            return false;
+        }
+
+        // Check if critical items have been reviewed
+        $criticalItems = $this->getCriticalItems($plan);
+        
+        if ($criticalItems->count() === 0) {
+            // All critical items addressed, exit recovery mode
+            $plan->update([
+                'status' => 'active',
+                'recovery_started_at' => null,
+            ]);
+
+            $this->notifyUser($plan, 'recovery_complete');
+            
+            Log::info("Plan {$plan->id} exited recovery mode successfully");
+            
+            return true;
+        }
+
+        // Check if recovery has been going on too long (more than 14 days)
+        if ($plan->recovery_started_at && Carbon::parse($plan->recovery_started_at)->diffInDays(Carbon::now()) > 14) {
+            // Offer to reset or continue
+            $this->notifyUser($plan, 'recovery_extended');
+        }
+
+        return false;
+    }
+
+    /**
+     * Get recovery mode progress for a plan
+     */
+    public function getRecoveryProgress(MemorizationPlan $plan): array
+    {
+        if ($plan->status !== 'recovery') {
+            return [
+                'in_recovery' => false,
+            ];
+        }
+
+        $criticalItems = $this->getCriticalItems($plan);
+        $totalItems = SpacedRepetition::whereHas('planItem', function ($query) use ($plan) {
+            $query->where('plan_id', $plan->id);
+        })->count();
+
+        $recoveredItems = $totalItems - $criticalItems->count();
+        $progress = $totalItems > 0 ? ($recoveredItems / $totalItems) * 100 : 0;
+
+        return [
+            'in_recovery' => true,
+            'started_at' => $plan->recovery_started_at,
+            'days_in_recovery' => $plan->recovery_started_at 
+                ? Carbon::parse($plan->recovery_started_at)->diffInDays(Carbon::now()) 
+                : 0,
+            'critical_items_remaining' => $criticalItems->count(),
+            'total_items' => $totalItems,
+            'progress_percentage' => round($progress, 1),
+            'estimated_days_remaining' => ceil($criticalItems->count() / self::RECOVERY_MODE_DAILY_LIMIT),
+        ];
     }
 
 
@@ -405,11 +712,108 @@ class AutoAdjustMemorizationPlanService
                 return 'تم تعديل خطة الحفظ الخاصة بك لتوفير المزيد من الوقت للمراجعة وتثبيت المحفوظ.';
 
             case 'overdue':
-                // $resumeUrl = url('/memorization-plans/' . $plan->id . '/active/');
-                return 'تم إيقاف خطة الحفظ الخاصة بك مؤقتًا نظرًا لعدم اكتمال المراجعات الأخيرة. يمكنك استئنافها عندما تكون مستعدًا.';
+                return 'تم تفعيل وضع الاسترداد لخطتك. سنركز على تثبيت ما حفظته قبل المتابعة. لا تقلق، سنساعدك على العودة للمسار!';
+
+            case 'recovery':
+                return 'تم تفعيل وضع الاسترداد الذكي. سنركز على المراجعات الأهم أولاً لحماية حفظك.';
+
+            case 'recovery_complete':
+                return 'أحسنت! أكملت وضع الاسترداد بنجاح. يمكنك الآن متابعة خطة الحفظ الجديدة.';
+
+            case 'recovery_extended':
+                return 'لا يزال لديك بعض المراجعات المتأخرة. خذ وقتك، والأهم هو الاستمرار ولو بمراجعة واحدة يومياً.';
 
             default:
                 return 'تم تحديث خطة الحفظ الخاصة بك بناءً على أدائك الأخير.';
         }
+    }
+
+    /**
+     * Run recovery check for all plans in recovery mode
+     */
+    public function runRecoveryChecks(): void
+    {
+        Log::info('Running recovery mode checks');
+
+        $recoveryPlans = MemorizationPlan::where('status', 'recovery')->get();
+
+        foreach ($recoveryPlans as $plan) {
+            try {
+                $this->checkRecoveryModeCompletion($plan);
+            } catch (\Exception $e) {
+                Log::error('Error checking recovery for plan ' . $plan->id . ': ' . $e->getMessage());
+            }
+        }
+
+        Log::info('Completed recovery mode checks');
+    }
+
+    /**
+     * Get a summary of memory health for a user
+     */
+    public function getMemoryHealthSummary(int $userId): array
+    {
+        $revisions = SpacedRepetition::whereHas('planItem.memorizationPlan', function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        })->get();
+
+        if ($revisions->isEmpty()) {
+            return [
+                'total_items' => 0,
+                'health_score' => 0,
+                'status' => 'no_data',
+                'status_ar' => 'لا توجد بيانات',
+            ];
+        }
+
+        $totalRetrievability = 0;
+        $criticalCount = 0;
+        $warningCount = 0;
+        $healthyCount = 0;
+
+        foreach ($revisions as $revision) {
+            $stability = $revision->stability ?? 1.0;
+            $daysElapsed = $revision->last_reviewed_at 
+                ? Carbon::now()->diffInDays($revision->last_reviewed_at) 
+                : 0;
+
+            $retrievability = $this->fsrsService->calculateRetrievability($stability, $daysElapsed);
+            $totalRetrievability += $retrievability;
+
+            if ($retrievability < self::CRITICAL_RETRIEVABILITY) {
+                $criticalCount++;
+            } elseif ($retrievability < self::WARNING_RETRIEVABILITY) {
+                $warningCount++;
+            } else {
+                $healthyCount++;
+            }
+        }
+
+        $count = $revisions->count();
+        $avgRetrievability = $totalRetrievability / $count;
+        $healthScore = round($avgRetrievability * 100, 1);
+
+        // Determine overall status
+        $status = 'healthy';
+        $statusAr = 'ممتاز';
+
+        if ($criticalCount > $count * 0.3) {
+            $status = 'critical';
+            $statusAr = 'يحتاج اهتمام';
+        } elseif ($warningCount > $count * 0.3) {
+            $status = 'warning';
+            $statusAr = 'جيد';
+        }
+
+        return [
+            'total_items' => $count,
+            'health_score' => $healthScore,
+            'status' => $status,
+            'status_ar' => $statusAr,
+            'critical_count' => $criticalCount,
+            'warning_count' => $warningCount,
+            'healthy_count' => $healthyCount,
+            'average_retrievability' => round($avgRetrievability, 4),
+        ];
     }
 }
