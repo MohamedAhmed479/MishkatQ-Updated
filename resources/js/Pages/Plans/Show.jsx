@@ -83,29 +83,31 @@ function Pagination({ items, planId }) {
     };
 
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-surface-200 dark:border-dark-300">
-            {/* Info */}
-            <div className="text-sm text-text-muted dark:text-text-dark-muted">
-                {from && to ? `عرض ${from} - ${to} من ${total} عنصر` : `إجمالي ${total} عنصر`}
-            </div>
+        <div className="flex flex-col gap-4 mt-6 pt-4 border-t border-surface-200 dark:border-dark-300">
+            {/* Info & Per Page - Mobile */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="text-sm text-text-muted dark:text-text-dark-muted">
+                    {from && to ? `عرض ${from} - ${to} من ${total} عنصر` : `إجمالي ${total} عنصر`}
+                </div>
 
-            {/* Per Page Selector */}
-            <div className="flex items-center gap-2">
-                <span className="text-sm text-text-muted dark:text-text-dark-muted">عناصر لكل صفحة:</span>
-                <select
-                    value={per_page}
-                    onChange={(e) => changePerPage(parseInt(e.target.value))}
-                    className="px-2 py-1 text-sm rounded-lg border border-surface-300 dark:border-dark-200 bg-white dark:bg-dark-400 text-text-primary dark:text-text-dark-primary focus:ring-2 focus:ring-primary-500"
-                >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                </select>
+                {/* Per Page Selector */}
+                <div className="flex items-center gap-2">
+                    <span className="text-xs sm:text-sm text-text-muted dark:text-text-dark-muted">عناصر لكل صفحة:</span>
+                    <select
+                        value={per_page}
+                        onChange={(e) => changePerPage(parseInt(e.target.value))}
+                        className="px-2 py-1 text-xs sm:text-sm rounded-lg border border-surface-300 dark:border-dark-200 bg-white dark:bg-dark-400 text-text-primary dark:text-text-dark-primary focus:ring-2 focus:ring-primary-500"
+                    >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                    </select>
+                </div>
             </div>
 
             {/* Page Navigation */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center justify-center gap-1 overflow-x-auto pb-2">
                 {/* First Page */}
                 <button
                     onClick={() => goToPage(1)}
@@ -281,17 +283,18 @@ export default function PlanShow({ plan, items }) {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                             {plan.status === 'active' ? (
-                                <Button variant="secondary" onClick={handlePause} icon={Pause}>
-                                    إيقاف مؤقت
+                                <Button variant="secondary" onClick={handlePause} icon={Pause} className="w-full sm:w-auto">
+                                    <span className="hidden sm:inline">إيقاف مؤقت</span>
+                                    <span className="sm:hidden">إيقاف</span>
                                 </Button>
                             ) : plan.status === 'paused' ? (
-                                <Button variant="secondary" onClick={handleActivate} icon={Play}>
+                                <Button variant="secondary" onClick={handleActivate} icon={Play} className="w-full sm:w-auto">
                                     استئناف
                                 </Button>
                             ) : null}
-                            <Button variant="danger" onClick={handleDelete} icon={Trash2}>
+                            <Button variant="danger" onClick={handleDelete} icon={Trash2} className="w-full sm:w-auto">
                                 حذف
                             </Button>
                         </div>
@@ -375,62 +378,77 @@ export default function PlanShow({ plan, items }) {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.03 }}
                                         className={`
-                                        flex items-center gap-4 p-4 rounded-xl transition-colors
+                                        flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 rounded-xl transition-colors
                                         ${item.is_completed
                                                 ? 'bg-success/10'
                                                 : 'bg-surface-100 dark:bg-dark-300 hover:bg-surface-200 dark:hover:bg-dark-200'
                                             }
                                     `}
                                     >
-                                        <div className={`
-                                        w-10 h-10 rounded-full flex items-center justify-center
-                                        ${item.is_completed
-                                                ? 'bg-success text-white'
-                                                : 'bg-surface-200 dark:bg-dark-200 text-text-muted'
-                                            }
-                                    `}>
-                                            {item.is_completed ? (
-                                                <CheckCircle className="w-5 h-5" />
-                                            ) : (
-                                                <span className="font-bold text-sm">
-                                                    {item.sequence || (isPaginated && items.from ? (items.from + index) : (index + 1))}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                            <div className={`
+                                                w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+                                                ${item.is_completed
+                                                        ? 'bg-success text-white'
+                                                        : 'bg-surface-200 dark:bg-dark-200 text-text-muted'
+                                                    }
+                                            `}>
+                                                {item.is_completed ? (
+                                                    <CheckCircle className="w-5 h-5" />
+                                                ) : (
+                                                    <span className="font-bold text-sm">
+                                                        {item.sequence || (isPaginated && items.from ? (items.from + index) : (index + 1))}
+                                                    </span>
+                                                )}
+                                            </div>
 
-                                        <div className="flex-1">
-                                            <p className={`font-medium ${item.is_completed ? 'text-success line-through' : 'text-text-primary dark:text-text-dark-primary'}`}>
-                                                سورة {item.chapter_name}
-                                            </p>
-                                            <p className="text-sm text-text-muted dark:text-text-dark-muted">
-                                                الآيات {item.start_verse} - {item.end_verse}
-                                            </p>
-                                        </div>
-
-                                        <div className="text-left">
-                                            <p className="text-xs text-text-muted dark:text-text-dark-muted flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                {item.scheduled_date}
-                                            </p>
-                                            {item.completed_at && (
-                                                <p className="text-xs text-success">
-                                                    أُكمل: {item.completed_at}
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`font-medium text-sm sm:text-base truncate ${item.is_completed ? 'text-success line-through' : 'text-text-primary dark:text-text-dark-primary'}`}>
+                                                    سورة {item.chapter_name}
                                                 </p>
-                                            )}
+                                                <p className="text-xs sm:text-sm text-text-muted dark:text-text-dark-muted">
+                                                    الآيات {item.start_verse} - {item.end_verse}
+                                                </p>
+                                            </div>
+
+                                            <div className="text-left text-xs sm:text-sm hidden sm:block">
+                                                <p className="text-text-muted dark:text-text-dark-muted flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    {item.scheduled_date}
+                                                </p>
+                                                {item.completed_at && (
+                                                    <p className="text-success mt-1">
+                                                        أُكمل: {item.completed_at}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 w-full sm:w-auto">
+                                            <div className="text-left text-xs sm:hidden mb-2">
+                                                <p className="text-text-muted dark:text-text-dark-muted flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    {item.scheduled_date}
+                                                </p>
+                                                {item.completed_at && (
+                                                    <p className="text-success mt-1">
+                                                        أُكمل: {item.completed_at}
+                                                    </p>
+                                                )}
+                                            </div>
                                             <Button 
                                                 size="sm" 
                                                 variant="outline"
                                                 icon={Info}
                                                 onClick={() => handleShowDetails(item.id)}
+                                                className="w-full sm:w-auto"
                                             >
-                                                التفاصيل
+                                                <span className="hidden xs:inline">التفاصيل</span>
+                                                <span className="xs:hidden">تفاصيل</span>
                                             </Button>
                                             {!item.is_completed && (
-                                                <Link href={`/app/session/${item.id}`}>
-                                                    <Button size="sm" icon={ChevronLeft} iconPosition="left">
+                                                <Link href={`/app/session/${item.id}`} className="w-full sm:w-auto">
+                                                    <Button size="sm" icon={ChevronLeft} iconPosition="left" className="w-full sm:w-auto">
                                                         ابدأ
                                                     </Button>
                                                 </Link>
@@ -468,7 +486,7 @@ export default function PlanShow({ plan, items }) {
                                 </h3>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-sm text-text-muted dark:text-text-dark-muted">السورة</p>
                                         <p className="font-semibold text-text-primary dark:text-text-dark-primary">
@@ -561,7 +579,7 @@ export default function PlanShow({ plan, items }) {
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-sm">
                                                     <div>
                                                         <p className="text-text-muted dark:text-text-dark-muted">تاريخ الجدولة</p>
                                                         <p className="font-medium text-text-primary dark:text-text-dark-primary">
@@ -601,7 +619,7 @@ export default function PlanShow({ plan, items }) {
                                                         <p className="text-sm font-semibold text-text-primary dark:text-text-dark-primary mb-2">
                                                             تفاصيل التقييم
                                                         </p>
-                                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                                                             <div>
                                                                 <p className="text-text-muted dark:text-text-dark-muted">تاريخ التقييم</p>
                                                                 <p className="font-medium text-text-primary dark:text-text-dark-primary">

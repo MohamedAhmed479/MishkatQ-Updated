@@ -202,6 +202,7 @@ Route::get('/', function () {
 Route::middleware('guest:web')->group(function () {
     Route::get('login', fn () => \Inertia\Inertia::render('Auth/Login'))->name('user.login');
     Route::post('login', [\App\Http\Controllers\Web\AuthController::class, 'login'])->name('user.login.post');
+    Route::post('resend-verification', [\App\Http\Controllers\Web\AuthController::class, 'resendVerificationEmail'])->name('user.verification.resend');
     Route::get('register', fn () => \Inertia\Inertia::render('Auth/Register'))->name('user.register');
     Route::post('register', [\App\Http\Controllers\Web\AuthController::class, 'register'])->name('user.register.post');
     Route::get('forgot-password', fn () => \Inertia\Inertia::render('Auth/ForgotPassword'))->name('user.password.request');

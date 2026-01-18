@@ -37,12 +37,15 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user('web');
         
-        // Add stats to user object for sidebar without replacing the model
+        // Calculate user stats without modifying the model
+        $totalPoints = 0;
+        $totalVersesMemorized = 0;
+        $currentStreak = 0;
+        
         if ($user) {
             $user->load('profile');
             
             // Calculate total points
-            $totalPoints = 0;
             if ($user->profile && $user->profile->total_points) {
                 $totalPoints = (int) $user->profile->total_points;
             } else {
@@ -53,12 +56,10 @@ class HandleInertiaRequests extends Middleware
                 }
             }
             
-            // Add computed properties to user object
-            $user->total_points = $totalPoints;
-            $user->total_verses_memorized = $user->getTotalMemorizedVerses() ?? 0;
+            // Calculate total verses memorized
+            $totalVersesMemorized = $user->getTotalMemorizedVerses() ?? 0;
             
             // Calculate streak (simplified for sidebar - cache to avoid performance issues)
-            $currentStreak = 0;
             for ($i = 0; $i < 365; $i++) {
                 $dateToCheck = now()->startOfDay()->subDays($i);
                 $hasActivity = false;
@@ -84,7 +85,6 @@ class HandleInertiaRequests extends Middleware
                     if ($currentStreak > 0) break;
                 }
             }
-            $user->current_streak = $currentStreak;
         }
         
         return [
@@ -94,9 +94,9 @@ class HandleInertiaRequests extends Middleware
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'total_points' => $user->total_points ?? 0,
-                    'total_verses_memorized' => $user->total_verses_memorized ?? 0,
-                    'current_streak' => $user->current_streak ?? 0,
+                    'total_points' => $totalPoints,
+                    'total_verses_memorized' => $totalVersesMemorized,
+                    'current_streak' => $currentStreak,
                 ] : null,
             ],
             'flash' => [

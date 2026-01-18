@@ -1,21 +1,40 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { Mail, Lock, ArrowLeft, Send } from 'lucide-react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import Button from '@/Components/UI/Button';
 import Input from '@/Components/UI/Input';
 
-export default function Login() {
+export default function Login({ flash }) {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
         remember: false,
     });
+    
+    const [resending, setResending] = useState(false);
+    const isVerificationError = errors.email && errors.email.includes('التحقق من بريدك الإلكتروني');
 
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/login', {
             preserveScroll: true,
+        });
+    };
+
+    const handleResendVerification = (e) => {
+        e.preventDefault();
+        if (!data.email) {
+            return;
+        }
+        
+        setResending(true);
+        router.post('/resend-verification', {
+            email: data.email
+        }, {
+            preserveScroll: true,
+            onFinish: () => setResending(false),
         });
     };
 
@@ -44,6 +63,34 @@ export default function Login() {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Success Message */}
+                    {flash?.success && (
+                        <div className="p-4 bg-success/10 border border-success/20 rounded-xl text-success text-sm">
+                            {flash.success}
+                        </div>
+                    )}
+
+                    {/* Verification Error Message */}
+                    {isVerificationError && (
+                        <div className="p-4 bg-warning/10 border border-warning/20 rounded-xl">
+                            <p className="text-warning text-sm mb-3">
+                                {errors.email}
+                            </p>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                icon={Send}
+                                onClick={handleResendVerification}
+                                loading={resending}
+                                disabled={!data.email || resending}
+                                className="w-full sm:w-auto"
+                            >
+                                {resending ? 'جاري الإرسال...' : 'إعادة إرسال رابط التحقق'}
+                            </Button>
+                        </div>
+                    )}
+
                     <Input
                         label="البريد الإلكتروني"
                         type="email"
@@ -51,7 +98,7 @@ export default function Login() {
                         placeholder="example@email.com"
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        error={errors.email}
+                        error={errors.email && !isVerificationError ? errors.email : undefined}
                         dir="ltr"
                     />
 

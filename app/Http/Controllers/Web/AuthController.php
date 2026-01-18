@@ -201,6 +201,37 @@ class AuthController extends Controller
         }
     }
 
+    public function resendVerificationEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+
+        if (!$user) {
+            return back()->withErrors([
+                'email' => 'البريد الإلكتروني غير موجود.',
+            ])->onlyInput('email');
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return back()->withErrors([
+                'email' => 'تم التحقق من البريد الإلكتروني بالفعل.',
+            ])->onlyInput('email');
+        }
+
+        try {
+            $user->sendEmailVerificationNotification();
+            
+            return back()->with('success', 'تم إرسال رابط التحقق بنجاح. يرجى التحقق من بريدك الإلكتروني.');
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'email' => 'حدث خطأ أثناء إرسال رابط التحقق. يرجى المحاولة مرة أخرى.',
+            ])->onlyInput('email');
+        }
+    }
+
     public function logout(Request $request)
     {
         Auth::guard('web')->logout();
