@@ -250,6 +250,10 @@ Route::prefix('app')->middleware(['auth:web'])->group(function () {
     // Quran Browser
     Route::get('quran', [\App\Http\Controllers\Web\QuranController::class, 'index'])->name('user.quran');
     Route::get('quran/chapter/{chapter}', [\App\Http\Controllers\Web\QuranController::class, 'chapter'])->name('user.quran.chapter');
+    Route::get('quran/juz/{juz}', [\App\Http\Controllers\Web\QuranController::class, 'juz'])->name('user.quran.juz');
+    Route::get('quran/verse/{verse}/tafsir', [\App\Http\Controllers\Web\QuranController::class, 'tafsir'])->name('user.quran.tafsir');
+    Route::post('quran/verse/{verse}/note', [\App\Http\Controllers\Web\QuranController::class, 'saveNote'])->name('user.quran.save-note');
+    Route::delete('quran/verse/{verse}/note', [\App\Http\Controllers\Web\QuranController::class, 'deleteNote'])->name('user.quran.delete-note');
     
     // Achievements & Gamification
     Route::get('achievements', [\App\Http\Controllers\Web\AchievementController::class, 'index'])->name('user.achievements');
