@@ -27,20 +27,21 @@ class AuthController extends Controller
         // Use web guard (session) for web authentication
         if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
             $user = Auth::guard('web')->user();
-            
+
             // Check if email is verified
             if (!$user->hasVerifiedEmail()) {
+                // Log the user back out but keep the existing session / CSRF token
+                // so that follow-up actions like "resend verification email" can work
                 Auth::guard('web')->logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                
+                $request->session()->regenerate();
+
                 return back()->withErrors([
                     'email' => 'يرجى التحقق من بريدك الإلكتروني قبل تسجيل الدخول.',
                 ])->onlyInput('email');
             }
-            
+
             $request->session()->regenerate();
-            
+
             return redirect()->intended('/app/dashboard');
         }
 

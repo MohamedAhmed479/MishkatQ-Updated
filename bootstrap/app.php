@@ -59,6 +59,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ->at('00:00');
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        // Exclude resend-verification from CSRF protection as a fallback
+        // (useForm should handle CSRF automatically, but this ensures it works)
+        $middleware->validateCsrfTokens(except: [
+            'resend-verification',
+        ]);
+        
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

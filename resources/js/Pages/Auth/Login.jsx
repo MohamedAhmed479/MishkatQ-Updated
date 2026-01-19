@@ -12,9 +12,14 @@ export default function Login({ flash }) {
         password: '',
         remember: false,
     });
-    
+
     const [resending, setResending] = useState(false);
     const isVerificationError = errors.email && errors.email.includes('التحقق من بريدك الإلكتروني');
+
+    // Separate form for resend verification to handle CSRF properly
+    const resendForm = useForm({
+        email: '',
+    });
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -28,11 +33,10 @@ export default function Login({ flash }) {
         if (!data.email) {
             return;
         }
-        
+
         setResending(true);
-        router.post('/resend-verification', {
-            email: data.email
-        }, {
+        resendForm.setData('email', data.email);
+        resendForm.post('/resend-verification', {
             preserveScroll: true,
             onFinish: () => setResending(false),
         });
