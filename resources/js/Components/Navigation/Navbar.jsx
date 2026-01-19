@@ -78,7 +78,7 @@ export default function Navbar({ user, onMenuClick }) {
                         </button>
                     )}
 
-                    <Link href="/" className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 cursor-default select-none">
                         <motion.img
                             src="/images/logo.svg"
                             alt="مشكاة"
@@ -89,7 +89,7 @@ export default function Navbar({ user, onMenuClick }) {
                         <span className="text-xl font-bold text-primary-700 dark:text-primary-400 hidden sm:block">
                             مشكاة
                         </span>
-                    </Link>
+                    </div>
                 </div>
 
                 {/* Left Side - Actions */}

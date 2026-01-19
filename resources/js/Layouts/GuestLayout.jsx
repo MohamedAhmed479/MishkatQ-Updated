@@ -33,7 +33,7 @@ function GuestLayoutContent({ children, title }) {
 
             {/* Header */}
             <header className="relative z-10 p-4 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-3">
+                <div className="flex items-center gap-3 cursor-default select-none">
                     <motion.img
                         src="/images/logo.svg"
                         alt="مشكاة"
@@ -41,7 +41,7 @@ function GuestLayoutContent({ children, title }) {
                         whileHover={{ rotate: 10 }}
                     />
                     <span className="text-xl font-bold text-white">مشكاة</span>
-                </Link>
+                </div>
 
                 <motion.button
                     onClick={toggleTheme}
