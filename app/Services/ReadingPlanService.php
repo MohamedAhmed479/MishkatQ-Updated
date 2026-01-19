@@ -161,10 +161,26 @@ class ReadingPlanService
             $endPage = $data['end_page'] ?? ($startPage + $plan->pages_per_day - 1);
             $endPage = min($endPage, $plan->end_page);
             
-            $pagesRead = $endPage - $startPage + 1;
-            $dailyTargetMet = $pagesRead >= $plan->pages_per_day;
+            $pagesReadThisCall = max(0, $endPage - $startPage + 1);
 
-            // Create or update today's progress
+            // If there is already progress for today, accumulate pages instead of overwriting
+            $existingProgress = ReadingProgress::where('reading_plan_id', $plan->id)
+                ->whereDate('date', today())
+                ->first();
+
+            $totalPagesReadToday = $pagesReadThisCall;
+            $combinedStartPage = $startPage;
+            $combinedEndPage = $endPage;
+
+            if ($existingProgress) {
+                $totalPagesReadToday += (int) $existingProgress->pages_read;
+                $combinedStartPage = min($existingProgress->start_page ?? $startPage, $startPage);
+                $combinedEndPage = max($existingProgress->end_page ?? $endPage, $endPage);
+            }
+
+            $dailyTargetMet = $totalPagesReadToday >= $plan->pages_per_day;
+
+            // Create or update today's progress (cumulative)
             $progress = ReadingProgress::updateOrCreate(
                 [
                     'reading_plan_id' => $plan->id,
@@ -172,9 +188,9 @@ class ReadingPlanService
                 ],
                 [
                     'user_id' => $plan->user_id,
-                    'pages_read' => $pagesRead,
-                    'start_page' => $startPage,
-                    'end_page' => $endPage,
+                    'pages_read' => $totalPagesReadToday,
+                    'start_page' => $combinedStartPage,
+                    'end_page' => $combinedEndPage,
                     'reading_mode' => $data['reading_mode'] ?? $plan->reading_mode,
                     'duration_minutes' => $data['duration_minutes'] ?? null,
                     'daily_target_met' => $dailyTargetMet,

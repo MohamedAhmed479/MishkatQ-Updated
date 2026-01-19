@@ -37,7 +37,8 @@ export default function Dashboard({
     pendingRevisionsCount,
     stats,
     recentBadges,
-    weeklyActivity
+    weeklyActivity,
+    readingSummary,
 }) {
     return (
         <MainLayout title="الرئيسية">
@@ -216,6 +217,92 @@ export default function Dashboard({
                         </Card>
                     </motion.div>
                 </div>
+
+                {/* Daily Reading (Wird) */}
+                <motion.div variants={itemVariants}>
+                    <Card>
+                        <CardHeader className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                    <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div>
+                                    <h2 className="font-bold text-text-primary dark:text-text-dark-primary">
+                                        ورد القراءة اليومي
+                                    </h2>
+                                    <p className="text-xs text-text-muted dark:text-text-dark-muted mt-0.5">
+                                        متابعة ختمة القرآن بالقراءة
+                                    </p>
+                                </div>
+                            </div>
+                            {readingSummary && (
+                                <span className={`text-xs px-2 py-1 rounded-lg ${
+                                    readingSummary.has_read_today
+                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                }`}>
+                                    {readingSummary.has_read_today ? 'تم إتمام ورد اليوم 🎉' : 'لم تُكمل ورد اليوم بعد'}
+                                </span>
+                            )}
+                        </CardHeader>
+                        <CardContent>
+                            {readingSummary ? (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between bg-surface-100 dark:bg-dark-300 rounded-xl p-4">
+                                        <div>
+                                            <p className="text-sm text-text-muted dark:text-text-dark-muted">
+                                                خطة القراءة
+                                            </p>
+                                            <p className="text-lg font-bold text-text-primary dark:text-text-dark-primary">
+                                                {readingSummary.name}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm text-text-muted dark:text-text-dark-muted">
+                                                ورد اليوم
+                                            </p>
+                                            <p className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                                                صفحة {readingSummary.start_page} - {readingSummary.end_page}
+                                            </p>
+                                            <p className="text-xs text-text-muted dark:text-text-dark-muted mt-1">
+                                                {readingSummary.pages_count} صفحة
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <Link href={`/app/reading/experience/${readingSummary.plan_id}`}>
+                                            <Button className="w-full" icon={Play}>
+                                                {readingSummary.has_read_today ? 'تابع القراءة' : 'ابدأ قراءة الورد'}
+                                            </Button>
+                                        </Link>
+                                        <Link href="/app/reading">
+                                            <Button variant="outline" className="w-full">
+                                                إدارة خطة القراءة
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-6">
+                                    <div className="w-16 h-16 mx-auto mb-4 bg-surface-200 dark:bg-dark-300 rounded-full flex items-center justify-center">
+                                        <BookOpen className="w-8 h-8 text-text-muted" />
+                                    </div>
+                                    <p className="text-text-primary dark:text-text-dark-primary font-medium">
+                                        لا توجد خطة قراءة نشطة
+                                    </p>
+                                    <p className="text-sm text-text-muted dark:text-text-dark-muted mt-1 mb-4">
+                                        أنشئ خطة ورد يومي للبدء في ختم القرآن
+                                    </p>
+                                    <Link href="/app/reading">
+                                        <Button variant="outline" icon={Plus}>
+                                            الانتقال إلى ورد القراءة
+                                        </Button>
+                                    </Link>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </motion.div>
 
                 {/* Weekly Activity Heatmap */}
                 <motion.div variants={itemVariants}>

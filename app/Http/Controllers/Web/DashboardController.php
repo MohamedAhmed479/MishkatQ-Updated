@@ -7,6 +7,7 @@ use App\Repositories\Interfaces\MemorizationPlanInterface;
 use App\Repositories\Interfaces\SpacedRepetitionInterface;
 use App\Services\AnalyticsService;
 use App\Services\IncentiveService;
+use App\Models\ReadingPlan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -59,6 +60,29 @@ class DashboardController extends Controller
         // Get weekly activity
         $weeklyActivity = $this->getWeeklyActivity($user);
         
+        // Reading plan summary (daily wird)
+        $readingSummary = null;
+        $activeReadingPlan = ReadingPlan::where('user_id', $user->id)
+            ->where('status', ReadingPlan::STATUS_ACTIVE)
+            ->first();
+
+        if ($activeReadingPlan) {
+            $dailyWird = $activeReadingPlan->getDailyWird();
+            $todayReadingProgress = $activeReadingPlan->todayProgress();
+            $startPage = $dailyWird['start_page'] ?? $activeReadingPlan->current_page;
+            $endPage = $dailyWird['end_page'] ?? $startPage;
+            $pagesCount = $dailyWird['pages_count'] ?? max(1, $endPage - $startPage + 1);
+
+            $readingSummary = [
+                'plan_id' => $activeReadingPlan->id,
+                'name' => $activeReadingPlan->name,
+                'start_page' => $startPage,
+                'end_page' => $endPage,
+                'pages_count' => $pagesCount,
+                'has_read_today' => (bool) $todayReadingProgress,
+            ];
+        }
+        
         // Calculate plan progress percentage dynamically
         $planProgress = 0;
         if ($activePlan) {
@@ -92,6 +116,7 @@ class DashboardController extends Controller
                 'icon' => $badge->icon,
             ]),
             'weeklyActivity' => $weeklyActivity,
+            'readingSummary' => $readingSummary,
         ]);
     }
     
