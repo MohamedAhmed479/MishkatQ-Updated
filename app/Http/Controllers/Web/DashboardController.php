@@ -7,8 +7,14 @@ use App\Repositories\Interfaces\MemorizationPlanInterface;
 use App\Repositories\Interfaces\SpacedRepetitionInterface;
 use App\Services\AnalyticsService;
 use App\Services\IncentiveService;
+use App\Services\QuranService;
 use App\Models\ReadingPlan;
+use App\Models\ReviewRecord;
+use App\Models\PlanItem;
+use App\Models\Verse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -17,7 +23,8 @@ class DashboardController extends Controller
         private MemorizationPlanInterface $planRepository,
         private SpacedRepetitionInterface $spacedRepetitionRepository,
         private AnalyticsService $analyticsService,
-        private IncentiveService $incentiveService
+        private IncentiveService $incentiveService,
+        private QuranService $quranService
     ) {}
 
     public function index(Request $request)
@@ -91,6 +98,9 @@ class DashboardController extends Controller
             $planProgress = $totalItems > 0 ? round(($completedItems / $totalItems) * 100, 2) : 0;
         }
         
+        // Get Aya of the Day (cached for 24 hours to be consistent for all users on the same day)
+        $ayaOfTheDay = $this->getAyaOfTheDay();
+        
         return Inertia::render('Dashboard/Index', [
             'activePlan' => $activePlan ? [
                 'id' => $activePlan->id,
@@ -106,7 +116,8 @@ class DashboardController extends Controller
                 'chapter_name' => $todayItem->quranSurah?->name_ar,
                 'start_verse' => $todayItem->verseStart?->verse_number,
                 'end_verse' => $todayItem->verseEnd?->verse_number,
-                'word_count' => 0, // Will be calculated on frontend or can be calculated here if needed
+                'word_count' => $todayItem->getWordCount(),
+                'verses_count' => $todayItem->getVersesCount(),
             ] : null,
             'pendingRevisionsCount' => $pendingRevisionsCount,
             'stats' => $userStats,
@@ -117,83 +128,36 @@ class DashboardController extends Controller
             ]),
             'weeklyActivity' => $weeklyActivity,
             'readingSummary' => $readingSummary,
+            'ayaOfTheDay' => $ayaOfTheDay,
         ]);
     }
     
     private function getUserStats($user): array
     {
-        // Calculate current streak - simple: count consecutive days with activity from most recent
-        $currentStreak = 0;
-        $lastActiveDate = null;
+        // Use pre-calculated streak from user profile (optimized)
+        $streakInfo = $user->getStreakInfo();
+        $currentStreak = $streakInfo['current_streak'];
         
-        // Find the most recent day with activity (today or before)
-        for ($i = 0; $i < 365; $i++) {
-            $dateToCheck = now()->startOfDay()->subDays($i);
-            $hasActivity = false;
+        // Check if streak needs to be reset (user missed a day)
+        if ($user->profile && $user->profile->last_activity_date) {
+            $lastActivity = Carbon::parse($user->profile->last_activity_date)->startOfDay();
+            $today = now()->startOfDay();
+            $daysDiff = $today->diffInDays($lastActivity);
             
-            // Check plan items completion
-            $hasActivity = $user->memorizationPlans()
-                ->whereHas('planItems', function ($query) use ($dateToCheck) {
-                    $query->where('is_completed', true)
-                        ->whereDate('updated_at', $dateToCheck->toDateString());
-                })
-                ->exists();
-            
-            // Check review records via spaced repetitions
-            if (!$hasActivity) {
-                $hasActivity = \App\Models\ReviewRecord::whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                })
-                ->whereDate('review_date', $dateToCheck->toDateString())
-                ->exists();
-            }
-            
-            if ($hasActivity) {
-                if ($lastActiveDate === null) {
-                    $lastActiveDate = $dateToCheck; // First active day found (most recent)
-                }
-                $currentStreak++;
-            } else {
-                // If we've started counting (found an active day), and now found a gap, stop
-                if ($lastActiveDate !== null) {
-                    break;
-                }
+            // If more than 1 day passed without activity, reset streak
+            if ($daysDiff > 1) {
+                $currentStreak = 0;
+                $user->profile->update(['current_streak' => 0]);
             }
         }
         
-        // Get total points - always calculate from transactions first as source of truth
-        // Then sync with profile if needed
-        $totalPointsFromTransactions = (int) $user->pointsTransactions()->sum('points');
-        
-        // Use profile total_points if it exists and matches or is close
-        // Otherwise, use transactions sum and update profile
-        if ($user->profile) {
-            $profilePoints = (int) ($user->profile->total_points ?? 0);
-            
-            // If transactions show points but profile doesn't, update profile
-            if ($totalPointsFromTransactions > 0 && $profilePoints == 0) {
-                $user->profile->update(['total_points' => $totalPointsFromTransactions]);
-                $totalPoints = $totalPointsFromTransactions;
-            } elseif ($profilePoints > 0) {
-                // Use profile if it has points (it should be synced, but prefer transactions if they differ significantly)
-                $totalPoints = max($profilePoints, $totalPointsFromTransactions);
-                
-                // If transactions are higher, update profile
-                if ($totalPointsFromTransactions > $profilePoints) {
-                    $user->profile->update(['total_points' => $totalPointsFromTransactions]);
-                    $totalPoints = $totalPointsFromTransactions;
-                }
-            } else {
-                $totalPoints = $totalPointsFromTransactions;
-            }
-        } else {
-            // No profile exists, use transactions
-            $totalPoints = $totalPointsFromTransactions;
-        }
+        // Get total points from profile (already synced by IncentiveService)
+        $totalPoints = $user->profile ? (int) ($user->profile->total_points ?? 0) : 0;
         
         return [
             'total_points' => $totalPoints,
             'current_streak' => $currentStreak,
+            'best_streak' => $streakInfo['best_streak'],
             'total_verses_memorized' => $user->getTotalMemorizedVerses() ?? 0,
             'badges_count' => $user->badges()->count(),
         ];
@@ -201,38 +165,100 @@ class DashboardController extends Controller
 
     private function getWeeklyActivity($user): array
     {
+        $startDate = now()->subDays(6)->startOfDay();
+        $endDate = now()->endOfDay();
+        
+        // Get all plan item completions in the last 7 days (single query)
+        $planCompletionDates = PlanItem::whereHas('memorizationPlan', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->where('is_completed', true)
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->selectRaw('DATE(updated_at) as activity_date')
+        ->distinct()
+        ->pluck('activity_date')
+        ->map(fn($date) => Carbon::parse($date)->toDateString())
+        ->toArray();
+        
+        // Get all review dates in the last 7 days (single query)
+        $reviewDates = ReviewRecord::whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->whereBetween('review_date', [$startDate, $endDate])
+        ->selectRaw('DATE(review_date) as activity_date')
+        ->distinct()
+        ->pluck('activity_date')
+        ->map(fn($date) => Carbon::parse($date)->toDateString())
+        ->toArray();
+        
+        // Get reading progress dates (single query)
+        $readingDates = $user->readingProgress()
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->pluck('date')
+            ->map(fn($date) => Carbon::parse($date)->toDateString())
+            ->toArray();
+        
+        // Merge all activity dates
+        $activeDates = array_unique(array_merge($planCompletionDates, $reviewDates, $readingDates));
+        
+        // Build the weekly activity array
         $days = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
+            $dateString = $date->toDateString();
             $dayName = $date->locale('ar')->dayName;
             
-            // Check if user had any activity on this day
-            $hasActivity = false;
-            
-            // Check plan items completion
-            $hasActivity = $user->memorizationPlans()
-                ->whereHas('planItems', function ($query) use ($date) {
-                    $query->where('is_completed', true)
-                        ->whereDate('updated_at', $date->toDateString());
-                })
-                ->exists();
-            
-            // Check review records via spaced repetitions
-            if (!$hasActivity) {
-                $hasActivity = \App\Models\ReviewRecord::whereHas('spacedRepetition.planItem.memorizationPlan', function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                })
-                ->whereDate('review_date', $date->toDateString())
-                ->exists();
-            }
-            
             $days[] = [
-                'date' => $date->toDateString(),
+                'date' => $dateString,
                 'day' => $dayName,
-                'active' => $hasActivity,
+                'active' => in_array($dateString, $activeDates),
             ];
         }
         
         return $days;
+    }
+
+    /**
+     * Get Aya of the Day - consistent for all users on the same day
+     */
+    private function getAyaOfTheDay(): ?array
+    {
+        $cacheKey = 'aya_of_the_day_' . now()->toDateString();
+        
+        return Cache::remember($cacheKey, now()->endOfDay(), function () {
+            // Use the day of year as a seed to get the same verse for everyone on the same day
+            $dayOfYear = now()->dayOfYear;
+            $totalVerses = Verse::count();
+            
+            if ($totalVerses === 0) {
+                return null;
+            }
+            
+            // Deterministic "random" verse based on day
+            $verseIndex = ($dayOfYear * 17) % $totalVerses; // Use prime number for better distribution
+            
+            $verse = Verse::with('chapter')
+                ->skip($verseIndex)
+                ->first();
+            
+            if (!$verse) {
+                // Fallback to a well-known verse (Ayat Al-Kursi)
+                $verse = Verse::where('chapter_id', 2)->where('verse_number', 255)->with('chapter')->first();
+            }
+            
+            if (!$verse) {
+                return null;
+            }
+            
+            return [
+                'id' => $verse->id,
+                'verse_key' => $verse->verse_key ?? "{$verse->chapter_id}:{$verse->verse_number}",
+                'text' => $verse->text_uthmani,
+                'chapter_name_ar' => $verse->chapter?->name_ar,
+                'chapter_name_en' => $verse->chapter?->name_en,
+                'verse_number' => $verse->verse_number,
+                'chapter_id' => $verse->chapter_id,
+            ];
+        });
     }
 }

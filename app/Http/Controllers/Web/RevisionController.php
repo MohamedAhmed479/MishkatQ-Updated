@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reciter;
+use App\Models\ReviewRecord;
 use App\Models\SpacedRepetition;
 use App\Models\Verse;
 use App\Repositories\Interfaces\SpacedRepetitionInterface;
 use App\Services\FSRSService;
+use App\Services\IncentiveService;
 use App\Services\MemorizationReviewService;
 use App\Services\SpacedRepetitionService;
 use App\Traits\AyaTafsirTrait;
@@ -24,7 +26,8 @@ class RevisionController extends Controller
         private SpacedRepetitionInterface $spacedRepetitionRepository,
         private FSRSService $fsrsService,
         private SpacedRepetitionService $spacedRepetitionService,
-        private MemorizationReviewService $memorizationReviewService
+        private MemorizationReviewService $memorizationReviewService,
+        private IncentiveService $incentiveService
     ) {}
 
     public function index(Request $request)
@@ -207,7 +210,7 @@ class RevisionController extends Controller
 
             // Create review record
             $successful = $performanceRating >= 3;
-            \App\Models\ReviewRecord::create([
+            $reviewRecord = ReviewRecord::create([
                 'spaced_repetition_id' => $revision->id,
                 'performance_rating' => $performanceRating,
                 'review_date' => Carbon::now(),
@@ -222,6 +225,14 @@ class RevisionController extends Controller
                 'scheduled_date' => $fsrsResult['scheduled_date'],
                 'interval_index' => $revision->interval_index + 1,
             ]);
+
+            // Award points for the review
+            $revision->load('planItem.memorizationPlan.user');
+            $user = $revision->planItem?->memorizationPlan?->user;
+            
+            if ($user) {
+                $this->incentiveService->awardReviewPoints($user, $reviewRecord);
+            }
 
             DB::commit();
 

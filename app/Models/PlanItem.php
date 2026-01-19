@@ -73,4 +73,32 @@ class PlanItem extends Model
 
         return "{$surahName} ({$startVerseNumber}-{$endVerseNumber})";
     }
+
+    /**
+     * Get the word count for this plan item
+     */
+    public function getWordCount(): int
+    {
+        $verses = Verse::where('chapter_id', $this->quran_surah_id)
+            ->where('id', '>=', $this->verse_start_id)
+            ->where('id', '<=', $this->verse_end_id)
+            ->get();
+
+        return $verses->sum(function ($verse) {
+            $text = $verse->text_imlaei ?? $verse->text_uthmani;
+            // Count Arabic words (split by spaces)
+            return count(preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY));
+        });
+    }
+
+    /**
+     * Get the number of verses in this plan item
+     */
+    public function getVersesCount(): int
+    {
+        return Verse::where('chapter_id', $this->quran_surah_id)
+            ->where('id', '>=', $this->verse_start_id)
+            ->where('id', '<=', $this->verse_end_id)
+            ->count();
+    }
 }

@@ -10,9 +10,9 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-    { name: 'الرئيسية', href: '/app/dashboard', icon: Home },
     { name: 'الورد', href: '/app/reading', icon: BookMarked },
     { name: 'المراجعات', href: '/app/revisions', icon: RefreshCw },
+    { name: 'الرئيسية', href: '/app/dashboard', icon: Home, isCenter: true },
     { name: 'الإنجازات', href: '/app/achievements', icon: Trophy },
     { name: 'حسابي', href: '/app/settings', icon: User },
 ];
@@ -28,34 +28,60 @@ export default function BottomNav({ user }) {
                 {navItems.map((item) => {
                     const isActive = url.startsWith(item.href);
                     const Icon = item.icon;
+                    const isCenter = item.isCenter || false;
 
                     return (
                         <Link
                             key={item.name}
                             href={item.href}
-                            className="relative flex flex-col items-center gap-1 py-2 px-3"
+                            className={`relative flex flex-col items-center gap-1 py-2 px-3 ${isCenter ? 'flex-1 max-w-[80px]' : ''}`}
                         >
-                            {isActive && (
+                            {isActive && !isCenter && (
                                 <motion.div
                                     layoutId="bottomNavIndicator"
                                     className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary-500 rounded-full"
                                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                 />
                             )}
-                            <Icon
-                                className={`w-5 h-5 transition-colors ${isActive
-                                    ? 'text-primary-600 dark:text-primary-400'
-                                    : 'text-text-muted dark:text-text-dark-muted'
-                                    }`}
-                            />
-                            <span
-                                className={`text-xs transition-colors ${isActive
-                                    ? 'text-primary-600 dark:text-primary-400 font-medium'
-                                    : 'text-text-muted dark:text-text-dark-muted'
-                                    }`}
-                            >
-                                {item.name}
-                            </span>
+                            {isCenter ? (
+                                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                                    isActive 
+                                        ? 'bg-primary-500 dark:bg-primary-600 shadow-lg shadow-primary-500/30' 
+                                        : 'bg-surface-200 dark:bg-dark-300'
+                                }`}>
+                                    <Icon
+                                        className={`w-6 h-6 transition-colors ${
+                                            isActive
+                                                ? 'text-white'
+                                                : 'text-text-muted dark:text-text-dark-muted'
+                                        }`}
+                                    />
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="centerNavIndicator"
+                                            className="absolute inset-0 rounded-full border-2 border-primary-400 dark:border-primary-500"
+                                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <Icon
+                                    className={`w-5 h-5 transition-colors ${isActive
+                                        ? 'text-primary-600 dark:text-primary-400'
+                                        : 'text-text-muted dark:text-text-dark-muted'
+                                        }`}
+                                />
+                            )}
+                            {!isCenter && (
+                                <span
+                                    className={`text-xs transition-colors ${isActive
+                                        ? 'text-primary-600 dark:text-primary-400 font-medium'
+                                        : 'text-text-muted dark:text-text-dark-muted'
+                                        }`}
+                                >
+                                    {item.name}
+                                </span>
+                            )}
                         </Link>
                     );
                 })}

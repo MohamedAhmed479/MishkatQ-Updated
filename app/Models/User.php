@@ -223,4 +223,85 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $this->notify(new CustomResetPassword($code));
     }
+
+    /**
+     * Update the global streak for all user activities (memorization, revision, reading).
+     * This method should be called whenever the user performs any tracked activity.
+     *
+     * @return array Returns the updated streak information
+     */
+    public function updateGlobalStreak(): array
+    {
+        $profile = $this->profile;
+        
+        if (!$profile) {
+            return [
+                'current_streak' => 0,
+                'best_streak' => 0,
+                'streak_increased' => false,
+            ];
+        }
+
+        $today = now()->startOfDay();
+        $lastActivityDate = $profile->last_activity_date;
+        
+        $streakIncreased = false;
+        $currentStreak = $profile->current_streak ?? 0;
+        $bestStreak = $profile->best_streak ?? 0;
+
+        if ($lastActivityDate) {
+            $lastActivity = \Carbon\Carbon::parse($lastActivityDate)->startOfDay();
+            $daysDiff = $today->diffInDays($lastActivity);
+
+            if ($daysDiff === 0) {
+                // Already active today, no change needed
+            } elseif ($daysDiff === 1) {
+                // Consecutive day - increase streak
+                $currentStreak++;
+                $streakIncreased = true;
+            } else {
+                // Streak broken - reset to 1
+                $currentStreak = 1;
+                $streakIncreased = true;
+            }
+        } else {
+            // First activity ever
+            $currentStreak = 1;
+            $streakIncreased = true;
+        }
+
+        // Update best streak if current exceeds it
+        if ($currentStreak > $bestStreak) {
+            $bestStreak = $currentStreak;
+        }
+
+        // Update profile
+        $profile->update([
+            'current_streak' => $currentStreak,
+            'best_streak' => $bestStreak,
+            'last_activity_date' => $today,
+        ]);
+
+        return [
+            'current_streak' => $currentStreak,
+            'best_streak' => $bestStreak,
+            'streak_increased' => $streakIncreased,
+        ];
+    }
+
+    /**
+     * Get current streak info without updating
+     */
+    public function getStreakInfo(): array
+    {
+        if (!$this->profile) {
+            return [
+                'current_streak' => 0,
+                'best_streak' => 0,
+                'is_active_today' => false,
+            ];
+        }
+
+        return $this->profile->getStreakInfo();
+    }
 }

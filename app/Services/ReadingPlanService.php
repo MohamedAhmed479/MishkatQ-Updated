@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 class ReadingPlanService
 {
+    protected ?IncentiveService $incentiveService = null;
+
+    public function __construct(?IncentiveService $incentiveService = null)
+    {
+        $this->incentiveService = $incentiveService;
+    }
+
     /**
      * Total pages in the Quran
      */
@@ -214,6 +221,30 @@ class ReadingPlanService
 
             $plan->update($planUpdates);
             $plan->refresh();
+
+            // Award points for reading progress
+            $user = User::find($plan->user_id);
+            if ($user && $this->incentiveService) {
+                $pointsToAward = $this->calculateReadingPoints($pagesReadThisCall, $dailyTargetMet);
+                $this->incentiveService->awardPoints(
+                    $user,
+                    $pointsToAward,
+                    'reading_progress',
+                    "قراءة {$pagesReadThisCall} صفحات من القرآن الكريم",
+                    $progress
+                );
+
+                // Extra bonus for completing a Hatmah
+                if ($plan->isCompleted()) {
+                    $this->incentiveService->awardPoints(
+                        $user,
+                        200,
+                        'hatmah_completed',
+                        'إتمام ختمة القرآن الكريم 🎉',
+                        $plan
+                    );
+                }
+            }
 
             return ApiResponse::success([
                 'progress' => $progress,
@@ -433,6 +464,22 @@ class ReadingPlanService
             'reading_history' => $readingHistory,
             'active_plan' => $activePlan ? $this->formatPlanResponse($activePlan) : null,
         ]);
+    }
+
+    /**
+     * Calculate points for reading progress
+     */
+    protected function calculateReadingPoints(int $pagesRead, bool $dailyTargetMet): int
+    {
+        // Base: 2 points per page read
+        $basePoints = $pagesRead * 2;
+        
+        // Bonus for meeting daily target
+        if ($dailyTargetMet) {
+            $basePoints += 10;
+        }
+
+        return $basePoints;
     }
 
     /**

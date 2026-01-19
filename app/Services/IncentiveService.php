@@ -134,6 +134,61 @@ class IncentiveService
         $this->userRepo->updateTotalPoints($user, $newPoints);
 
         $this->checkPointsMilestones($user, $oldPoints, $newPoints);
+
+        // Update global streak for any activity that awards points
+        $streakInfo = $user->updateGlobalStreak();
+        
+        // Award streak bonus points for milestones
+        if ($streakInfo['streak_increased']) {
+            $this->checkStreakMilestones($user, $streakInfo['current_streak']);
+        }
+    }
+
+    /**
+     * Check and award streak milestones
+     */
+    private function checkStreakMilestones(User $user, int $currentStreak): void
+    {
+        $streakMilestones = [7, 14, 30, 60, 90, 180, 365];
+        
+        foreach ($streakMilestones as $milestone) {
+            if ($currentStreak === $milestone) {
+                $bonusPoints = $this->calculateStreakBonus($milestone);
+                
+                // Create transaction for streak bonus (without recursive call)
+                $this->pointsRepo->createTransaction($user, [
+                    'points' => $bonusPoints,
+                    'activity_type' => 'streak_milestone',
+                    'description' => "مكافأة {$milestone} يوم متتالي من النشاط 🔥",
+                    'transactionable_type' => null,
+                    'transactionable_id' => null
+                ]);
+
+                $oldPoints = $user->profile->total_points;
+                $newPoints = $oldPoints + $bonusPoints;
+                $this->userRepo->updateTotalPoints($user, $newPoints);
+
+                $this->notificationService->recordStreakAchievement($user, $milestone);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Calculate streak bonus points based on milestone
+     */
+    private function calculateStreakBonus(int $days): int
+    {
+        return match(true) {
+            $days >= 365 => 500,
+            $days >= 180 => 300,
+            $days >= 90 => 150,
+            $days >= 60 => 100,
+            $days >= 30 => 75,
+            $days >= 14 => 40,
+            $days >= 7 => 25,
+            default => 0
+        };
     }
 
     public function checkAndAwardBadges(User $user): Collection

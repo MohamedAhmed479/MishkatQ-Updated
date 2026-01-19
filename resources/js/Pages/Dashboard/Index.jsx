@@ -10,7 +10,10 @@ import {
     ChevronLeft,
     Play,
     Plus,
-    Target
+    Target,
+    Star,
+    Sparkles,
+    TrendingUp
 } from 'lucide-react';
 import MainLayout from '@/Layouts/MainLayout';
 import Card, { CardContent, CardHeader } from '@/Components/UI/Card';
@@ -39,6 +42,7 @@ export default function Dashboard({
     recentBadges,
     weeklyActivity,
     readingSummary,
+    ayaOfTheDay,
 }) {
     return (
         <MainLayout title="الرئيسية">
@@ -59,6 +63,13 @@ export default function Dashboard({
                         واصل رحلتك في حفظ كتاب الله
                     </p>
                 </motion.div>
+
+                {/* Aya of the Day */}
+                {ayaOfTheDay && (
+                    <motion.div variants={itemVariants}>
+                        <AyaOfTheDay aya={ayaOfTheDay} />
+                    </motion.div>
+                )}
 
                 {/* Stats Grid */}
                 <motion.div
@@ -121,9 +132,14 @@ export default function Dashboard({
                                             <p className="text-text-muted dark:text-text-dark-muted">
                                                 الآيات {todayItem.start_verse} - {todayItem.end_verse}
                                             </p>
-                                            <p className="text-sm text-text-light dark:text-text-dark-muted mt-2">
-                                                {todayItem.word_count} كلمة
-                                            </p>
+                                            <div className="flex items-center gap-4 mt-2">
+                                                <span className="text-sm text-text-light dark:text-text-dark-muted">
+                                                    {todayItem.verses_count || (todayItem.end_verse - todayItem.start_verse + 1)} آية
+                                                </span>
+                                                <span className="text-sm text-text-light dark:text-text-dark-muted">
+                                                    {todayItem.word_count || 0} كلمة
+                                                </span>
+                                            </div>
                                         </div>
                                         <Link href={`/app/session/${todayItem.id}`}>
                                             <Button className="w-full" icon={Play}>
@@ -133,30 +149,35 @@ export default function Dashboard({
                                     </div>
                                 ) : activePlan ? (
                                     <div className="text-center py-6">
-                                        <div className="w-16 h-16 mx-auto mb-4 bg-success/10 rounded-full flex items-center justify-center">
-                                            <Target className="w-8 h-8 text-success" />
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-success/20 to-success/10 rounded-full flex items-center justify-center">
+                                            <Sparkles className="w-8 h-8 text-success" />
                                         </div>
                                         <p className="text-text-primary dark:text-text-dark-primary font-medium">
-                                            أكملت حفظ اليوم! 🎉
+                                            بارك الله فيك! أكملت حفظ اليوم
                                         </p>
                                         <p className="text-sm text-text-muted dark:text-text-dark-muted mt-1">
-                                            لا تنسَ المراجعات
+                                            "خيركم من تعلم القرآن وعلمه"
                                         </p>
+                                        <Link href="/app/revisions" className="mt-4 inline-block">
+                                            <Button variant="outline" size="sm" icon={RefreshCw}>
+                                                راجع محفوظاتك
+                                            </Button>
+                                        </Link>
                                     </div>
                                 ) : (
                                     <div className="text-center py-6">
-                                        <div className="w-16 h-16 mx-auto mb-4 bg-surface-200 dark:bg-dark-300 rounded-full flex items-center justify-center">
-                                            <Plus className="w-8 h-8 text-text-muted" />
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/30 dark:to-primary-900/10 rounded-full flex items-center justify-center">
+                                            <BookOpen className="w-8 h-8 text-primary-500 dark:text-primary-400" />
                                         </div>
                                         <p className="text-text-primary dark:text-text-dark-primary font-medium">
-                                            لا توجد خطة نشطة
+                                            ابدأ رحلتك مع القرآن
                                         </p>
                                         <p className="text-sm text-text-muted dark:text-text-dark-muted mt-1 mb-4">
-                                            أنشئ خطة حفظ جديدة للبدء
+                                            "إن الذي يقرأ القرآن وهو ماهر به مع السفرة الكرام البررة"
                                         </p>
                                         <Link href="/app/plans/create">
-                                            <Button variant="outline" icon={Plus}>
-                                                إنشاء خطة
+                                            <Button icon={Plus}>
+                                                أنشئ خطة حفظ
                                             </Button>
                                         </Link>
                                     </div>
@@ -202,14 +223,14 @@ export default function Dashboard({
                                     </div>
                                 ) : (
                                     <div className="text-center py-6">
-                                        <div className="w-16 h-16 mx-auto mb-4 bg-success/10 rounded-full flex items-center justify-center">
-                                            <RefreshCw className="w-8 h-8 text-success" />
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-accent-100 to-accent-50 dark:from-accent-900/30 dark:to-accent-900/10 rounded-full flex items-center justify-center">
+                                            <Star className="w-8 h-8 text-accent-500 dark:text-accent-400" />
                                         </div>
                                         <p className="text-text-primary dark:text-text-dark-primary font-medium">
-                                            لا توجد مراجعات اليوم
+                                            لا توجد مراجعات مطلوبة
                                         </p>
                                         <p className="text-sm text-text-muted dark:text-text-dark-muted mt-1">
-                                            استمر في الحفظ لإنشاء مراجعات
+                                            تابع الحفظ لتُنشأ مراجعات تلقائية
                                         </p>
                                     </div>
                                 )}
@@ -284,18 +305,18 @@ export default function Dashboard({
                                 </div>
                             ) : (
                                 <div className="text-center py-6">
-                                    <div className="w-16 h-16 mx-auto mb-4 bg-surface-200 dark:bg-dark-300 rounded-full flex items-center justify-center">
-                                        <BookOpen className="w-8 h-8 text-text-muted" />
+                                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-900/10 rounded-full flex items-center justify-center">
+                                        <BookOpen className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
                                     </div>
                                     <p className="text-text-primary dark:text-text-dark-primary font-medium">
-                                        لا توجد خطة قراءة نشطة
+                                        ابدأ ختمة القرآن الكريم
                                     </p>
                                     <p className="text-sm text-text-muted dark:text-text-dark-muted mt-1 mb-4">
-                                        أنشئ خطة ورد يومي للبدء في ختم القرآن
+                                        "اقرأ القرآن فإنه يأتي يوم القيامة شفيعاً لأصحابه"
                                     </p>
                                     <Link href="/app/reading">
                                         <Button variant="outline" icon={Plus}>
-                                            الانتقال إلى ورد القراءة
+                                            أنشئ خطة قراءة
                                         </Button>
                                     </Link>
                                 </div>
@@ -482,9 +503,9 @@ function BadgeDisplay({ badge }) {
 function QuickLinkCard({ href, icon: Icon, label, color }) {
     return (
         <Link href={href}>
-            <Card hover className="p-4 text-center">
+            <Card hover className="p-4 text-center group transition-all duration-200">
                 <div className={`
-                    w-12 h-12 mx-auto mb-2 rounded-xl flex items-center justify-center
+                    w-12 h-12 mx-auto mb-2 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110
                     ${color === 'primary'
                         ? 'bg-primary-100 dark:bg-primary-900/30'
                         : 'bg-accent-100 dark:bg-accent-900/30'
@@ -500,5 +521,73 @@ function QuickLinkCard({ href, icon: Icon, label, color }) {
                 </p>
             </Card>
         </Link>
+    );
+}
+
+/**
+ * Aya of the Day Component - Beautiful display of a daily Quranic verse
+ */
+function AyaOfTheDay({ aya }) {
+    if (!aya) return null;
+
+    return (
+        <Card className="overflow-hidden">
+            {/* Decorative Header */}
+            <div className="bg-gradient-to-r from-primary-600 via-primary-500 to-emerald-500 dark:from-primary-700 dark:via-primary-600 dark:to-emerald-600 px-6 py-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-white font-bold text-lg">آية اليوم</h3>
+                            <p className="text-white/80 text-sm">تدبر وتأمل</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-white/90 text-sm font-medium">
+                            سورة {aya.chapter_name_ar}
+                        </p>
+                        <p className="text-white/70 text-xs">
+                            الآية {aya.verse_number}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Verse Content */}
+            <CardContent className="p-6">
+                <div className="relative">
+                    {/* Decorative Quote Marks */}
+                    <span className="absolute -top-2 -right-2 text-6xl text-primary-100 dark:text-primary-900/30 font-serif leading-none select-none">
+                        ❝
+                    </span>
+                    
+                    {/* Verse Text */}
+                    <p 
+                        className="text-xl md:text-2xl leading-loose text-text-primary dark:text-text-dark-primary text-center font-quran px-4 py-4"
+                        style={{ fontFamily: "'Amiri', 'Scheherazade New', serif" }}
+                        dir="rtl"
+                    >
+                        {aya.text}
+                    </p>
+                    
+                    <span className="absolute -bottom-4 -left-2 text-6xl text-primary-100 dark:text-primary-900/30 font-serif leading-none select-none rotate-180">
+                        ❝
+                    </span>
+                </div>
+                
+                {/* Action Link */}
+                <div className="mt-6 pt-4 border-t border-surface-200 dark:border-dark-300 flex justify-center">
+                    <Link 
+                        href={`/app/quran/chapter/${aya.chapter_id}?verse=${aya.verse_number}`}
+                        className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2 transition-colors"
+                    >
+                        <span>اقرأ في السورة</span>
+                        <ChevronLeft className="w-4 h-4" />
+                    </Link>
+                </div>
+            </CardContent>
+        </Card>
     );
 }
