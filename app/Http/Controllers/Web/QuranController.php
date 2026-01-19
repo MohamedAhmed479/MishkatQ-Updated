@@ -110,6 +110,35 @@ class QuranController extends Controller
         ]);
     }
 
+    public function getNote(Request $request, Verse $verse)
+    {
+        $note = UserVerseNote::where('user_id', Auth::id())
+            ->where('verse_id', $verse->id)
+            ->first();
+
+        return response()->json([
+            'note' => $note?->note,
+            'verse_id' => $verse->id,
+        ]);
+    }
+
+    public function getNotesBatch(Request $request)
+    {
+        $verseIds = $request->input('verse_ids', []);
+        if (!is_array($verseIds) || empty($verseIds)) {
+            return response()->json(['notes' => []]);
+        }
+
+        $notes = UserVerseNote::where('user_id', Auth::id())
+            ->whereIn('verse_id', $verseIds)
+            ->get()
+            ->mapWithKeys(fn ($n) => [$n->verse_id => $n->note]);
+
+        return response()->json([
+            'notes' => $notes,
+        ]);
+    }
+
     protected function renderChapterView($chapter, $verses, $title = null)
     {
         $chapters = Chapter::orderBy('id')->get(['id', 'name_ar']);

@@ -32,11 +32,18 @@ export default function ReadingHub({ activePlan, statistics, suggestions }) {
     const streakInfo = activePlan?.data?.streak_info || {};
     const suggestedPlans = suggestions?.data?.suggestions || [];
 
+    // Derive pages read this week from history when available (fallback if API value is 0)
+    const pagesThisWeek = stats.reading_history?.length
+        ? stats.reading_history
+            .slice(-7)
+            .reduce((sum, day) => sum + (day.total_pages || 0), 0)
+        : (stats.pages_this_week ?? 0);
+
     return (
         <MainLayout title="ورد القراءة">
             <Head title="ورد القراءة - مشكاة" />
 
-            <div className="space-y-6 pb-24">
+            <div className="space-y-6 pb-36">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
@@ -58,10 +65,10 @@ export default function ReadingHub({ activePlan, statistics, suggestions }) {
 
                 {/* Active Plan Card or Create New */}
                 {plan ? (
-                    <ActivePlanCard 
-                        plan={plan} 
-                        dailyWird={dailyWird} 
-                        streakInfo={streakInfo} 
+                    <ActivePlanCard
+                        plan={plan}
+                        dailyWird={dailyWird}
+                        streakInfo={streakInfo}
                     />
                 ) : (
                     <CreatePlanPrompt suggestions={suggestedPlans} />
@@ -86,8 +93,8 @@ export default function ReadingHub({ activePlan, statistics, suggestions }) {
                         />
                         <StatCard
                             icon={Target}
-                            label="صفحات الأسبوع"
-                            value={stats.pages_this_week || 0}
+                            label="صفحات تمت هذا الأسبوع"
+                            value={pagesThisWeek}
                             suffix="صفحة"
                             color="primary"
                         />
@@ -114,8 +121,8 @@ export default function ReadingHub({ activePlan, statistics, suggestions }) {
 
             {/* Floating Action Button */}
             {plan && (
-                <FloatingReadButton 
-                    plan={plan} 
+                <FloatingReadButton
+                    plan={plan}
                     hasReadToday={streakInfo.has_read_today}
                 />
             )}
@@ -128,6 +135,28 @@ function ActivePlanCard({ plan, dailyWird, streakInfo }) {
     const progressPercentage = plan.progress_percentage || 0;
     const circumference = 2 * Math.PI * 45;
     const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
+    const daysRemaining = Number.isFinite(plan.days_remaining) ? plan.days_remaining : null;
+
+    const formatArabicDate = (date) => {
+        try {
+            return new Intl.DateTimeFormat('ar-EG', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            }).format(date);
+        } catch {
+            return date.toLocaleDateString();
+        }
+    };
+
+    const expectedKhatmDate = (() => {
+        if (daysRemaining === null) return null;
+        const d = new Date();
+        d.setHours(12, 0, 0, 0); // avoid DST edge cases
+        d.setDate(d.getDate() + Math.max(0, daysRemaining));
+        return d;
+    })();
 
     return (
         <Card className="overflow-hidden">
@@ -201,6 +230,12 @@ function ActivePlanCard({ plan, dailyWird, streakInfo }) {
                         </div>
                     </div>
                 )}
+
+                {/* Khatm Date Hint */}
+                <div className="mt-3 text-sm text-primary-100">
+                    <span className="font-bold text-white">تاريخ الختم المتوقع:</span>{' '}
+                    {expectedKhatmDate ? formatArabicDate(expectedKhatmDate) : 'غير متاح حالياً'}
+                </div>
 
                 {/* Status Indicators */}
                 <div className="flex items-center gap-4 mt-4 text-sm">
@@ -295,16 +330,16 @@ function ReadingHistoryCard({ history }) {
                     </div>
                     <div>
                         <h2 className="font-bold text-text-primary dark:text-text-dark-primary">
-                            سجل القراءة
+                            سجل القراءة (آخر 14 يوم)
                         </h2>
                         <p className="text-sm text-text-muted dark:text-text-dark-muted">
-                            آخر 30 يوم
+                            كل عمود = عدد الصفحات في اليوم
                         </p>
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="flex items-end gap-1 h-24 overflow-x-auto pb-2">
+                <div className="flex items-end gap-2 h-24 overflow-x-auto pb-2">
                     {history.slice(-14).map((day, index) => {
                         const height = Math.max((day.total_pages / maxPages) * 100, 5);
                         return (
@@ -313,15 +348,15 @@ function ReadingHistoryCard({ history }) {
                                 initial={{ height: 0 }}
                                 animate={{ height: `${height}%` }}
                                 transition={{ delay: index * 0.05 }}
-                                className="flex-1 min-w-[16px] bg-gradient-to-t from-primary-500 to-primary-400 rounded-t-md"
+                                className="w-3 md:w-4 bg-gradient-to-t from-primary-500 to-primary-400 rounded-md"
                                 title={`${day.date}: ${day.total_pages} صفحة`}
                             />
                         );
                     })}
                 </div>
                 <div className="flex justify-between text-xs text-text-muted mt-2">
-                    <span>قبل أسبوعين</span>
-                    <span>اليوم</span>
+                    <span>الأقدم (منذ نحو أسبوعين)</span>
+                    <span>اليوم (الأحدث)</span>
                 </div>
             </CardContent>
         </Card>
@@ -350,11 +385,10 @@ function SuggestionsGrid({ suggestions }) {
                                 <div className="flex flex-col h-full">
                                     <div className="flex items-center justify-between mb-2">
                                         <Zap className="w-5 h-5 text-accent-500" />
-                                        <span className={`text-xs px-2 py-1 rounded-full ${
-                                            suggestion.difficulty === 'صعب جداً' ? 'bg-red-100 text-red-600' :
+                                        <span className={`text-xs px-2 py-1 rounded-full ${suggestion.difficulty === 'صعب جداً' ? 'bg-red-100 text-red-600' :
                                             suggestion.difficulty === 'متوسط' ? 'bg-yellow-100 text-yellow-600' :
-                                            'bg-green-100 text-green-600'
-                                        }`}>
+                                                'bg-green-100 text-green-600'
+                                            }`}>
                                             {suggestion.difficulty}
                                         </span>
                                     </div>
@@ -382,18 +416,25 @@ function SuggestionsGrid({ suggestions }) {
 // Floating Action Button for Reading
 function FloatingReadButton({ plan, hasReadToday }) {
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div
+            className="
+                fixed right-4 z-50
+                md:left-1/2 md:right-auto md:-translate-x-1/2
+            "
+            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}
+        >
             <Link href={`/app/reading/experience/${plan.id}`}>
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={`
-                        flex items-center gap-3 px-8 py-4 rounded-full shadow-2xl
-                        ${hasReadToday 
-                            ? 'bg-gradient-to-r from-green-500 to-green-600' 
-                            : 'bg-gradient-to-r from-primary-500 to-primary-600'
+                        flex items-center gap-2 md:gap-3 px-4 py-3 md:px-8 md:py-4 rounded-full shadow-xl md:shadow-2xl
+                        backdrop-blur bg-white/90 text-primary-700 border border-primary-100
+                        ${hasReadToday
+                            ? 'md:bg-gradient-to-r md:from-green-500 md:to-green-600 md:text-white'
+                            : 'md:bg-gradient-to-r md:from-primary-500 md:to-primary-600 md:text-white'
                         }
-                        text-white font-bold text-lg
+                        font-bold text-sm md:text-lg
                     `}
                 >
                     {hasReadToday ? (

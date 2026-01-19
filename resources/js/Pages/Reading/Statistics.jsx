@@ -18,6 +18,17 @@ export default function Statistics({ statistics }) {
     const stats = statistics?.data || {};
     const activePlan = stats.active_plan || null;
     const readingHistory = stats.reading_history || [];
+    const totalHatmah = stats.total_hatmah || 0;
+    const longestStreak = stats.longest_streak || 0;
+
+    // Derive weekly/monthly pages from history when available (fallback to API values)
+    const pagesThisWeek = readingHistory.length
+        ? readingHistory.slice(-7).reduce((sum, day) => sum + (day.total_pages || 0), 0)
+        : (stats.pages_this_week || 0);
+
+    const pagesThisMonth = readingHistory.length
+        ? readingHistory.slice(-30).reduce((sum, day) => sum + (day.total_pages || 0), 0)
+        : (stats.pages_this_month || 0);
 
     return (
         <MainLayout title="إحصائيات القراءة">
@@ -47,26 +58,26 @@ export default function Statistics({ statistics }) {
                     <StatCard
                         icon={Award}
                         label="الختمات"
-                        value={stats.total_hatmah || 0}
+                        value={totalHatmah}
                         color="success"
                     />
                     <StatCard
                         icon={Flame}
                         label="أطول سلسلة"
-                        value={stats.longest_streak || 0}
+                        value={longestStreak}
                         suffix="يوم"
                         color="warning"
                     />
                     <StatCard
                         icon={Target}
                         label="صفحات الأسبوع"
-                        value={stats.pages_this_week || 0}
+                        value={pagesThisWeek}
                         color="primary"
                     />
                     <StatCard
                         icon={BookOpen}
                         label="صفحات الشهر"
-                        value={stats.pages_this_month || 0}
+                        value={pagesThisMonth}
                         color="accent"
                     />
                 </div>
@@ -133,11 +144,11 @@ export default function Statistics({ statistics }) {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-primary-100">الصفحات المتبقية</span>
-                                        <span className="font-medium">{activePlan.remaining_pages}</span>
+                                        <span className="font-medium">{activePlan.remaining_pages ?? '—'}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-primary-100">أيام متبقية</span>
-                                        <span className="font-medium">{activePlan.days_remaining}</span>
+                                        <span className="font-medium">{activePlan.days_remaining ?? '—'}</span>
                                     </div>
                                 </div>
                             </CardContent>
@@ -240,36 +251,42 @@ function StatCard({ icon: Icon, label, value, suffix, color }) {
 }
 
 function ReadingChart({ history }) {
-    const maxPages = Math.max(...history.map(h => h.total_pages || 0), 1);
+    const recentHistory = history.slice(-30);
+    const maxPages = Math.max(...recentHistory.map(h => h.total_pages || 0), 1);
 
     return (
         <div className="space-y-4">
-            <div className="flex items-end gap-1 h-32">
-                {history.slice(-14).map((day, index) => {
-                    const height = Math.max((day.total_pages / maxPages) * 100, 5);
-                    const date = new Date(day.date);
-                    const isToday = date.toDateString() === new Date().toDateString();
-                    
-                    return (
-                        <div key={day.date} className="flex-1 flex flex-col items-center">
-                            <motion.div
-                                initial={{ height: 0 }}
-                                animate={{ height: `${height}%` }}
-                                transition={{ delay: index * 0.05, duration: 0.5 }}
-                                className={`w-full rounded-t-md ${
-                                    isToday 
-                                        ? 'bg-gradient-to-t from-accent-500 to-accent-400' 
-                                        : 'bg-gradient-to-t from-primary-500 to-primary-400'
-                                }`}
-                                title={`${day.date}: ${day.total_pages} صفحة`}
-                            />
-                        </div>
-                    );
-                })}
+            <div className="overflow-x-auto pb-2">
+                <div className="flex items-end gap-2 h-32 min-w-[320px]">
+                    {recentHistory.map((day, index) => {
+                        const height = Math.max((day.total_pages / maxPages) * 100, 5);
+                        const date = new Date(day.date);
+                        const isToday = date.toDateString() === new Date().toDateString();
+                        
+                        return (
+                            <div key={day.date} className="flex flex-col items-center shrink-0 w-2.5 md:w-3">
+                                <motion.div
+                                    initial={{ height: 0 }}
+                                    animate={{ height: `${height}%` }}
+                                    transition={{ delay: index * 0.03, duration: 0.4 }}
+                                    className={`w-full rounded-md ${
+                                        isToday 
+                                            ? 'bg-gradient-to-t from-accent-500 to-accent-400' 
+                                            : 'bg-gradient-to-t from-primary-500 to-primary-400'
+                                    }`}
+                                    title={`${day.date}: ${day.total_pages} صفحة`}
+                                />
+                            </div>
+                        );
+                    })}
+                    {!recentHistory.length && (
+                        <div className="text-sm text-text-muted">لا يوجد بيانات للعرض</div>
+                    )}
+                </div>
             </div>
             <div className="flex justify-between text-xs text-text-muted">
-                <span>قبل أسبوعين</span>
-                <span>اليوم</span>
+                <span>الأقدم</span>
+                <span>الأحدث</span>
             </div>
         </div>
     );

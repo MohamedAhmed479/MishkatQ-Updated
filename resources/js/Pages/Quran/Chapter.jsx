@@ -59,6 +59,7 @@ export default function ChapterView({ chapter, verses, chapters_list, juzs_list,
     const [isSavingNote, setIsSavingNote] = useState(false);
     const [isDeletingNote, setIsDeletingNote] = useState(false);
     const [activeWord, setActiveWord] = useState(null);
+    const NOTES_STORAGE_KEY = 'mishkat-reading-notes';
 
     // Share States
     const [shareVerse, setShareVerse] = useState(null);
@@ -258,6 +259,16 @@ export default function ChapterView({ chapter, verses, chapters_list, juzs_list,
         }
     };
 
+    const updateNotesCache = (verseId, noteText) => {
+        try {
+            const cached = JSON.parse(localStorage.getItem(NOTES_STORAGE_KEY) || '{}');
+            const next = { ...cached, [verseId]: noteText || '' };
+            localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(next));
+        } catch (e) {
+            console.warn('Failed to update notes cache', e);
+        }
+    };
+
     const handleSaveNote = async () => {
         if (!selectedVerse) return;
         setIsSavingNote(true);
@@ -268,6 +279,7 @@ export default function ChapterView({ chapter, verses, chapters_list, juzs_list,
             if (index !== -1) {
                 verses[index].user_note = note;
             }
+            updateNotesCache(selectedVerse.id, note);
             // Show success - you could add a toast here
         } catch (error) {
             console.error('Error saving note:', error);
@@ -287,6 +299,7 @@ export default function ChapterView({ chapter, verses, chapters_list, juzs_list,
                 verses[index].user_note = null;
             }
             setNote('');
+            updateNotesCache(selectedVerse.id, '');
         } catch (error) {
             console.error('Error deleting note:', error);
         } finally {

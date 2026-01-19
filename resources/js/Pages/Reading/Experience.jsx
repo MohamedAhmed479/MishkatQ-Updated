@@ -29,6 +29,9 @@ import {
     Home,
     Layout,
     List,
+    Edit3,
+    Save,
+    Trash2,
 } from 'lucide-react';
 
 // Theme configurations
@@ -136,6 +139,19 @@ export default function ReadingExperience({
     // Page tracking
     const [page, setPage] = useState(currentPage || todayStartPage || 1);
     const [isMarkingProgress, setIsMarkingProgress] = useState(false);
+    const [controlsVisible, setControlsVisible] = useState(false);
+    const [noteVerse, setNoteVerse] = useState(null);
+    const [noteText, setNoteText] = useState('');
+    const [isSavingNote, setIsSavingNote] = useState(false);
+    const [isDeletingNote, setIsDeletingNote] = useState(false);
+    const [verseNotes, setVerseNotes] = useState(() =>
+        Object.fromEntries((verses || []).map(v => [v.id, v.user_note || '']))
+    );
+    const NOTES_STORAGE_KEY = 'mishkat-reading-notes';
+
+    // Swipe navigation (mobile)
+    const touchStartRef = useRef({ x: 0, y: 0, t: 0 });
+    const touchMovedRef = useRef(false);
 
     // Check if current page is the last page of today's wird
     const isLastPageOfToday = page >= todayEndPage;
@@ -144,6 +160,56 @@ export default function ReadingExperience({
     useEffect(() => {
         setPage(currentPage || todayStartPage || 1);
     }, [currentPage, todayStartPage]);
+
+    // Initialize notes from server + cache
+    useEffect(() => {
+        const baseNotes = Object.fromEntries((verses || []).map(v => [v.id, v.user_note || '']));
+        try {
+            const cached = JSON.parse(localStorage.getItem(NOTES_STORAGE_KEY) || '{}');
+            if (cached && typeof cached === 'object') {
+                setVerseNotes({ ...baseNotes, ...cached });
+            } else {
+                setVerseNotes(baseNotes);
+            }
+        } catch {
+            setVerseNotes(baseNotes);
+        }
+    }, [verses]);
+
+    const updateCache = (notesMap) => {
+        try {
+            localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notesMap));
+        } catch (e) {
+            console.warn('Failed to cache notes', e);
+        }
+    };
+
+    // Fetch latest notes from Quran API in a single batch to keep in sync
+    useEffect(() => {
+        if (!verses?.length) return;
+        let cancelled = false;
+        const fetchNotes = async () => {
+            try {
+                const verseIds = verses.map(v => v.id);
+                const res = await axios.post('/app/quran/notes/batch', { verse_ids: verseIds });
+                const notes = res.data?.notes || {};
+                if (cancelled) return;
+                setVerseNotes((prev) => {
+                    const updated = { ...prev };
+                    verseIds.forEach((id) => {
+                        const n = notes[id] ?? prev[id] ?? '';
+                        updated[id] = n || '';
+                    });
+                    updateCache(updated);
+                    return updated;
+                });
+            } catch (error) {
+                console.error('Error fetching verse notes batch:', error);
+            }
+        };
+        fetchNotes();
+        return () => { cancelled = true; };
+    }, [verses]);
 
     // Refs
     const containerRef = useRef(null);
@@ -295,6 +361,94 @@ export default function ReadingExperience({
         });
     };
 
+    const openNoteModal = (verse) => {
+        setNoteVerse(verse);
+        setNoteText(verseNotes[verse.id] || '');
+    };
+
+    const handleSaveNote = async () => {
+        if (!noteVerse) return;
+        setIsSavingNote(true);
+        try {
+            await axios.post(`/app/quran/verse/${noteVerse.id}/note`, { note: noteText });
+            setVerseNotes(prev => {
+                const next = { ...prev, [noteVerse.id]: noteText };
+                updateCache(next);
+                return next;
+            });
+            setNoteVerse(null);
+        } catch (error) {
+            console.error('Error saving note:', error);
+            alert('حدث خطأ أثناء حفظ الخاطرة');
+        } finally {
+            setIsSavingNote(false);
+        }
+    };
+
+    const handleDeleteNote = async () => {
+        if (!noteVerse) return;
+        setIsDeletingNote(true);
+        try {
+            await axios.delete(`/app/quran/verse/${noteVerse.id}/note`);
+            setVerseNotes(prev => {
+                const next = { ...prev, [noteVerse.id]: '' };
+                updateCache(next);
+                return next;
+            });
+            setNoteVerse({ ...noteVerse, user_note: '' });
+            setNoteText('');
+            setNoteVerse(null);
+        } catch (error) {
+            console.error('Error deleting note:', error);
+            alert('حدث خطأ أثناء حذف الخاطرة');
+        } finally {
+            setIsDeletingNote(false);
+        }
+    };
+
+    const handleTouchStart = (e) => {
+        const touch = e.touches?.[0];
+        if (!touch) return;
+        touchMovedRef.current = false;
+        touchStartRef.current = { x: touch.clientX, y: touch.clientY, t: Date.now() };
+    };
+
+    const handleTouchMove = () => {
+        touchMovedRef.current = true;
+    };
+
+    const handleTouchEnd = (e) => {
+        const touch = e.changedTouches?.[0];
+        if (!touch) return;
+
+        const start = touchStartRef.current;
+        const dx = touch.clientX - start.x;
+        const dy = touch.clientY - start.y;
+        const dt = Date.now() - start.t;
+
+        // Ignore long presses / slow drags
+        if (dt > 900) return;
+
+        // Prefer vertical scroll if user moved mostly vertically
+        if (Math.abs(dy) > Math.abs(dx) * 0.9) return;
+
+        const width = window.innerWidth || 360;
+        const minDistance = 60;
+        const edgeRight = width * 0.65;
+        const edgeLeft = width * 0.35;
+
+        // Swipe from right edge -> next page
+        if (start.x >= edgeRight && dx <= -minDistance) {
+            goToPage(page + 1);
+            return;
+        }
+
+        // Swipe from left edge -> previous page
+        if (start.x <= edgeLeft && dx >= minDistance) {
+            goToPage(page - 1);
+        }
+    };
+
     // Toggle fullscreen
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -325,12 +479,18 @@ export default function ReadingExperience({
     return (
         <div
             ref={containerRef}
-            className={`min-h-screen ${t.bg} ${t.text} transition-colors duration-300`}
+            className={`
+                min-h-screen ${t.bg} ${t.text} transition-colors duration-300
+                ${isFullscreen ? 'h-screen overflow-y-auto touch-pan-y' : ''}
+            `}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
             <Head title={`قراءة - صفحة ${page}`} />
 
-            {/* Header */}
-            <header className={`fixed top-0 left-0 right-0 z-50 ${t.headerBg} border-b ${t.border}`}>
+            {/* Header (hidden until user toggles) */}
+            <header className={`fixed top-0 left-0 right-0 z-50 ${t.headerBg} border-b ${t.border} ${controlsVisible ? '' : 'hidden'}`}>
                 <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-2">
                         <button
@@ -399,8 +559,8 @@ export default function ReadingExperience({
                     <button
                         onClick={toggleReadingMode}
                         className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${readingMode === 'hadr'
-                                ? 'bg-primary-500 text-white'
-                                : t.button
+                            ? 'bg-primary-500 text-white'
+                            : t.button
                             }`}
                     >
                         <BookOpen className="w-4 h-4" />
@@ -409,8 +569,8 @@ export default function ReadingExperience({
                     <button
                         onClick={toggleReadingMode}
                         className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${readingMode === 'tadabbur'
-                                ? 'bg-accent-500 text-white'
-                                : t.button
+                            ? 'bg-accent-500 text-white'
+                            : t.button
                             }`}
                     >
                         <BookMarked className="w-4 h-4" />
@@ -433,6 +593,8 @@ export default function ReadingExperience({
                         showTafsir={showTafsir}
                         onTafsirClick={fetchTafsir}
                         verseRefs={verseRefs}
+                        verseNotes={verseNotes}
+                        onOpenNote={openNoteModal}
                     />
                 ) : (
                     // Verse View - Each verse in separate card
@@ -449,6 +611,8 @@ export default function ReadingExperience({
                                 readingMode={readingMode}
                                 showTafsir={showTafsir}
                                 onTafsirClick={() => fetchTafsir(verse)}
+                                verseNotes={verseNotes}
+                                onOpenNote={openNoteModal}
                                 ref={(el) => verseRefs.current[verse.id] = el}
                             />
                         ))}
@@ -469,8 +633,8 @@ export default function ReadingExperience({
                 )}
             </AnimatePresence>
 
-            {/* Footer Controls */}
-            <footer className={`fixed bottom-0 left-0 right-0 z-50 ${t.footerBg} border-t ${t.border}`}>
+            {/* Footer Controls (hidden until user toggles) */}
+            <footer className={`fixed bottom-0 left-0 right-0 z-50 ${t.footerBg} border-t ${t.border} ${controlsVisible ? '' : 'hidden'}`}>
                 {/* Audio Controls */}
                 <div className="flex items-center justify-center gap-4 py-3 border-b border-opacity-50">
                     <button
@@ -589,12 +753,41 @@ export default function ReadingExperience({
                     />
                 )}
             </AnimatePresence>
+
+            {/* Notes Modal */}
+            <AnimatePresence>
+                {noteVerse && (
+                    <NoteModal
+                        verse={noteVerse}
+                        noteText={noteText}
+                        onChange={setNoteText}
+                        onSave={handleSaveNote}
+                        onDelete={handleDeleteNote}
+                        onClose={() => setNoteVerse(null)}
+                        isSaving={isSavingNote}
+                        isDeleting={isDeletingNote}
+                        theme={t}
+                    />
+                )}
+            </AnimatePresence>
+            {/* Toggle Controls Button */}
+            <button
+                onClick={() => setControlsVisible(v => !v)}
+                className="
+                    fixed bottom-4 right-4 z-[60]
+                    p-3 rounded-full shadow-lg bg-primary-500 text-white
+                    hover:bg-primary-600 transition
+                "
+                title={controlsVisible ? 'إخفاء الأدوات' : 'إظهار الأدوات'}
+            >
+                {controlsVisible ? <X className="w-5 h-5" /> : <Settings className="w-5 h-5" />}
+            </button>
         </div>
     );
 }
 
 // Page View Component - Continuous flow of verses
-function PageView({ verses, theme: t, fontSize, scriptType, isActive, readingMode, showTafsir, onTafsirClick, verseRefs }) {
+function PageView({ verses, theme: t, fontSize, scriptType, isActive, readingMode, showTafsir, onTafsirClick, verseRefs, verseNotes, onOpenNote }) {
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -605,8 +798,8 @@ function PageView({ verses, theme: t, fontSize, scriptType, isActive, readingMod
             `}
         >
             <div
-                className="text-justify leading-relaxed font-quran"
-                style={{ fontSize: `${fontSize}px`, lineHeight: '2.8' }}
+                className="font-amiri text-center rtl"
+                style={{ fontSize: `${Math.max(22, fontSize)}px`, lineHeight: '2.8' }}
                 dir="rtl"
             >
                 {verses?.map((verse, index) => (
@@ -617,15 +810,27 @@ function PageView({ verses, theme: t, fontSize, scriptType, isActive, readingMod
                             inline transition-all duration-200
                             ${isActive === index ? 'ring-2 ring-primary-500 rounded-lg px-2 py-1' : ''}
                         `}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => onOpenNote(verse)}
                     >
                         {/* Verse Number Badge - Inline with text */}
                         <span className={`
-                            inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold
-                            ml-2 mr-1 align-middle
-                            ${t.button}
+                            inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold
+                            ml-2 mr-1 align-middle select-none
+                            bg-primary-500 text-white shadow-sm
+                            ring-1 ring-black/5 dark:ring-white/10
                         `}>
                             {verse.verse_number}
                         </span>
+                        {verseNotes[verse.id] && (
+                            <span
+                                className="inline-flex items-center justify-center px-2 h-6 rounded-full bg-amber-100 text-amber-800 text-[11px] font-semibold mx-1 align-middle select-none"
+                                title="لديك خاطرة على هذه الآية"
+                            >
+                                خاطرة
+                            </span>
+                        )}
 
                         {/* Verse Text - Continuous flow */}
                         <span className={`${t.text} inline`}>
@@ -638,7 +843,10 @@ function PageView({ verses, theme: t, fontSize, scriptType, isActive, readingMod
                         {/* Tafsir Button for Tadabbur Mode */}
                         {readingMode === 'tadabbur' && showTafsir && (
                             <button
-                                onClick={() => onTafsirClick(verse)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onTafsirClick(verse);
+                                }}
                                 className={`
                                     inline-flex items-center justify-center w-5 h-5 rounded-full text-xs mx-1 align-middle
                                     ${t.button} opacity-60 hover:opacity-100 transition
@@ -666,6 +874,8 @@ const VerseCard = React.forwardRef(({
     readingMode,
     showTafsir,
     onTafsirClick,
+    verseNotes,
+    onOpenNote,
 }, ref) => {
     return (
         <motion.div
@@ -678,19 +888,37 @@ const VerseCard = React.forwardRef(({
                 ${t.verseBg} ${t.verseHover}
                 ${isActive ? t.activeVerse + ' ring-2 ring-primary-500' : ''}
             `}
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpenNote(verse)}
         >
             {/* Verse Number */}
             <div className="flex items-start justify-between mb-4">
-                <span className={`
-                    inline-flex items-center justify-center w-10 h-10 rounded-full 
-                    text-sm font-bold ${t.button}
-                `}>
-                    {verse.verse_number}
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className={`
+                        inline-flex items-center justify-center w-11 h-11 rounded-full 
+                        text-base font-bold select-none
+                        bg-primary-500 text-white shadow-sm
+                        ring-1 ring-black/5 dark:ring-white/10
+                    `}>
+                        {verse.verse_number}
+                    </span>
+                    {verseNotes[verse.id] && (
+                        <span
+                            className="inline-flex items-center justify-center px-2 h-7 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold select-none"
+                            title="لديك خاطرة على هذه الآية"
+                        >
+                            خاطرة
+                        </span>
+                    )}
+                </div>
 
                 {readingMode === 'tadabbur' && (
                     <button
-                        onClick={onTafsirClick}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onTafsirClick();
+                        }}
                         className={`p-2 rounded-lg ${t.button} transition`}
                     >
                         <MessageSquare className="w-4 h-4" />
@@ -700,8 +928,8 @@ const VerseCard = React.forwardRef(({
 
             {/* Verse Text */}
             <p
-                className="text-center leading-loose font-quran"
-                style={{ fontSize: `${fontSize}px`, lineHeight: '2.5' }}
+                className="font-amiri text-center rtl"
+                style={{ fontSize: `${Math.max(22, fontSize)}px`, lineHeight: '2.5' }}
                 dir="rtl"
             >
                 {scriptType === 'imlaei' ? (verse.text_imlaei || verse.text_uthmani || verse.text) : (verse.text_uthmani || verse.text)}
@@ -711,6 +939,71 @@ const VerseCard = React.forwardRef(({
 });
 
 VerseCard.displayName = 'VerseCard';
+
+// Note Modal
+function NoteModal({ verse, noteText, onChange, onSave, onDelete, onClose, isSaving, isDeleting, theme: t }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center px-4"
+        >
+            <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+            <div className={`relative w-full max-w-lg rounded-2xl shadow-2xl ${t.bg} ${t.text} p-6 z-[81]`}>
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 className="font-bold flex items-center gap-2">
+                            <Edit3 className="w-4 h-4" />
+                            خاطرتي على الآية {verse?.verse_number}
+                        </h3>
+                        <p className={`text-sm ${t.accent}`}>{verse?.text_uthmani || verse?.text}</p>
+                    </div>
+                    <button onClick={onClose} className={`p-2 rounded-lg ${t.button}`}>
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <textarea
+                    value={noteText}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder="اكتب تأملاتك وخواطرك هنا..."
+                    className={`w-full h-32 p-4 rounded-xl border-2 ${t.border} ${t.bg} focus:border-primary-500 outline-none transition`}
+                    dir="rtl"
+                />
+
+                <div className="flex gap-3 mt-4">
+                    <button
+                        onClick={onSave}
+                        disabled={isSaving || !noteText.trim()}
+                        className="
+                            flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg
+                            bg-primary-500 text-white font-bold hover:bg-primary-600 transition disabled:opacity-60
+                        "
+                    >
+                        {isSaving ? 'جاري الحفظ...' : <><Save className="w-4 h-4" /> حفظ الخاطرة</>}
+                    </button>
+                    {verse?.user_note || noteText ? (
+                        <button
+                            onClick={onDelete}
+                            disabled={isDeleting}
+                            className="
+                                px-4 py-3 rounded-lg border border-red-200 text-red-600 hover:bg-red-50
+                                disabled:opacity-60
+                            "
+                        >
+                            {isDeleting ? '...' : (
+                                <span className="inline-flex items-center gap-2">
+                                    <Trash2 className="w-4 h-4" /> حذف
+                                </span>
+                            )}
+                        </button>
+                    ) : null}
+                </div>
+            </div>
+        </motion.div>
+    );
+}
 
 // Tafsir Panel Component
 function TafsirPanel({ verse, tafsir, isLoading, theme: t, onClose }) {
@@ -857,8 +1150,8 @@ function SettingsModal({
                         <button
                             onClick={() => onScriptTypeChange('uthmani')}
                             className={`p-4 rounded-xl border-2 flex items-center gap-3 transition ${scriptType === 'uthmani'
-                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                    : `border-surface-200 dark:border-dark-300 ${t.verseBg}`
+                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                : `border-surface-200 dark:border-dark-300 ${t.verseBg}`
                                 }`}
                         >
                             <div className="text-right flex-1">
@@ -874,8 +1167,8 @@ function SettingsModal({
                         <button
                             onClick={() => onScriptTypeChange('imlaei')}
                             className={`p-4 rounded-xl border-2 flex items-center gap-3 transition ${scriptType === 'imlaei'
-                                    ? 'border-accent-500 bg-accent-50 dark:bg-accent-900/20'
-                                    : `border-surface-200 dark:border-dark-300 ${t.verseBg}`
+                                ? 'border-accent-500 bg-accent-50 dark:bg-accent-900/20'
+                                : `border-surface-200 dark:border-dark-300 ${t.verseBg}`
                                 }`}
                         >
                             <div className="text-right flex-1">

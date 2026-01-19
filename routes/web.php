@@ -254,6 +254,8 @@ Route::prefix('app')->middleware(['auth:web'])->group(function () {
     Route::get('quran/verse/{verse}/tafsir', [\App\Http\Controllers\Web\QuranController::class, 'tafsir'])->name('user.quran.tafsir');
     Route::post('quran/verse/{verse}/note', [\App\Http\Controllers\Web\QuranController::class, 'saveNote'])->name('user.quran.save-note');
     Route::delete('quran/verse/{verse}/note', [\App\Http\Controllers\Web\QuranController::class, 'deleteNote'])->name('user.quran.delete-note');
+    Route::get('quran/verse/{verse}/note', [\App\Http\Controllers\Web\QuranController::class, 'getNote'])->name('user.quran.get-note');
+    Route::post('quran/notes/batch', [\App\Http\Controllers\Web\QuranController::class, 'getNotesBatch'])->name('user.quran.get-notes-batch');
     
     // Achievements & Gamification
     Route::get('achievements', [\App\Http\Controllers\Web\AchievementController::class, 'index'])->name('user.achievements');
