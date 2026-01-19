@@ -580,7 +580,12 @@ export default function ReadingExperience({
             </header>
 
             {/* Main Content */}
-            <main className="pt-28 pb-40 px-4 max-w-3xl mx-auto">
+            <main
+                className={`
+                    ${isFullscreen ? 'pt-6 pb-20 px-2 max-w-none' : 'pt-28 pb-40 px-4 max-w-3xl'}
+                    mx-auto
+                `}
+            >
                 {viewMode === 'page' ? (
                     // Page View - All verses in one continuous flow
                     <PageView
@@ -793,8 +798,10 @@ function PageView({ verses, theme: t, fontSize, scriptType, isActive, readingMod
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className={`
-                p-6 md:p-8 rounded-2xl transition-all duration-300
+                transition-all duration-300
                 ${t.verseBg}
+                rounded-none md:rounded-2xl
+                px-3 md:px-8 py-4 md:py-8
             `}
         >
             <div
@@ -884,9 +891,11 @@ const VerseCard = React.forwardRef(({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.02 }}
             className={`
-                p-6 rounded-2xl transition-all duration-300
+                transition-all duration-300
                 ${t.verseBg} ${t.verseHover}
                 ${isActive ? t.activeVerse + ' ring-2 ring-primary-500' : ''}
+                px-3 md:px-6 py-4 md:py-6
+                rounded-none md:rounded-2xl
             `}
             role="button"
             tabIndex={0}
