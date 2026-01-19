@@ -35,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'provider',
         'provider_id',
         'provider_token',
+        'can_use_smart_recitation',
     ];
 
     /**
@@ -58,7 +59,16 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'provider_token' => 'encrypted',
+            'can_use_smart_recitation' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if user can use smart recitation feature
+     */
+    public function canUseSmartRecitation(): bool
+    {
+        return $this->can_use_smart_recitation ?? false;
     }
 
     public function devices(): HasMany

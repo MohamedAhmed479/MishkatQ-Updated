@@ -52,6 +52,30 @@ class PlanItem extends Model
     }
 
     /**
+     * علاقة مع جدول اختبارات الجلسة
+     */
+    public function sessionTests(): HasMany
+    {
+        return $this->hasMany(SessionTest::class, "plan_item_id", "id");
+    }
+
+    /**
+     * التحقق من اجتياز المستخدم لجميع الاختبارات المطلوبة
+     */
+    public function hasPassedAllTests(int $userId, float $threshold = null): bool
+    {
+        return SessionTest::hasPassedAllTests($userId, $this->id, $threshold);
+    }
+
+    /**
+     * الحصول على إحصائيات الاختبارات لهذا العنصر
+     */
+    public function getTestStats(int $userId): array
+    {
+        return SessionTest::getTestStats($userId, $this->id);
+    }
+
+    /**
      * الحصول على نص الآيات المرتبطة بهذا المقطع
      */
     public function getVersesText()

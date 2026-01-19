@@ -63,6 +63,8 @@ class UserManagementController extends Controller implements HasMiddleware
             'daily_minutes' => ['required', 'integer', 'min:0'],
             'sessions_per_day' => ['required', 'integer', 'min:1'],
             'current_level' => ['required', 'in:beginner,intermediate,advanced'],
+            // Feature flags
+            'can_use_smart_recitation' => ['nullable', 'boolean'],
         ]);
 
         // Create the user
@@ -70,6 +72,7 @@ class UserManagementController extends Controller implements HasMiddleware
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
+            'can_use_smart_recitation' => $data['can_use_smart_recitation'] ?? false,
         ]);
 
         // Create user profile
@@ -123,12 +126,15 @@ class UserManagementController extends Controller implements HasMiddleware
             'daily_minutes' => ['required', 'integer', 'min:0'],
             'sessions_per_day' => ['required', 'integer', 'min:1'],
             'current_level' => ['required', 'in:beginner,intermediate,advanced'],
+            // Feature flags
+            'can_use_smart_recitation' => ['nullable', 'boolean'],
         ]);
 
         // Update user basic data
         $userData = [
             'name' => $data['name'],
             'email' => $data['email'],
+            'can_use_smart_recitation' => $request->boolean('can_use_smart_recitation'),
         ];
 
         if (!empty($data['password'])) {

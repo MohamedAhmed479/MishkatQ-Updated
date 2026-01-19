@@ -279,6 +279,44 @@
                     </div>
                 </div>
 
+                <!-- Feature Flags Section -->
+                <div class="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-700">
+                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                        الميزات الخاصة
+                    </h3>
+
+                    <!-- Smart Recitation Feature -->
+                    <div class="flex items-start gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center h-6">
+                            <input type="checkbox" 
+                                   name="can_use_smart_recitation" 
+                                   id="can_use_smart_recitation"
+                                   value="1"
+                                   {{ old('can_use_smart_recitation', $user->can_use_smart_recitation) ? 'checked' : '' }}
+                                   class="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500 focus:ring-2 transition-colors" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="can_use_smart_recitation" class="block text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                    </svg>
+                                    تفعيل ميزة التسميع الذكي
+                                </span>
+                            </label>
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                السماح للمستخدم باستخدام ميزة التسميع الصوتي الذكي المدعومة بالذكاء الاصطناعي
+                            </p>
+                        </div>
+                    </div>
+                    @error('can_use_smart_recitation')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Form Actions -->
                 <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-200 dark:border-slate-700">
                     <button type="submit" 

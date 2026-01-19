@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import {
     ArrowRight,
     ArrowLeft,
@@ -8,7 +9,9 @@ import {
     Eye,
     EyeOff,
     X,
-    BookOpen
+    BookOpen,
+    ClipboardCheck,
+    AlertCircle
 } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@/Contexts/ThemeContext';
 import Button from '@/Components/UI/Button';
@@ -17,9 +20,20 @@ import AudioPlayer from '@/Components/Session/AudioPlayer';
 import ViewModeToggle from '@/Components/Session/ViewModeToggle';
 import VerseCard from '@/Components/Session/VerseCard';
 import ContinuousPlayer from '@/Components/Session/ContinuousPlayer';
+import TestManager from '@/Components/Session/TestManager';
 
-function MemorizeContent({ planItem, verses, reciters }) {
+// Session phases
+const PHASES = {
+    MEMORIZE: 'memorize',
+    TEST: 'test',
+    COMPLETE: 'complete',
+};
+
+function MemorizeContent({ planItem, verses, reciters, testConfig = {}, testResults: initialTestResults = {} }) {
     const { theme } = useTheme();
+
+    // Session phase: memorize -> test -> complete
+    const [phase, setPhase] = useState(PHASES.MEMORIZE);
 
     // View mode: 'single', 'all', or 'reading'
     const [viewMode, setViewMode] = useState(() => {
@@ -36,6 +50,10 @@ function MemorizeContent({ planItem, verses, reciters }) {
     const [showText, setShowText] = useState(true);
     const [completed, setCompleted] = useState(false);
     const [rating, setRating] = useState(null);
+
+    // Test state
+    const [canComplete, setCanComplete] = useState(testConfig.can_complete ?? false);
+    const [testSubmitting, setTestSubmitting] = useState(false);
 
     // Tafsir open states (map of verse id to boolean)
     const [tafsirOpen, setTafsirOpen] = useState({});
@@ -84,9 +102,55 @@ function MemorizeContent({ planItem, verses, reciters }) {
             setCurrentVerseIndex(currentVerseIndex + 1);
             setShowText(true);
         } else {
-            setCompleted(true);
+            // Finished reviewing all verses, move to test phase if tests are required
+            if (testConfig.require_tests && !canComplete) {
+                setPhase(PHASES.TEST);
+            } else {
+                setCompleted(true);
+            }
         }
     };
+
+    // Handle transitioning to test phase manually
+    const handleStartTest = useCallback(() => {
+        setPhase(PHASES.TEST);
+    }, []);
+
+    // Handle test completion
+    const handleTestsComplete = useCallback(async (results) => {
+        setTestSubmitting(true);
+
+        try {
+            // Submit test results to the backend
+            const response = await axios.post(`/app/session/${planItem.id}/tests`, {
+                tests: Object.values(results.results)
+                    .filter(r => r !== null)
+                    .map(r => ({
+                        test_type: r.testType,
+                        score: r.score,
+                        details: r.details,
+                    })),
+            });
+
+            if (response.data.can_complete) {
+                setCanComplete(true);
+                setCompleted(true);
+            } else {
+                // Show what tests are still needed
+                alert('يجب اجتياز جميع الاختبارات المطلوبة');
+            }
+        } catch (error) {
+            console.error('Error submitting tests:', error);
+            alert('حدث خطأ أثناء حفظ نتائج الاختبارات');
+        } finally {
+            setTestSubmitting(false);
+        }
+    }, [planItem.id]);
+
+    // Handle skipping tests (if allowed)
+    const handleSkipTests = useCallback(() => {
+        setCompleted(true);
+    }, []);
 
     const handlePrevious = () => {
         if (currentVerseIndex > 0) {
@@ -180,7 +244,29 @@ function MemorizeContent({ planItem, verses, reciters }) {
             {/* Main Content */}
             <main className="flex-1 flex flex-col p-4 md:p-6">
                 <AnimatePresence mode="wait">
-                    {!completed ? (
+                    {/* Test Phase */}
+                    {phase === PHASES.TEST && !completed && (
+                        <motion.div
+                            key="test-phase"
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -50 }}
+                            className="flex-1 max-w-3xl mx-auto w-full"
+                        >
+                            <TestManager
+                                verses={verses}
+                                planItemId={planItem.id}
+                                onAllTestsComplete={handleTestsComplete}
+                                onSkipTests={!testConfig.require_tests ? handleSkipTests : undefined}
+                                requireTests={testConfig.require_tests}
+                                minimumScore={testConfig.minimum_score}
+                                canUseSmartRecitation={testConfig.can_use_smart_recitation}
+                            />
+                        </motion.div>
+                    )}
+
+                    {/* Memorize Phase */}
+                    {phase === PHASES.MEMORIZE && !completed ? (
                         <>
                             {/* Single Verse Mode */}
                             {viewMode === 'single' && (
@@ -268,16 +354,27 @@ function MemorizeContent({ planItem, verses, reciters }) {
                                         />
                                     ))}
 
-                                    {/* Complete Button */}
-                                    <div className="pt-6 pb-8">
-                                        <Button
-                                            onClick={() => setCompleted(true)}
-                                            className="w-full"
-                                            size="lg"
-                                            icon={Check}
-                                        >
-                                            أتممت الحفظ
-                                        </Button>
+                                    {/* Test/Complete Buttons */}
+                                    <div className="pt-6 pb-8 space-y-3">
+                                        {testConfig.require_tests && !canComplete ? (
+                                            <Button
+                                                onClick={handleStartTest}
+                                                className="w-full"
+                                                size="lg"
+                                                icon={ClipboardCheck}
+                                            >
+                                                الانتقال للاختبار
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                onClick={() => setCompleted(true)}
+                                                className="w-full"
+                                                size="lg"
+                                                icon={Check}
+                                            >
+                                                أتممت الحفظ
+                                            </Button>
+                                        )}
                                     </div>
                                 </motion.div>
                             )}
@@ -360,22 +457,35 @@ function MemorizeContent({ planItem, verses, reciters }) {
                                         </div>
                                     </div>
 
-                                    {/* Complete Button */}
-                                    <div className="pt-6 pb-8">
-                                        <Button
-                                            onClick={() => setCompleted(true)}
-                                            className="w-full"
-                                            size="lg"
-                                            icon={Check}
-                                        >
-                                            أتممت الحفظ
-                                        </Button>
+                                    {/* Test/Complete Buttons */}
+                                    <div className="pt-6 pb-8 space-y-3">
+                                        {testConfig.require_tests && !canComplete ? (
+                                            <Button
+                                                onClick={handleStartTest}
+                                                className="w-full"
+                                                size="lg"
+                                                icon={ClipboardCheck}
+                                            >
+                                                الانتقال للاختبار
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                onClick={() => setCompleted(true)}
+                                                className="w-full"
+                                                size="lg"
+                                                icon={Check}
+                                            >
+                                                أتممت الحفظ
+                                            </Button>
+                                        )}
                                     </div>
                                 </motion.div>
                             )}
                         </>
-                    ) : (
-                        /* Completion Screen */
+                    ) : null}
+
+                    {/* Completion Screen */}
+                    {completed && (
                         <motion.div
                             key="completed"
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -437,8 +547,8 @@ function MemorizeContent({ planItem, verses, reciters }) {
                 </AnimatePresence>
             </main>
 
-            {/* Footer Navigation (only in single mode and not completed) */}
-            {viewMode === 'single' && !completed && (
+            {/* Footer Navigation (only in single mode, memorize phase, and not completed) */}
+            {viewMode === 'single' && phase === PHASES.MEMORIZE && !completed && (
                 <footer className="sticky bottom-0 bg-white/90 dark:bg-dark-400/90 backdrop-blur-xl border-t border-surface-300 dark:border-dark-300 p-4">
                     <div className="max-w-3xl mx-auto flex items-center justify-between">
                         <Button
@@ -452,10 +562,12 @@ function MemorizeContent({ planItem, verses, reciters }) {
 
                         <Button
                             onClick={handleNext}
-                            icon={currentVerseIndex === verses.length - 1 ? Check : ArrowLeft}
+                            icon={currentVerseIndex === verses.length - 1 ? (testConfig.require_tests && !canComplete ? ClipboardCheck : Check) : ArrowLeft}
                             iconPosition="left"
                         >
-                            {currentVerseIndex === verses.length - 1 ? 'إنهاء' : 'التالية'}
+                            {currentVerseIndex === verses.length - 1 
+                                ? (testConfig.require_tests && !canComplete ? 'الاختبار' : 'إنهاء') 
+                                : 'التالية'}
                         </Button>
                     </div>
                 </footer>
@@ -464,11 +576,17 @@ function MemorizeContent({ planItem, verses, reciters }) {
     );
 }
 
-export default function Memorize({ planItem, verses, reciters = [] }) {
+export default function Memorize({ planItem, verses, reciters = [], testConfig = {}, testResults = {} }) {
     return (
         <ThemeProvider>
             <Head title={`حفظ سورة ${planItem.chapter_name}`} />
-            <MemorizeContent planItem={planItem} verses={verses} reciters={reciters} />
+            <MemorizeContent 
+                planItem={planItem} 
+                verses={verses} 
+                reciters={reciters} 
+                testConfig={testConfig}
+                testResults={testResults}
+            />
         </ThemeProvider>
     );
 }

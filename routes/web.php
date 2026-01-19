@@ -242,6 +242,11 @@ Route::prefix('app')->middleware(['auth:web'])->group(function () {
     Route::get('session/{planItem}', [\App\Http\Controllers\Web\SessionController::class, 'memorize'])->name('user.session.memorize');
     Route::post('session/{planItem}/complete', [\App\Http\Controllers\Web\SessionController::class, 'complete'])->name('user.session.complete');
     
+    // Session Tests
+    Route::post('session/{planItem}/test', [\App\Http\Controllers\Web\SessionController::class, 'submitTest'])->name('user.session.submit-test');
+    Route::post('session/{planItem}/tests', [\App\Http\Controllers\Web\SessionController::class, 'submitTests'])->name('user.session.submit-tests');
+    Route::get('session/{planItem}/test-status', [\App\Http\Controllers\Web\SessionController::class, 'getTestStatus'])->name('user.session.test-status');
+    
     // Revisions
     Route::get('revisions', [\App\Http\Controllers\Web\RevisionController::class, 'index'])->name('user.revisions');
     Route::get('revisions/{revision}', [\App\Http\Controllers\Web\RevisionController::class, 'show'])->name('user.revisions.show');
