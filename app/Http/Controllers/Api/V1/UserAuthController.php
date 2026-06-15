@@ -235,7 +235,11 @@ class UserAuthController extends Controller
 
         try {
             $data = $request->only('email', 'code');
-            $response = $this->authService->handleVerifyOtp($data);
+            $responseData = $this->authService->handleVerifyOtp($data);
+
+            if(! $responseData['success']){
+                return ApiResponse::error($responseData['message'], $responseData["HttpCode"]);
+            }
 
             // Log successful OTP verification
             $this->auditService->logAuth(
@@ -245,7 +249,10 @@ class UserAuthController extends Controller
                 "OTP verified successfully for: {$email}"
             );
 
-            return $response;
+            return ApiResponse::success([
+                "email" => $responseData["email"],
+                "token" => $responseData["token"],
+            ], $responseData["message"], $responseData["HttpCode"]);
 
         } catch (\Exception $e) {
             // Log failed OTP verification
@@ -268,7 +275,11 @@ class UserAuthController extends Controller
 
         try {
             $data = $request->only('email', 'password', 'password_confirmation', 'token');
-            $response = $this->authService->handleResetPassword($data);
+            $responseData = $this->authService->handleResetPassword($data);
+
+            if(! $responseData['success']){
+                return ApiResponse::error($responseData['message'], $responseData["HttpCode"]);
+            }
 
             // Log successful password reset
             $this->auditService->logAuth(
@@ -278,7 +289,7 @@ class UserAuthController extends Controller
                 "Password reset completed for: {$email}"
             );
 
-            return $response;
+            return ApiResponse::success($responseData["data"], $responseData["message"], $responseData["HttpCode"]);
 
         } catch (\Exception $e) {
             // Log failed password reset

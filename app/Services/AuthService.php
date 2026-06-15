@@ -82,11 +82,11 @@ class AuthService
 
     public function loginWithDevice(Array $credentials, Array $deviceInfo)
     {
-        if(! $this->isValidCredentials($credentials)) {
+        $user = $this->userRepository->findByEmail($credentials['email']);
+
+        if(! $this->isValidCredentials($credentials, $user)) {
             return ApiResponse::unauthorized("بيانات اعتماد غير صالحة");
         }
-
-        $user = $this->userRepository->findByEmail($credentials['email']);
 
         $tokenResult = $user->createToken("user-login", ['*'], now()->addDays(10));
 
@@ -130,9 +130,9 @@ class AuthService
         return ApiResponse::success($data, "تم تسجيل الدخول بنجاح");
     }
 
-    public function isValidCredentials(Array $credentials): bool
+
+    public function isValidCredentials(Array $credentials, $user): bool
     {
-        $user = $this->userRepository->findByEmail($credentials['email']);
         if (!$user) {
             return false;
         }
@@ -220,50 +220,56 @@ class AuthService
         );
     }
 
-    public function handleVerifyOtp(Array $data): JsonResponse{
+    public function handleVerifyOtp(Array $data): array{
         $email = $data['email'] ?? '';
         $code = $data['code'] ?? '';
 
         $cachedCode = \Illuminate\Support\Facades\Cache::get("password_reset_code_{$email}");
 
-        if (!$cachedCode || !hash_equals((string)$cachedCode, (string)$code)) {
-            return ApiResponse::error('رمز إعادة التعيين غير صالح أو منتهي الصلاحية', 422);
+        if (!$cachedCode || $cachedCode != $code) {
+            return [
+                "success" => false,
+                "HttpCode" => 422,
+                "message" => 'رمز إعادة التعيين غير صالح أو منتهي الصلاحية',
+            ];
         }
 
-        return ApiResponse::success(
-            [
-                'email' => $email,
-                'token' => \Illuminate\Support\Facades\Cache::get("password_reset_token_{$email}"),
-            ],
-            'تم التحقق من رمز إعادة التعيين بنجاح'
-        );
+        // Create Token
+        $rawToken = bin2hex(random_bytes(32));
+        $tokenHashed = Hash::make($rawToken);
+
+        \Illuminate\Support\Facades\Cache::put("password_reset_token_{$email}", $tokenHashed, 300);
+
+        return [
+            "success" => true,
+            'email' => $email,
+            "HttpCode" => 200,
+            'token' => $rawToken,
+            "message" => 'تم التحقق من رمز إعادة التعيين بنجاح',
+        ];
     }
 
-    public function handleResetPassword(Array $data):  JsonResponse
+    public function handleResetPassword(Array $data): array
     {
         $email = $data['email'] ?? '';
         $token = $data['token'] ?? '';
         $password = $data['password'] ?? '';
-        $passwordConfirmation = $data['password_confirmation'] ?? '';
 
-        // Validate password confirmation
-        if ($password !== $passwordConfirmation) {
-            return ApiResponse::error('كلمات المرور غير متطابقة', 422);
-        }
 
         // Verify token from cache
         $cachedToken = \Illuminate\Support\Facades\Cache::get("password_reset_token_{$email}");
 
-        if (!$cachedToken || !hash_equals((string)$cachedToken, (string)$token)) {
-            return ApiResponse::error('رمز إعادة التعيين غير صالح أو منتهي الصلاحية', 422);
+        if (!$cachedToken || Hash::check($token, $cachedToken)) {
+            return [
+                "success" => false,
+                "HttpCode" => 422,
+                "message" => 'رمز إعادة التعيين غير صالح أو منتهي الصلاحية',
+            ];
         }
 
         // Find user by email
         $user = $this->userRepository->findByEmail($email);
 
-        if (!$user) {
-            return ApiResponse::error('المستخدم غير موجود', 404);
-        }
 
         // Update password directly - User model has 'password' => 'hashed' cast, so it will hash automatically
         $user->update([
@@ -275,12 +281,14 @@ class AuthService
         \Illuminate\Support\Facades\Cache::forget("password_reset_token_{$email}");
 
         // Fire password reset event
-        event(new PasswordReset($user));
+        // event(new PasswordReset($user));
 
-        return ApiResponse::success(
-            null,
-            'تم إعادة تعيين كلمة المرور بنجاح'
-        );
+        return [
+            "success" => true,
+            "data" => [],
+            "HttpCode" => 200,
+            "message" => 'تم إعادة تعيين كلمة المرور بنجاح',
+        ];
     }
 
 

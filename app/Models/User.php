@@ -179,7 +179,7 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($this->profile && $this->profile->total_points) {
             return (int) $this->profile->total_points;
         }
-        
+
         // Fallback: calculate from points transactions
         return (int) $this->pointsTransactions()->sum('points');
     }
@@ -225,12 +225,6 @@ class User extends Authenticatable implements MustVerifyEmail
             now()->addMinutes(config('auth.passwords.users.expire'))
         );
 
-        \Illuminate\Support\Facades\Cache::put(
-            "password_reset_token_{$this->email}",
-            $token,
-            now()->addMinutes(config('auth.passwords.users.expire'))
-        );
-
         $this->notify(new CustomResetPassword($code));
     }
 
@@ -243,7 +237,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function updateGlobalStreak(): array
     {
         $profile = $this->profile;
-        
+
         if (!$profile) {
             return [
                 'current_streak' => 0,
@@ -254,7 +248,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $today = now()->startOfDay();
         $lastActivityDate = $profile->last_activity_date;
-        
+
         $streakIncreased = false;
         $currentStreak = $profile->current_streak ?? 0;
         $bestStreak = $profile->best_streak ?? 0;
